@@ -225,7 +225,7 @@ async function main() {
       check('Settings lists Emby & Seerr, not connected', (await current.locator('[data-action="settings.group.media"]').textContent()).includes('Not connected'));
       const box = await current.locator('.settings-group').evaluateAll(els => els.map(e => e.getBoundingClientRect().bottom));
       const hint = await current.locator('.settings-overview-hint').evaluate(e => e.getBoundingClientRect().top);
-      check('seven groups fit above the hint', Math.max(...box) < hint, { box, hint });
+      check('eight groups fit above the hint', Math.max(...box) < hint, { box, hint });
       await shot('settings-overview');
     });
 
@@ -686,7 +686,7 @@ async function main() {
       check('Settings offers Inputs on Home with a count', (await current.locator('[data-action="settings.group.inputs"]').textContent()).includes('3 of 3'));
       const sbox = await current.locator('.settings-group').evaluateAll(els => els.map(e => e.getBoundingClientRect().bottom));
       const shint = await current.locator('.settings-overview-hint').evaluate(e => e.getBoundingClientRect().top);
-      check('eight groups still fit above the hint', Math.max(...sbox) < shint, { sbox, shint });
+      check('nine groups still fit above the hint', Math.max(...sbox) < shint, { sbox, shint });
       await act('settings.group.inputs');
       check('Inputs on Home opens', (await state()).view === 'inputs');
       await reach('list.input.2.toggle');
@@ -751,9 +751,9 @@ async function main() {
       await current.evaluate(() => ShoreQA.fireSaver());
       await current.waitForTimeout(50);
       check('with the saver off, idle does not open Art Mode', (await current.evaluate(() => window.__tv.calls)).every(c => c.id !== 'org.tizen.art-app'));
-      await scene('appearance');
-      await act('background.saver');
-      check('the screen-saver screen opens from Background', (await state()).settingsGroup === 'saver');
+      await scene('settings');
+      await act('settings.group.saver');
+      check('the screen-saver screen opens from Settings', (await state()).settingsGroup === 'saver');
       await act('saver.5');
       check('choosing 5 min is saved', (await state()).saver === 5 && (await current.evaluate(() => JSON.parse(localStorage.getItem('cleanframe.home.v1')).saver)) === 5);
       check('the idle timeout reflects the chosen minutes', (await current.evaluate(() => ShoreQA.saverMs())) === 300000);
