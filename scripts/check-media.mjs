@@ -740,6 +740,32 @@ async function main() {
       await shot('watch-photo');
     });
 
+    await run('Screen saver, hero pan and backdrop accent', async () => {
+      api = freshApi(); await page({ paired: true, look: 'watch' });
+      check('the hero backdrop has the slow ambient pan', await current.locator('#wBackA').evaluate(el => getComputedStyle(el).animationName) === 'wKen');
+      check('the backdrop accent layer is present', await current.locator('#wAccent').count() === 1);
+      const red = await current.evaluate(() => { var d = []; for (var i = 0; i < 60; i++) d.push(200, 32, 32, 255); return ShoreQA.vibrant(d); });
+      const rc = (red.match(/\d+/g) || []).map(Number);
+      check('a red-dominant image yields a red accent', /^rgb\(/.test(red) && rc[0] > rc[1] + 40 && rc[0] > rc[2] + 40, red);
+      check('screen saver is off by default', (await state()).saver === 0);
+      await current.evaluate(() => ShoreQA.fireSaver());
+      await current.waitForTimeout(50);
+      check('with the saver off, idle does not open Art Mode', (await current.evaluate(() => window.__tv.calls)).every(c => c.id !== 'org.tizen.art-app'));
+      await scene('appearance');
+      await act('background.saver');
+      check('the screen-saver screen opens from Background', (await state()).settingsGroup === 'saver');
+      await act('saver.5');
+      check('choosing 5 min is saved', (await state()).saver === 5 && (await current.evaluate(() => JSON.parse(localStorage.getItem('cleanframe.home.v1')).saver)) === 5);
+      check('the idle timeout reflects the chosen minutes', (await current.evaluate(() => ShoreQA.saverMs())) === 300000);
+      await current.evaluate(() => ShoreQA.fireSaver());
+      await until(() => window.__tv.calls.some(c => c.id === 'org.tizen.art-app'));
+      const call = (await current.evaluate(() => window.__tv.calls)).find(c => c.id === 'org.tizen.art-app');
+      check('with a timeout set, idle enters Samsung Art Mode', call && call.method === 'launchAppControl');
+      await act('saver.0');
+      check('it can be turned back off', (await state()).saver === 0);
+      await current.close(); current = null;
+    });
+
     await run('Cached rows show at once and refresh on return', async () => {
       api = freshApi(); api.hidden = ['nextup'];
       await page({ paired: true, cacheHome: { Rows: [{ Id: 'cached', Title: 'From cache', Layout: 'landscape', Items: [{ Id: '1', Kind: 'movie', Title: 'Old', PlayItemId: '1' }] }] }, staleMs: 50, waitRows: false });

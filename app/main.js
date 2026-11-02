@@ -37,6 +37,7 @@
     { id: '5', name: 'Every 5 minutes', min: 5 }, { id: '15', name: 'Every 15 minutes', min: 15 },
     { id: '60', name: 'Every hour', min: 60 }
   ];
+  var SAVER_VALUES = [0, 2, 5, 10, 15, 30];
   var KEY = 'cleanframe.home.v1', storageOk = true, catalog = { loading: false, loaded: false, error: null, request: 0, revision: 0 };
   var QA = window.ShoreQA = { minuteMs: window.ShoreQA && window.ShoreQA.minuteMs || 60000, pollMs: window.ShoreQA && window.ShoreQA.pollMs || 3000, staleMs: window.ShoreQA && window.ShoreQA.staleMs || 30000,
     featureMs: window.ShoreQA && window.ShoreQA.featureMs || 9000 };
@@ -435,7 +436,8 @@
       font: pick(modern.font, LOOK_VALUES.font, 'manrope'), wall: wall(modern.wall || s.wallpaper) ? modern.wall || s.wallpaper : WALLS[0].id,
       home: h, recent: recent, lastApp: h.indexOf(s.lastApp) >= 0 ? s.lastApp : h[0],
       mode: pick(s.mode, MODES.map(function (m) { return m.id; }), 'fixed'),
-      hiddenInputs: (Array.isArray(s.hiddenInputs) ? s.hiddenInputs : []).filter(function (n, i, all) { return typeof n === 'number' && n >= 1 && n <= 9 && all.indexOf(n) === i; })
+      hiddenInputs: (Array.isArray(s.hiddenInputs) ? s.hiddenInputs : []).filter(function (n, i, all) { return typeof n === 'number' && n >= 1 && n <= 9 && all.indexOf(n) === i; }),
+      saver: SAVER_VALUES.indexOf(+s.saver) >= 0 ? +s.saver : 0
     };
   }
   function serialise(c) {
@@ -460,7 +462,7 @@
   }
   function clearSession() { S.undo = []; S.removedAt = {}; S.note = null; S.err = null; }
   function begin() { S.note = null; }
-  function next(home, recent) { var c = lookOf(S.c); c.home = home; c.recent = recent; c.lastApp = S.c.lastApp; c.mode = S.c.mode; c.hiddenInputs = (S.c.hiddenInputs || []).slice(); return c; }
+  function next(home, recent) { var c = lookOf(S.c); c.home = home; c.recent = recent; c.lastApp = S.c.lastApp; c.mode = S.c.mode; c.hiddenInputs = (S.c.hiddenInputs || []).slice(); c.saver = S.c.saver || 0; return c; }
   function snap() { return { home: S.c.home.slice(), recent: S.c.recent.slice() }; }
   function pushRecent(list, id) { return [id].concat(without(list, id)).slice(0, 5); }
   function write(c, label) {
@@ -545,6 +547,10 @@
       render(); syncRotation();
     });
   }
+  var saverTimer = 0;
+  function saverMs() { return (S.c.saver || 0) * 60000; }
+  function armSaver() { clearTimeout(saverTimer); saverTimer = 0; var ms = saverMs(); if (ms > 0 && !document.hidden) saverTimer = setTimeout(fireSaver, ms); }
+  function fireSaver() { saverTimer = 0; if (document.hidden || busy || (S.c.saver || 0) <= 0) return; perform('Art Mode', FrameDevice.art); }
   function launch(id) {
     var a = app(id), c;
     if (!a || busy) return;
@@ -617,7 +623,7 @@
   function openSettings() { push({ id: 'settings', f: { id: S.settingsFocus } }); }
   function openAppearance(group) {
     var axis = { background: 'bg', layout: 'layout', typography: 'font', focus: 'focus' }[group];
-    var action = S.detailFocus[group] || (axis ? 'choice.' + axis + '.' + S.c[axis] : group === 'rotation' ? 'rotation.' + S.c.mode : 'samsung.home');
+    var action = S.detailFocus[group] || (axis ? 'choice.' + axis + '.' + S.c[axis] : group === 'rotation' ? 'rotation.' + S.c.mode : group === 'saver' ? 'saver.' + S.c.saver : 'samsung.home');
     push({ id: 'appearance', group: group, f: { action: action } });
   }
   function openMessage(key) { push({ id: 'message', msg: key, f: { b: 0 } }); }
@@ -1031,10 +1037,10 @@
     else if (id === 'media') { if (!M.cfg || M.unauthorized) openConnect(); else openMediaSettings(); }
     else openAppearance(id);
   }
-  var DETAIL_NAMES = { background: 'Background', layout: 'Layout', typography: 'Typography', focus: 'Focus', rotation: 'Rotation', samsung: 'Samsung' };
+  var DETAIL_NAMES = { background: 'Background', layout: 'Layout', typography: 'Typography', focus: 'Focus', rotation: 'Rotation', saver: 'Screen saver', samsung: 'Samsung' };
   function choice(axis, value, disabled) {
-    return { action: axis === 'mode' ? 'rotation.' + value : 'choice.' + axis + '.' + value, axis: axis, value: value, disabled: !!disabled,
-      label: axis === 'font' ? FONTS[value].name : axis === 'mode' ? MODES.filter(function (m) { return m.id === value; })[0].name : value === 'both' ? 'Both' : VALUE_NAMES[value] };
+    return { action: axis === 'saver' ? 'saver.' + value : axis === 'mode' ? 'rotation.' + value : 'choice.' + axis + '.' + value, axis: axis, value: value, disabled: !!disabled,
+      label: axis === 'saver' ? saverName(value) : axis === 'font' ? FONTS[value].name : axis === 'mode' ? MODES.filter(function (m) { return m.id === value; })[0].name : value === 'both' ? 'Both' : VALUE_NAMES[value] };
   }
   function detailSections(t) {
     var flat = S.c.bg !== 'photo', inactive = !materialApplies();
@@ -1042,7 +1048,8 @@
     if (t.group === 'background') return [
       { id: 'bg', title: 'Background type', items: options('bg', ['photo', 'light', 'dark']) },
       { id: 'wall', title: 'Wallpaper', items: [{ action: 'background.wallpaper', label: wall(S.c.wall).name, thumbnail: true, disabled: flat }] },
-      { id: 'rotation', title: 'Rotation', items: [{ action: 'background.rotation', label: mode().name, disabled: flat }], reason: flat ? 'Choose Photo to use wallpaper and rotation.' : '' }
+      { id: 'rotation', title: 'Rotation', items: [{ action: 'background.rotation', label: mode().name, disabled: flat }], reason: flat ? 'Choose Photo to use wallpaper and rotation.' : '' },
+      { id: 'saver', title: 'Screen saver', items: [{ action: 'background.saver', label: saverName(S.c.saver) }], reason: 'Opens Samsung Art Mode after Home sits idle this long.' }
     ];
     if (t.group === 'layout') return [
       { id: 'layout', title: 'Layout', horizontal: true, items: options('layout', ['list', 'dock', 'watch']),
@@ -1058,13 +1065,15 @@
     ];
     if (t.group === 'rotation') return [{ id: 'mode', title: '', items: options('mode', MODES.map(function (m) { return m.id; }), flat),
       reason: flat ? 'Choose Photo in Background to use rotation.' : 'Timed changes pause while Settings or another panel is open.' }];
+    if (t.group === 'saver') return [{ id: 'saver', title: '', items: options('saver', SAVER_VALUES),
+      reason: 'The screen saver opens Samsung Art Mode when Home sits idle. Any remote button wakes it.' }];
     return [{ id: 'samsung', title: '', items: [
       { action: 'samsung.home', label: 'Samsung Home', description: 'Open Samsung’s Home screen' },
       { action: 'samsung.settings', label: 'TV settings', description: 'Picture, sound and network settings' }
     ] }];
   }
   function detailRows(t) {
-    var rows = [[{ action: 'settings.back', label: t.group === 'rotation' ? 'Background' : 'Settings' }]];
+    var rows = [[{ action: 'settings.back', label: t.group === 'rotation' || t.group === 'saver' ? 'Background' : 'Settings' }]];
     detailSections(t).forEach(function (section) {
       var enabled = section.items.filter(function (item) { return !item.disabled; });
       if (section.horizontal && enabled.length) rows.push(enabled);
@@ -1092,6 +1101,15 @@
     c = next(S.c.home.slice(), S.c.recent.slice()); c.mode = value;
     if (!write(c, 'Wallpaper rotation')) S.lookError = { type: 'save', patch: { mode: value }, row: 'mode', transient: false };
   }
+  function saverName(v) { return v ? v + ' min' : 'Off'; }
+  function applySaver(value) {
+    var c;
+    if (value === S.c.saver) return;
+    S.err = null; S.lookError = null;
+    c = next(S.c.home.slice(), S.c.recent.slice()); c.saver = value;
+    if (!write(c, 'Screen saver')) S.lookError = { type: 'save', patch: { saver: value }, row: 'saver', transient: false };
+    armSaver();
+  }
   function detailBack() { cancelLook(); S.err = null; pop(); }
   function detailOk(t, item) {
     var patch = {}, error = S.lookError;
@@ -1100,18 +1118,21 @@
     if (item.action === 'settings.retry') {
       if (error && error.patch[error.row] !== undefined) detailFocus(t, choice(error.row, error.patch[error.row]), 0);
       if (error && error.row === 'mode') applyRotation(error.patch.mode);
+      else if (error && error.row === 'saver') applySaver(error.patch.saver);
       else if (error) setLook(error.patch, { row: error.row });
     } else if (item.axis === 'mode') applyRotation(item.value);
+    else if (item.axis === 'saver') applySaver(item.value);
     else if (item.axis) { patch[item.axis] = item.value; setLook(patch, { row: item.axis }); }
     else if (item.action === 'background.wallpaper') openWallpaper();
     else if (item.action === 'background.rotation') openAppearance('rotation');
+    else if (item.action === 'background.saver') openAppearance('saver');
     else if (item.action === 'samsung.home') perform('Samsung Home', FrameDevice.home);
     else if (item.action === 'samsung.settings') perform('TV settings', FrameDevice.settings);
   }
   V.appearance = {
     norm: function (t) {
       var rows = detailRows(t), exists = false, applied = null;
-      var axis = { background: 'bg', layout: 'layout', typography: 'font', focus: 'focus', rotation: 'mode' }[t.group];
+      var axis = { background: 'bg', layout: 'layout', typography: 'font', focus: 'focus', rotation: 'mode', saver: 'saver' }[t.group];
       rows.forEach(function (items) { items.forEach(function (item) {
         if (item.action === t.f.action) exists = true;
         if (item.axis === axis && item.value === S.c[axis]) applied = item;
@@ -1549,6 +1570,7 @@
     norm();
     render();
     syncRotation();
+    armSaver();
   }
 
   /* ---------- Rendering ---------- */
@@ -1996,12 +2018,49 @@
     var next, cur;
     if (W.src === src) return;
     W.src = src; cur = wBacks[W.back]; next = wBacks[1 - W.back];
-    if (!src) { cur.className = 'w-backdrop'; next.className = 'w-backdrop'; return; }
+    if (!src) { cur.className = 'w-backdrop'; next.className = 'w-backdrop'; wSetAccent(''); return; }
+    wProbeAccent(src);
     function show() { if (W.src !== src) return; W.back = 1 - W.back; next.className = 'w-backdrop is-on'; cur.className = 'w-backdrop'; }
     next.onload = show;
     next.onerror = function () { if (W.src === src) cur.className = 'w-backdrop'; };
     if (next._src === src && next.complete && next.naturalWidth) show();
     else { next._src = src; next.src = src; }
+  }
+  var wAccentCanvas = null, wAccentSrc = '';
+  function wSetAccent(rgb) { if (rgb) watchEl.style.setProperty('--w-accent', rgb); else { watchEl.style.removeProperty('--w-accent'); wAccentSrc = ''; } }
+  function wProbeAccent(src) {
+    if (!src || src === wAccentSrc) return;
+    var probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = function () {
+      if (W.src !== src) return;
+      try {
+        if (!wAccentCanvas) wAccentCanvas = document.createElement('canvas');
+        var cv = wAccentCanvas, w = 24, h = 14, ctx;
+        cv.width = w; cv.height = h; ctx = cv.getContext('2d');
+        ctx.drawImage(probe, 0, 0, w, h);
+        var rgb = wVibrant(ctx.getImageData(0, 0, w, h).data);
+        if (rgb) { wAccentSrc = src; wSetAccent(rgb); }
+      } catch (e) {}
+    };
+    probe.src = src;
+  }
+  function wVibrant(d) {
+    var i, r, g, b, mx, mn, l, sa, score, best = null, bestScore = -1, sr = 0, sg = 0, sb = 0, n = 0;
+    for (i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
+      r = d[i]; g = d[i + 1]; b = d[i + 2];
+      mx = Math.max(r, g, b); mn = Math.min(r, g, b); l = (mx + mn) / 510;
+      sa = mx === mn ? 0 : (mx - mn) / (255 - Math.abs(mx + mn - 255));
+      sr += r; sg += g; sb += b; n++;
+      score = sa * (1 - Math.abs(l - 0.5));
+      if (l > 0.12 && l < 0.92 && score > bestScore) { bestScore = score; best = [r, g, b]; }
+    }
+    if (!n) return '';
+    if (bestScore < 0.1) best = [sr / n, sg / n, sb / n];
+    mx = Math.max(best[0], best[1], best[2]);
+    if (mx > 0 && mx < 120) { var k = 120 / mx; best = [best[0] * k, best[1] * k, best[2] * k]; }
+    return 'rgb(' + Math.min(255, Math.round(best[0])) + ',' + Math.min(255, Math.round(best[1])) + ',' + Math.min(255, Math.round(best[2])) + ')';
   }
   function wPreload(src) { if (src && W.pre !== src) { W.pre = src; W.preImg = new Image(); W.preImg.src = src; } }
   /* A programme's landscape image may be its channel logo, so games use only real background art. */
@@ -2394,7 +2453,7 @@
         + command({ action: 'settings.retry', label: 'Try again' }, '<span>Try again</span>', 'setting-retry');
     }
     setHTML(appearanceStatus, status);
-    hint = selected.disabled ? '' : selected.action === 'settings.back' ? 'Return to ' + (t.group === 'rotation' ? 'Background' : 'Settings') : selected.action === 'settings.retry' ? 'Retry this change' : selected.axis ? 'Apply selected setting' : selected.action === 'background.wallpaper' ? 'Choose a wallpaper' : selected.action === 'background.rotation' ? 'Choose a rotation interval' : 'Open on the TV';
+    hint = selected.disabled ? '' : selected.action === 'settings.back' ? 'Return to ' + (t.group === 'rotation' || t.group === 'saver' ? 'Background' : 'Settings') : selected.action === 'settings.retry' ? 'Retry this change' : selected.axis ? 'Apply selected setting' : selected.action === 'background.wallpaper' ? 'Choose a wallpaper' : selected.action === 'background.rotation' ? 'Choose a rotation interval' : selected.action === 'background.saver' ? 'Choose a screen saver timeout' : 'Open on the TV';
     setHTML(appearanceDesc, hint ? '<span class="remote-key">OK</span><span>' + esc(hint) + '</span>' : '');
   }
   function renderWallpaper(t) {
@@ -2963,16 +3022,17 @@
   window.addEventListener('focus', function () { release(); focusStage(); after(); updateClock(); });
   document.addEventListener('visibilitychange', function () {
     heldKeys = {};
-    if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); clearTimeout(M.timer); clearTimeout(W.timer); W.timer = 0; }
+    if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); clearTimeout(M.timer); clearTimeout(W.timer); W.timer = 0; clearTimeout(saverTimer); saverTimer = 0; }
     else {
       release();
       refreshMedia(false);
       refreshInputs();
       if (S.c.bg === 'photo' && !S.pending && !S.previewBundle && (!committedBundle || S.bundleKey !== bundleKey(S.c))) setLook({}, { transient: true, startup: true });
-      after(); updateClock(); focusStage();
+      after(); updateClock(); focusStage(); armSaver();
     }
   });
   window.addEventListener('resize', fit);
+  QA.fireSaver = fireSaver; QA.vibrant = wVibrant; QA.saverMs = saverMs;
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
   var NAV = { left: 'left', right: 'right', up: 'up', down: 'down', ok: 'ok', enter: 'ok', back: 'back', escape: 'back' };
@@ -3017,5 +3077,5 @@
   refreshInputs();
   if (!catalog.loaded) refreshCatalog();
   setLook({}, { transient: true, startup: true });
-  norm(); render(); fit(); focusStage(); updateClock(); syncRotation();
+  norm(); render(); fit(); focusStage(); updateClock(); syncRotation(); armSaver();
 })();

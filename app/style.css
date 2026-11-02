@@ -774,8 +774,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .w-shade{position:absolute;left:0;top:0;width:1920px;height:1080px;display:none;background:linear-gradient(to right,rgba(6,8,12,.86),rgba(6,8,12,.74) 900px,rgba(6,8,12,.7)),linear-gradient(to bottom,rgba(6,8,12,0) 420px,rgba(6,8,12,.3) 820px)}
 .bg-photo .w-shade{display:block}
 .w-backs{position:absolute;left:0;top:0;width:1920px;height:860px;transition:opacity 400ms linear;-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,0) 400px,rgba(0,0,0,.22) 640px,rgba(0,0,0,.72) 1000px,#000 1300px);mask-image:linear-gradient(to right,rgba(0,0,0,0) 400px,rgba(0,0,0,.22) 640px,rgba(0,0,0,.72) 1000px,#000 1300px)}
-.w-backdrop{position:absolute;left:400px;top:0;width:1520px;height:855px;object-fit:cover;object-position:50% 20%;opacity:0;transition:opacity 900ms linear;-webkit-mask-image:linear-gradient(to bottom,#000 40%,rgba(0,0,0,.5) 66%,rgba(0,0,0,0) 92%);mask-image:linear-gradient(to bottom,#000 40%,rgba(0,0,0,.5) 66%,rgba(0,0,0,0) 92%)}
+.w-backdrop{position:absolute;left:400px;top:0;width:1520px;height:855px;object-fit:cover;object-position:50% 20%;opacity:0;transition:opacity 900ms linear;-webkit-mask-image:linear-gradient(to bottom,#000 40%,rgba(0,0,0,.5) 66%,rgba(0,0,0,0) 92%);mask-image:linear-gradient(to bottom,#000 40%,rgba(0,0,0,.5) 66%,rgba(0,0,0,0) 92%);will-change:transform;transform-origin:50% 35%;animation:wKen 44s ease-in-out infinite alternate}
 .w-backdrop.is-on{opacity:1}
+@keyframes wKen{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.08) translate3d(-1.4%,-1.2%,0)}}
+.w-accent{position:absolute;left:0;top:0;width:1920px;height:640px;pointer-events:none;opacity:.32;background:radial-gradient(1180px 560px at 24% 96%,var(--w-accent,transparent),transparent 72%);transition:opacity 900ms linear}
+.watch.is-scrolled .w-accent{opacity:.14}
 .w-top-shade{position:absolute;left:0;top:0;width:1920px;height:200px;background:var(--top-shade)}
 .watch.is-browsing .w-backs{opacity:.6}
 .watch.is-scrolled .w-backs{opacity:.32}
@@ -842,4 +845,4 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wapp.is-input .wapp-name{margin-top:4px}
 .wapp.is-off{opacity:.5}
 .wapp.is-off.is-focus{opacity:.85}
-@media(prefers-reduced-motion:reduce){.w-bands,.wband,.wr-track,.wc,.wapp,.wi-btn,.wr-btn,.w-backdrop,.w-backs{transition:none!important}}
+@media(prefers-reduced-motion:reduce){.w-bands,.wband,.wr-track,.wc,.wapp,.wi-btn,.wr-btn,.w-backdrop,.w-backs{transition:none!important}.w-backdrop{animation:none!important}}
