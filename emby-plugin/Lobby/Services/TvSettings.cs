@@ -43,6 +43,7 @@ namespace Lobby.Services
     {
         public const string Continue = "continue";
         public const string NextUp = "nextup";
+        public const string RecentlyAdded = "recentlyadded";
         public const string LiveNow = "livenow";
         public const string Sports = "sports";
         public const string SeerrTrending = "seerr-trending";
@@ -54,6 +55,7 @@ namespace Lobby.Services
         {
             new RowDefinition(Continue, "Continue Watching", "library"),
             new RowDefinition(NextUp, "Next Up", "library"),
+            new RowDefinition(RecentlyAdded, "Recently Added", "library"),
             new RowDefinition(LiveNow, "On Now", "livetv"),
             new RowDefinition(Sports, "Your Teams", "livetv"),
             new RowDefinition(SeerrTrending, "Trending", "seerr"),
@@ -74,6 +76,7 @@ namespace Lobby.Services
             var hidden = new HashSet<string>();
             if (!c.ShowContinueWatching) hidden.Add(Continue);
             if (!c.ShowNextUp) hidden.Add(NextUp);
+            if (!c.ShowRecentlyAdded) hidden.Add(RecentlyAdded);
             if (!c.ShowLiveNow) hidden.Add(LiveNow);
             if (!c.ShowSports) hidden.Add(Sports);
             if (!c.ShowSeerrTrending) hidden.Add(SeerrTrending);

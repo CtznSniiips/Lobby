@@ -224,6 +224,26 @@ namespace Lobby.Services
                 });
             }
 
+            if (settings.IsVisible(TvSettings.RecentlyAdded))
+            {
+                AddRow(response, built, TvSettings.RecentlyAdded, "landscape", () =>
+                {
+                    var items = _library.GetItemList(new InternalItemsQuery(user)
+                    {
+                        Recursive = true,
+                        IncludeItemTypes = new[] { "Movie", "Series" },
+                        OrderBy = new[] { ValueTuple.Create("DateLastContentAdded", SortOrder.Descending) },
+                        Limit = fetch + resumeIds.Count,
+                        DtoOptions = dtoOptions,
+                    });
+                    return _dto.GetBaseItemDtos(items, dtoOptions, user)
+                        .Select(d => MapLibraryItem(d, PlayAction.Play))
+                        .Where(i => !resumeIds.Contains(i.Id))
+                        .Take(fetch)
+                        .ToList();
+                });
+            }
+
             if (settings.IsVisible(TvSettings.LiveNow))
             {
                 AddRow(response, built, TvSettings.LiveNow, "landscape", () =>
