@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- Version bump so the per-TV weather build is distinguishable from the earlier 0.6.0 build that still had the old global weather settings. No code changes from 0.6.0's final state.
+
 ## 0.6.0
 
 - `GET /Lobby/Search?query=`: searches the Emby library and (when configured) Seerr for a title, and returns two rows — **In your library** (play/resume) and **Request from Seerr** (titles not already in the library, de-duplicated by TMDB id). Backend for the TV's upcoming search screen.
