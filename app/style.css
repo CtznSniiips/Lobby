@@ -303,6 +303,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .settings-group{width:100%;height:100px;padding:12px 32px 12px 28px;border-radius:20px;display:flex;align-items:center;justify-content:space-between;color:var(--ink);transition:background-color 140ms linear,color 140ms linear}
 .settings-group+.settings-group{margin-top:6px}
 .settings-overview.is-compact .settings-group{height:88px;padding-top:8px;padding-bottom:8px}.settings-overview.is-compact .settings-group+.settings-group{margin-top:4px}
+.settings-overview.is-dense .settings-group{height:80px;padding-top:6px;padding-bottom:6px}.settings-overview.is-dense .settings-group+.settings-group{margin-top:4px}
 .settings-group-copy{min-width:0;display:flex;flex-direction:column}
 .settings-group-name{font-size:40px;line-height:48px;font-weight:500;letter-spacing:-.6px}
 .settings-group-value{font-size:26px;line-height:34px;color:var(--mute);white-space:nowrap}
