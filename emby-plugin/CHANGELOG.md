@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- `GET /Lobby/Search?query=`: searches the Emby library and (when configured) Seerr for a title, and returns two rows — **In your library** (play/resume) and **Request from Seerr** (titles not already in the library, de-duplicated by TMDB id). Backend for the TV's upcoming search screen.
+
 ## 0.5.0
 
 - Optional **weather** on the Watch home screen: set a latitude/longitude (and °C/°F) on the plugin page and the TV shows a small conditions icon and temperature next to the clock. Data is fetched by the TV from Open-Meteo (free, no account); nothing is sent when it's off or unset.
