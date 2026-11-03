@@ -371,7 +371,7 @@ define([], function () {
                 } else if (act === 'delete-tv') {
                     if (!window.confirm('Unpair this TV? Lobby on it will need to pair again.')) { return; }
                     call = api('POST', 'Lobby/Admin/Tvs/Delete', { Id: card.getAttribute('data-tv') });
-                 else if (act === 'weather-geo') {
+                } else if (act === 'weather-geo') {
                     var gmsg = card.querySelector('.wx-msg');
                     if (!navigator.geolocation) { show(gmsg, 'This browser has no location support.', false); return; }
                     show(gmsg, 'Asking this browser for its location\u2026', true);
