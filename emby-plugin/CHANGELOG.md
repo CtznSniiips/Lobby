@@ -2,7 +2,8 @@
 
 ## 0.5.0
 
-- Optional **weather** on the Watch home screen: set a latitude/longitude (and °C/°F) on the plugin page and the TV shows a small conditions icon and temperature next to the clock. Data is fetched by the TV from Open-Meteo (free, no account); nothing is sent when it's off or unset.
+- Optional **per-TV weather** on the Watch home screen: give each paired TV a location on the plugin page — by ZIP/postal code, the browser's location, or latitude/longitude, with °C/°F — and that TV shows a small conditions icon and temperature next to the clock. Fetched by the TV from Open-Meteo (free, no account); nothing is sent when it's off or unset.
+- Fixed: the Recently Added row's default toggle now persists across plugin settings saves.
 
 ## 0.4.0
 

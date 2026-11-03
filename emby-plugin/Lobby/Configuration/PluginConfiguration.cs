@@ -45,10 +45,6 @@ namespace Lobby.Configuration
         public bool ShowSeerrTrending { get; set; } = true;
         public bool ShowSeerrPopularMovies { get; set; } = true;
         public bool ShowSeerrPopularShows { get; set; } = true;
-        public bool WeatherEnabled { get; set; }
-        public double WeatherLatitude { get; set; }
-        public double WeatherLongitude { get; set; }
-        public bool WeatherFahrenheit { get; set; }
 
         /// <summary>Paired TVs.</summary>
         public TvDevice[] Tvs { get; set; } = new TvDevice[0];
@@ -78,6 +74,12 @@ namespace Lobby.Configuration
 
         /// <summary>Team names / keywords for the Sports row.</summary>
         public string[] SportsTeams { get; set; } = new string[0];
+
+        /// <summary>Weather chip for this TV. Off when WeatherEnabled is false or both coordinates are 0.</summary>
+        public bool WeatherEnabled { get; set; }
+        public double WeatherLatitude { get; set; }
+        public double WeatherLongitude { get; set; }
+        public bool WeatherFahrenheit { get; set; }
 
         /// <summary>Settings changed from the TV. Null until the TV saves its own; until then the server defaults apply.</summary>
         public TvPreferences Preferences { get; set; }

@@ -88,13 +88,28 @@ define([], function () {
             '  <div class="cf-field"><label>Emby user this TV acts as</label><select data-f="EmbyUserId">' + userOptions(state.EmbyUsers, values.EmbyUserId) + '</select></div>' +
             '  <div class="cf-field"><label>Emby app on this TV</label><select data-f="EmbyDeviceId">' + deviceOptions(state.Sessions, values.EmbyDeviceId, values.Duid) + '</select></div>' +
             '  <div class="cf-field"><label>Sports teams (comma separated)</label><textarea data-f="SportsTeams" placeholder="e.g. Maple Leafs, Blue Jays">' + esc((values.SportsTeams || []).join(', ')) + '</textarea></div>' +
+            '</div>' +
+            '<div class="cf-field" style="margin-top:.8em;"><label><input type="checkbox" data-f="WeatherEnabled"' + (values.WeatherEnabled ? ' checked' : '') + ' /> Show weather on this TV\u2019s Watch screen</label></div>' +
+            '<div class="cf-field"><label>Weather location (ZIP / postal code)</label>' +
+            '  <div style="display:flex;gap:.5em;align-items:center;flex-wrap:wrap;">' +
+            '    <input class="wx-zip" type="text" placeholder="e.g. 10001" style="max-width:9em;" />' +
+            '    <input class="wx-country" type="text" placeholder="US" maxlength="2" style="max-width:4em;" />' +
+            '    <button type="button" class="cf-btn" data-act="weather-zip">Find</button>' +
+            '    <button type="button" class="cf-btn" data-act="weather-geo">Use my location</button>' +
+            '  </div>' +
+            '  <div class="cf-hint wx-msg">Fills in the coordinates below. Weather is from Open-Meteo (free, no account).</div>' +
+            '</div>' +
+            '<div class="cf-grid">' +
+            '  <div class="cf-field"><label>Latitude</label><input data-f="WeatherLatitude" type="text" value="' + esc(values.WeatherLatitude ? String(values.WeatherLatitude) : '') + '" /></div>' +
+            '  <div class="cf-field"><label>Longitude</label><input data-f="WeatherLongitude" type="text" value="' + esc(values.WeatherLongitude ? String(values.WeatherLongitude) : '') + '" /></div>' +
+            '  <div class="cf-field"><label><input type="checkbox" data-f="WeatherFahrenheit"' + (values.WeatherFahrenheit ? ' checked' : '') + ' /> Show \u00b0F</label></div>' +
             '</div>';
     }
 
     function readFields(card) {
         var out = {};
         Array.prototype.forEach.call(card.querySelectorAll('[data-f]'), function (el) {
-            out[el.getAttribute('data-f')] = el.value;
+            out[el.getAttribute('data-f')] = el.type === 'checkbox' ? el.checked : el.value;
         });
         return out;
     }
@@ -200,10 +215,6 @@ define([], function () {
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
                 $('#cf' + k).value = s[k];
             });
-            $('#cfWeatherEnabled').checked = !!s.WeatherEnabled;
-            $('#cfWeatherFahrenheit').checked = !!s.WeatherFahrenheit;
-            $('#cfWeatherLatitude').value = s.WeatherLatitude || '';
-            $('#cfWeatherLongitude').value = s.WeatherLongitude || '';
             renderFallback();
         }
 
@@ -221,10 +232,6 @@ define([], function () {
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
                 s[k] = parseInt($('#cf' + k).value, 10) || 0;
             });
-            s.WeatherEnabled = $('#cfWeatherEnabled').checked;
-            s.WeatherFahrenheit = $('#cfWeatherFahrenheit').checked;
-            s.WeatherLatitude = parseFloat($('#cfWeatherLatitude').value) || 0;
-            s.WeatherLongitude = parseFloat($('#cfWeatherLongitude').value) || 0;
             return s;
         }
 
@@ -316,35 +323,6 @@ define([], function () {
                     show(smsg, 'Settings saved.', true);
                     return loadSeerrUsers(true).then(function () { renderSettings(); renderLinks(); });
                 }, function (err) { show(smsg, err.message, false); }).then(function () { loading(false); });
-            } else if (name === 'weather-geo') {
-                var gm = cf('weather-lookup-msg');
-                if (!navigator.geolocation) { show(gm, 'This browser has no location support.', false); return; }
-                show(gm, 'Asking this browser for its location…', true);
-                navigator.geolocation.getCurrentPosition(function (pos) {
-                    $('#cfWeatherLatitude').value = pos.coords.latitude.toFixed(4);
-                    $('#cfWeatherLongitude').value = pos.coords.longitude.toFixed(4);
-                    show(gm, 'Filled in your coordinates. Save settings to keep them.', true);
-                }, function () { show(gm, 'Could not get this browser\'s location.', false); });
-            } else if (name === 'weather-zip') {
-                var zm = cf('weather-lookup-msg');
-                var zip = $('#cfWeatherZip').value.trim();
-                var country = ($('#cfWeatherCountry').value.trim() || 'us').toLowerCase();
-                if (!zip) { show(zm, 'Enter a ZIP / postal code first.', false); return; }
-                show(zm, 'Looking up ' + zip + '…', true);
-                var wx = new XMLHttpRequest();
-                wx.open('GET', 'https://api.zippopotam.us/' + encodeURIComponent(country) + '/' + encodeURIComponent(zip), true);
-                wx.onload = function () {
-                    if (wx.status >= 200 && wx.status < 300) {
-                        try {
-                            var place = JSON.parse(wx.responseText).places[0];
-                            $('#cfWeatherLatitude').value = (+place.latitude).toFixed(4);
-                            $('#cfWeatherLongitude').value = (+place.longitude).toFixed(4);
-                            show(zm, 'Found ' + place['place name'] + (place['state abbreviation'] ? ', ' + place['state abbreviation'] : '') + '. Save settings to keep it.', true);
-                        } catch (e) { show(zm, 'Unexpected response from the lookup service.', false); }
-                    } else { show(zm, 'No match for that ZIP / postal code.', false); }
-                };
-                wx.onerror = function () { show(zm, 'Could not reach the lookup service.', false); };
-                wx.send();
             } else if (name === 'sync-links') {
                 var lmsg = cf('links-message');
                 loading(true);
@@ -393,6 +371,36 @@ define([], function () {
                 } else if (act === 'delete-tv') {
                     if (!window.confirm('Unpair this TV? Lobby on it will need to pair again.')) { return; }
                     call = api('POST', 'Lobby/Admin/Tvs/Delete', { Id: card.getAttribute('data-tv') });
+                 else if (act === 'weather-geo') {
+                    var gmsg = card.querySelector('.wx-msg');
+                    if (!navigator.geolocation) { show(gmsg, 'This browser has no location support.', false); return; }
+                    show(gmsg, 'Asking this browser for its location\u2026', true);
+                    navigator.geolocation.getCurrentPosition(function (pos) {
+                        card.querySelector('[data-f="WeatherLatitude"]').value = pos.coords.latitude.toFixed(4);
+                        card.querySelector('[data-f="WeatherLongitude"]').value = pos.coords.longitude.toFixed(4);
+                        show(gmsg, 'Filled in. Save this TV to keep it.', true);
+                    }, function () { show(gmsg, 'Could not get this browser\'s location.', false); });
+                    return;
+                } else if (act === 'weather-zip') {
+                    var zmsg = card.querySelector('.wx-msg');
+                    var zip = card.querySelector('.wx-zip').value.trim();
+                    var country = (card.querySelector('.wx-country').value.trim() || 'us').toLowerCase();
+                    if (!zip) { show(zmsg, 'Enter a ZIP / postal code first.', false); return; }
+                    show(zmsg, 'Looking up ' + zip + '\u2026', true);
+                    var zx = new XMLHttpRequest();
+                    zx.open('GET', 'https://api.zippopotam.us/' + encodeURIComponent(country) + '/' + encodeURIComponent(zip), true);
+                    zx.onload = function () {
+                        if (zx.status >= 200 && zx.status < 300) {
+                            try { var place = JSON.parse(zx.responseText).places[0];
+                                card.querySelector('[data-f="WeatherLatitude"]').value = (+place.latitude).toFixed(4);
+                                card.querySelector('[data-f="WeatherLongitude"]').value = (+place.longitude).toFixed(4);
+                                show(zmsg, 'Found ' + place['place name'] + (place['state abbreviation'] ? ', ' + place['state abbreviation'] : '') + '. Save this TV to keep it.', true);
+                            } catch (e) { show(zmsg, 'Unexpected response from the lookup service.', false); }
+                        } else { show(zmsg, 'No match for that ZIP / postal code.', false); }
+                    };
+                    zx.onerror = function () { show(zmsg, 'Could not reach the lookup service.', false); };
+                    zx.send();
+                    return;
                 }
                 if (call) {
                     call.then(function () {

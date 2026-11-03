@@ -172,13 +172,13 @@ namespace Lobby.Services
                 GeneratedUtc = DateTime.UtcNow.ToString("o"),
             };
 
-            if (config.WeatherEnabled && (config.WeatherLatitude != 0 || config.WeatherLongitude != 0))
+            if (tv.WeatherEnabled && (tv.WeatherLatitude != 0 || tv.WeatherLongitude != 0))
             {
                 response.Weather = new WeatherConfig
                 {
-                    Latitude = config.WeatherLatitude,
-                    Longitude = config.WeatherLongitude,
-                    Fahrenheit = config.WeatherFahrenheit,
+                    Latitude = tv.WeatherLatitude,
+                    Longitude = tv.WeatherLongitude,
+                    Fahrenheit = tv.WeatherFahrenheit,
                 };
             }
 
