@@ -15,6 +15,25 @@
         #lobbyConfigPage .cf-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.6em; letter-spacing: .15em; font-weight: 700; padding: .1em .5em; border-radius: 6px; background: rgba(82,181,75,.18); }
         #lobbyConfigPage .cf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .9em 1.2em; }
         #lobbyConfigPage .cf-field label { display: block; font-size: .85em; opacity: .75; margin-bottom: .3em; }
+        /* Keep checkbox controls beside their labels; Emby's global form styles can float/expand them. */
+        #lobbyConfigPage .cf-field label.cf-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: .5em;
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        #lobbyConfigPage .cf-field label.cf-toggle input[type="checkbox"] {
+            float: none !important;
+            position: static !important;
+            flex: 0 0 auto;
+            width: 1.1em;
+            height: 1.1em;
+            margin: 0 !important;
+            padding: 0;
+        }
         #lobbyConfigPage .cf-field input, #lobbyConfigPage .cf-field select, #lobbyConfigPage .cf-field textarea,
         #lobbyConfigPage .cf-inline-select {
             width: 100%; box-sizing: border-box; font: inherit; color: inherit; padding: .5em .6em;
