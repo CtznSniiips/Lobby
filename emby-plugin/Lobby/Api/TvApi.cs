@@ -127,6 +127,13 @@ namespace Lobby.Api
         public int TmdbId { get; set; }
     }
 
+    [Route("/Lobby/Search", "GET", Summary = "Searches the Emby library and Seerr. Returns rows: in your library (play) and from Seerr (request).")]
+    [Unauthenticated]
+    public class SearchTitles : IReturn<HomeResponse>
+    {
+        public string Query { get; set; }
+    }
+
     // ---- Responses ------------------------------------------------------------------------------
 
     public class TitlePerson
@@ -366,6 +373,12 @@ namespace Lobby.Api
                     })
                     .ToList(),
             };
+        }
+
+        public async Task<object> Get(SearchTitles request)
+        {
+            var tv = Authenticate();
+            return await Runtime.Home.Search(tv, request.Query, CancellationToken.None).ConfigureAwait(false);
         }
 
         public async Task<object> Get(GetRequesters request)

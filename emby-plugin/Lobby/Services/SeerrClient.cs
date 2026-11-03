@@ -209,6 +209,19 @@ namespace Lobby.Services
             return results;
         }
 
+        public async Task<List<SeerrMedia>> Search(string query, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return new List<SeerrMedia>();
+            }
+
+            var page = await Send<SeerrDiscoverPage>(HttpMethod.Get, "/api/v1/search?query=" + Uri.EscapeDataString(query) + "&page=1", null, ct).ConfigureAwait(false);
+            return (page?.Results ?? new List<SeerrMedia>())
+                .Where(m => m.MediaType == "movie" || m.MediaType == "tv")
+                .ToList();
+        }
+
         /// <summary>Tagline, runtime and genres for one title. Cached, since they rarely change.</summary>
         public async Task<SeerrDetails> Details(string mediaType, int tmdbId, CancellationToken ct)
         {

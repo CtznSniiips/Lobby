@@ -746,6 +746,82 @@ namespace Lobby.Services
             return result?.Items ?? new BaseItemDto[0];
         }
 
+        public async Task<HomeResponse> Search(TvDevice tv, string query, CancellationToken ct)
+        {
+            var user = GetUser(tv);
+            var response = new HomeResponse
+            {
+                TvName = tv.Name,
+                UserName = user.Name,
+                EmbyUserId = user.Id.ToString("N"),
+                RequestsEnabled = Plugin.Instance.Configuration.RequestsEnabled && _seerr.IsConfigured,
+                GeneratedUtc = DateTime.UtcNow.ToString("o"),
+            };
+            query = (query ?? string.Empty).Trim();
+            if (query.Length == 0)
+            {
+                return response;
+            }
+
+            var dtoOptions = new DtoOptions(true)
+            {
+                EnableImages = true,
+                ImageTypeLimit = 1,
+                EnableUserData = true,
+            };
+
+            var items = _library.GetItemList(new InternalItemsQuery(user)
+            {
+                SearchTerm = query,
+                Recursive = true,
+                IncludeItemTypes = new[] { "Movie", "Series" },
+                Limit = 24,
+                DtoOptions = dtoOptions,
+            });
+
+            var libraryRow = new HomeRow { Id = "search-library", Title = "In your library", Layout = "poster" };
+            var tmdbInLibrary = new HashSet<string>();
+            foreach (var d in _dto.GetBaseItemDtos(items, dtoOptions, user))
+            {
+                libraryRow.Items.Add(MapLibraryItem(d, d.UserData?.PlaybackPositionTicks > 0 ? PlayAction.Resume : PlayAction.Play));
+                var tmdb = TmdbId(d.ProviderIds);
+                if (tmdb != null)
+                {
+                    tmdbInLibrary.Add(tmdb);
+                }
+            }
+
+            if (libraryRow.Items.Count > 0)
+            {
+                response.Rows.Add(libraryRow);
+            }
+
+            if (_seerr.IsConfigured)
+            {
+                try
+                {
+                    var found = await _seerr.Search(query, ct).ConfigureAwait(false);
+                    var seerrRow = new HomeRow { Id = "search-seerr", Title = "Request from Seerr", Layout = "poster" };
+                    foreach (var m in found.Where(m => !tmdbInLibrary.Contains(m.Id.ToString(CultureInfo.InvariantCulture))).Take(24))
+                    {
+                        seerrRow.Items.Add(MapSeerr(m));
+                    }
+
+                    if (seerrRow.Items.Count > 0)
+                    {
+                        response.Rows.Add(seerrRow);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.ErrorException("search: Seerr lookup failed", ex);
+                    response.Warnings.Add("Seerr search is unavailable");
+                }
+            }
+
+            return response;
+        }
+
         private void AddRow(HomeResponse response, Dictionary<string, HomeRow> built, string id, string layout, Func<List<HomeItem>> build)
         {
             var title = TvSettings.FindRow(id).Title;
