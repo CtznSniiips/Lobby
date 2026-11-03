@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -99,6 +100,11 @@ namespace Lobby.Api
 
         /// <summary>Comma or newline separated.</summary>
         public string SportsTeams { get; set; }
+
+        public bool WeatherEnabled { get; set; }
+        public string WeatherLatitude { get; set; }
+        public string WeatherLongitude { get; set; }
+        public bool WeatherFahrenheit { get; set; }
     }
 
     public class SettingsView
@@ -117,6 +123,7 @@ namespace Lobby.Api
         public int RememberRequesterMinutes { get; set; }
         public bool ShowContinueWatching { get; set; }
         public bool ShowNextUp { get; set; }
+        public bool ShowRecentlyAdded { get; set; }
         public bool ShowLiveNow { get; set; }
         public bool ShowSports { get; set; }
         public bool ShowSeerrTrending { get; set; }
@@ -133,6 +140,10 @@ namespace Lobby.Api
         public string EmbyDeviceId { get; set; }
         public string Duid { get; set; }
         public string[] SportsTeams { get; set; }
+        public bool WeatherEnabled { get; set; }
+        public double WeatherLatitude { get; set; }
+        public double WeatherLongitude { get; set; }
+        public bool WeatherFahrenheit { get; set; }
         public string PairedUtc { get; set; }
         public string LastSeenUtc { get; set; }
 
@@ -255,6 +266,10 @@ namespace Lobby.Api
                         EmbyDeviceId = t.EmbyDeviceId,
                         Duid = t.Duid,
                         SportsTeams = t.SportsTeams ?? new string[0],
+                        WeatherEnabled = t.WeatherEnabled,
+                        WeatherLatitude = t.WeatherLatitude,
+                        WeatherLongitude = t.WeatherLongitude,
+                        WeatherFahrenheit = t.WeatherFahrenheit,
                         PairedUtc = t.PairedUtc,
                         LastSeenUtc = t.LastSeenUtc,
                         EmbyAppControllable = tvSession != null && tvSession.IsActive && tvSession.SupportsRemoteControl,
@@ -324,6 +339,7 @@ namespace Lobby.Api
                 c.RememberRequesterMinutes = Clamp(request.RememberRequesterMinutes, 0, 1440, 30);
                 c.ShowContinueWatching = request.ShowContinueWatching;
                 c.ShowNextUp = request.ShowNextUp;
+                c.ShowRecentlyAdded = request.ShowRecentlyAdded;
                 c.ShowLiveNow = request.ShowLiveNow;
                 c.ShowSports = request.ShowSports;
                 c.ShowSeerrTrending = request.ShowSeerrTrending;
@@ -420,10 +436,14 @@ namespace Lobby.Api
                 tv.EmbyUserId = TvRegistry.NormalizeId(request.EmbyUserId);
                 tv.EmbyDeviceId = string.IsNullOrWhiteSpace(request.EmbyDeviceId) ? null : request.EmbyDeviceId.Trim();
                 tv.SportsTeams = TvRegistry.CleanTeams(new[] { request.SportsTeams });
+                tv.WeatherEnabled = request.WeatherEnabled;
+                tv.WeatherFahrenheit = request.WeatherFahrenheit;
+                tv.WeatherLatitude = double.TryParse(request.WeatherLatitude, NumberStyles.Float, CultureInfo.InvariantCulture, out var wlat) ? wlat : 0;
+                tv.WeatherLongitude = double.TryParse(request.WeatherLongitude, NumberStyles.Float, CultureInfo.InvariantCulture, out var wlon) ? wlon : 0;
                 updated = tv;
             });
 
-            return new TvView { Id = updated.Id, Name = updated.Name, EmbyUserId = updated.EmbyUserId, EmbyDeviceId = updated.EmbyDeviceId, Duid = updated.Duid, SportsTeams = updated.SportsTeams };
+            return new TvView { Id = updated.Id, Name = updated.Name, EmbyUserId = updated.EmbyUserId, EmbyDeviceId = updated.EmbyDeviceId, Duid = updated.Duid, SportsTeams = updated.SportsTeams, WeatherEnabled = updated.WeatherEnabled, WeatherLatitude = updated.WeatherLatitude, WeatherLongitude = updated.WeatherLongitude, WeatherFahrenheit = updated.WeatherFahrenheit };
         }
 
         public object Post(ResetTvSettingsAdmin request)
@@ -467,6 +487,7 @@ namespace Lobby.Api
                 RememberRequesterMinutes = c.RememberRequesterMinutes,
                 ShowContinueWatching = c.ShowContinueWatching,
                 ShowNextUp = c.ShowNextUp,
+                ShowRecentlyAdded = c.ShowRecentlyAdded,
                 ShowLiveNow = c.ShowLiveNow,
                 ShowSports = c.ShowSports,
                 ShowSeerrTrending = c.ShowSeerrTrending,
