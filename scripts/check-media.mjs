@@ -766,6 +766,30 @@ async function main() {
       await current.close(); current = null;
     });
 
+    await run('Weather chip on the Watch hero', async () => {
+      api = freshApi(); await page({ paired: true, look: 'watch' });
+      const icons = await current.evaluate(() => ({
+        clearDay: ShoreQA.weatherIcon(0, true), clearNight: ShoreQA.weatherIcon(0, false),
+        partly: ShoreQA.weatherIcon(2, true), cloud: ShoreQA.weatherIcon(3, true),
+        fog: ShoreQA.weatherIcon(45, true), drizzle: ShoreQA.weatherIcon(53, true),
+        rain: ShoreQA.weatherIcon(65, true), showers: ShoreQA.weatherIcon(81, true),
+        snow: ShoreQA.weatherIcon(73, true), storm: ShoreQA.weatherIcon(95, true)
+      }));
+      check('weather codes map to the right icons', icons.clearDay === 'wx-sun' && icons.clearNight === 'wx-moon'
+        && icons.partly === 'wx-partly' && icons.cloud === 'wx-cloud' && icons.fog === 'wx-fog'
+        && icons.drizzle === 'wx-rain' && icons.rain === 'wx-rain' && icons.showers === 'wx-rain'
+        && icons.snow === 'wx-snow' && icons.storm === 'wx-storm', icons);
+      check('no chip before any weather arrives', await current.locator('#wTop .wt-wx').count() === 0);
+      await current.evaluate(() => ShoreQA.applyWeather({ temp: 14, code: 61, day: true }));
+      await until(() => document.querySelectorAll('#wTop .wt-wx').length === 1);
+      check('the chip shows the temperature by the clock', (await current.locator('#wTop .wt-temp').textContent()) === '14\u00b0'
+        && await current.locator('#wTop .wt-wx .ico').count() === 1);
+      await current.evaluate(() => ShoreQA.applyWeather(null));
+      await until(() => document.querySelectorAll('#wTop .wt-wx').length === 0);
+      check('clearing weather removes the chip', true);
+      await current.close(); current = null;
+    });
+
     await run('Cached rows show at once and refresh on return', async () => {
       api = freshApi(); api.hidden = ['nextup'];
       await page({ paired: true, cacheHome: { Rows: [{ Id: 'cached', Title: 'From cache', Layout: 'landscape', Items: [{ Id: '1', Kind: 'movie', Title: 'Old', PlayItemId: '1' }] }] }, staleMs: 50, waitRows: false });

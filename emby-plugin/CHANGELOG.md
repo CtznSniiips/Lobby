@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Optional **weather** on the Watch home screen: set a latitude/longitude (and °C/°F) on the plugin page and the TV shows a small conditions icon and temperature next to the clock. Data is fetched by the TV from Open-Meteo (free, no account); nothing is sent when it's off or unset.
+
 ## 0.4.0
 
 - New **Recently Added** home row: the newest movies and series added to the library (excluding what's already in Continue Watching). Hidden by nothing by default; toggle it under the plugin's row switches or per-TV in Settings → Emby & Seerr, where it also reorders like any other row.

@@ -45,6 +45,10 @@ namespace Lobby.Configuration
         public bool ShowSeerrTrending { get; set; } = true;
         public bool ShowSeerrPopularMovies { get; set; } = true;
         public bool ShowSeerrPopularShows { get; set; } = true;
+        public bool WeatherEnabled { get; set; }
+        public double WeatherLatitude { get; set; }
+        public double WeatherLongitude { get; set; }
+        public bool WeatherFahrenheit { get; set; }
 
         /// <summary>Paired TVs.</summary>
         public TvDevice[] Tvs { get; set; } = new TvDevice[0];

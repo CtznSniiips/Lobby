@@ -105,6 +105,16 @@ namespace Lobby.Services
 
         /// <summary>Non-fatal problems, e.g. Seerr unreachable. The rest of the home screen still works.</summary>
         public List<string> Warnings { get; set; } = new List<string>();
+
+        /// <summary>Weather location for the TV to fetch and show, or null when off/unset.</summary>
+        public WeatherConfig Weather { get; set; }
+    }
+
+    public class WeatherConfig
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public bool Fahrenheit { get; set; }
     }
 
     /// <summary>Builds the rows for a TV's home screen.</summary>
@@ -161,6 +171,16 @@ namespace Lobby.Services
                 RequestsEnabled = config.RequestsEnabled && _seerr.IsConfigured,
                 GeneratedUtc = DateTime.UtcNow.ToString("o"),
             };
+
+            if (config.WeatherEnabled && (config.WeatherLatitude != 0 || config.WeatherLongitude != 0))
+            {
+                response.Weather = new WeatherConfig
+                {
+                    Latitude = config.WeatherLatitude,
+                    Longitude = config.WeatherLongitude,
+                    Fahrenheit = config.WeatherFahrenheit,
+                };
+            }
 
             var dtoOptions = new DtoOptions(true)
             {

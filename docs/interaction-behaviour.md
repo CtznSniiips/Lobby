@@ -1,4 +1,4 @@
-# Interaction behaviour — 0.9.5
+# Interaction behaviour — 0.9.6
 
 ## Home
 
@@ -96,7 +96,7 @@ Nothing changes until the TV is paired with the Lobby Emby plugin. An unpaired H
 
 **Watch layout.** Settings → Layout → Watch. A newly paired TV switches to it. Until the TV is paired and the server has something to show, Watch looks and behaves like Dock, and the Layout page says why.
 
-- Top: a rail on the left (Art Mode, All apps, Settings), the date and time on the right, and a featured title over its backdrop: a greeting, the title's tagline as the headline (its name when it has none), two lines of overview, a button named for the action (Resume, Play, Request, Watch live) with the reason and details beside it, and the title's logo, or its name, on the right. Dots show which of up to five featured titles is in view.
+- Top: a rail on the left (Art Mode, All apps, Settings), the date and time on the right (with a small weather icon and temperature beside them when a location is set on the plugin page), and a featured title over its backdrop: a greeting, the title's tagline as the headline (its name when it has none), two lines of overview, a button named for the action (Resume, Play, Request, Watch live) with the reason and details beside it, and the title's logo, or its name, on the right. Dots show which of up to five featured titles is in view.
 - The featured mix comes from the server. Games for the first two teams in this TV's Your Teams list come first when they're on now or start within the hour, headed by the matchup with the channel logo (or league) beside it and Watch live or Watch channel on the button; a game without artwork shows over the plain background. Then the title being watched most recently, the newest library additions not yet watched, and the top of Seerr's Trending list, alternating. Titles without background art are left out. Featured titles don't appear again in the rows. If the server sends no featured titles (an older plugin, or nothing with background art), the TV features the first title of Continue Watching and of Next Up and the top three of Trending that have artwork, and takes them out of their rows.
 - Home starts on the featured button. Left and Right step through the featured titles (Right wraps); Left from the first one reaches the rail. Featured titles change every nine seconds while Home is in view, wherever focus is; while a card has focus only the background changes. Up and Down move along the rail, and Down from Settings enters the app dock; Right or Back leaves it.
 - Below are the rows, one per band. Continue Watching and Next Up merge into one Continue Watching row: titles in progress first, then next episodes. Your Teams has its own row. Library and Live TV cards show their title and detail line only while focused; Seerr rows are artwork tiles. The focused card has a thin outline.
