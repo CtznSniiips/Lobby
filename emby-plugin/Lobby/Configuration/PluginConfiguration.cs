@@ -39,6 +39,7 @@ namespace Lobby.Configuration
 
         public bool ShowContinueWatching { get; set; } = true;
         public bool ShowNextUp { get; set; } = true;
+        public bool ShowRecentlyAdded { get; set; } = true;
         public bool ShowLiveNow { get; set; } = true;
         public bool ShowSports { get; set; } = true;
         public bool ShowSeerrTrending { get; set; } = true;

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- New **Recently Added** home row: the newest movies and series added to the library (excluding what's already in Continue Watching). Hidden by nothing by default; toggle it under the plugin's row switches or per-TV in Settings → Emby & Seerr, where it also reorders like any other row.
+
 ## 0.3.0
 
 - `GET /Lobby/Details`: a Seerr title's tagline, overview, genres, runtime or seasons, rating, directors, writers, creators, networks and top-billed cast (with role and photo), for the TV's request screen. Uses the same 12-hour cache as featured taglines.
