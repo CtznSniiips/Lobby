@@ -89,7 +89,7 @@ define([], function () {
             '  <div class="cf-field"><label>Emby app on this TV</label><select data-f="EmbyDeviceId">' + deviceOptions(state.Sessions, values.EmbyDeviceId, values.Duid) + '</select></div>' +
             '  <div class="cf-field"><label>Sports teams (comma separated)</label><textarea data-f="SportsTeams" placeholder="e.g. Maple Leafs, Blue Jays">' + esc((values.SportsTeams || []).join(', ')) + '</textarea></div>' +
             '</div>' +
-            '<div class="cf-field" style="margin-top:.8em;"><label><input type="checkbox" data-f="WeatherEnabled"' + (values.WeatherEnabled ? ' checked' : '') + ' /> Show weather on this TV\u2019s Watch screen</label></div>' +
+            '<div class="cf-field" style="margin-top:.8em;"><label class="cf-toggle"><input type="checkbox" data-f="WeatherEnabled"' + (values.WeatherEnabled ? ' checked' : '') + ' /> Show weather on this TV\u2019s Watch screen</label></div>' +
             '<div class="cf-field"><label>Weather location (ZIP / postal code)</label>' +
             '  <div style="display:flex;gap:.5em;align-items:center;flex-wrap:wrap;">' +
             '    <input class="wx-zip" type="text" placeholder="e.g. 10001" style="max-width:9em;" />' +
@@ -102,8 +102,8 @@ define([], function () {
             '<div class="cf-grid">' +
             '  <div class="cf-field"><label>Latitude</label><input data-f="WeatherLatitude" type="text" value="' + esc(values.WeatherLatitude ? String(values.WeatherLatitude) : '') + '" /></div>' +
             '  <div class="cf-field"><label>Longitude</label><input data-f="WeatherLongitude" type="text" value="' + esc(values.WeatherLongitude ? String(values.WeatherLongitude) : '') + '" /></div>' +
-            '  <div class="cf-field"><label><input type="checkbox" data-f="WeatherFahrenheit"' + (values.WeatherFahrenheit ? ' checked' : '') + ' /> Show \u00b0F</label></div>' +
-            '</div>';
+            '</div>' +
+            '<div class="cf-field" style="margin-top:.8em;"><label class="cf-toggle"><input type="checkbox" data-f="WeatherFahrenheit"' + (values.WeatherFahrenheit ? ' checked' : '') + ' /> Show \u00b0F</label></div>';
     }
 
     function readFields(card) {
