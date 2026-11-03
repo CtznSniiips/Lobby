@@ -184,6 +184,33 @@
                         </div>
                     </div>
                 </div>
+                <h2 style="margin-top:1.6em;">Weather</h2>
+                <div class="cf-card">
+                    <div class="cf-field" style="margin-bottom:.4em;"><label><input type="checkbox" id="cfWeatherEnabled" /> Show a weather chip on the Watch home screen</label></div>
+                    <div class="cf-field">
+                        <label for="cfWeatherZip">Set location by ZIP / postal code</label>
+                        <div style="display:flex;gap:.5em;align-items:center;flex-wrap:wrap;">
+                            <input id="cfWeatherZip" type="text" placeholder="e.g. 10001" style="max-width:9em;" />
+                            <input id="cfWeatherCountry" type="text" placeholder="US" maxlength="2" style="max-width:4em;" />
+                            <button type="button" class="cf-btn" data-cf="weather-zip">Find</button>
+                            <button type="button" class="cf-btn" data-cf="weather-geo">Use my location</button>
+                        </div>
+                        <div class="cf-hint" data-cf="weather-lookup-msg">Fills in the latitude/longitude below. “Use my location” asks this browser for permission.</div>
+                    </div>
+                    <div class="cf-grid">
+                        <div class="cf-field">
+                            <label for="cfWeatherLatitude">Latitude</label>
+                            <input id="cfWeatherLatitude" type="number" step="any" min="-90" max="90" />
+                            <div class="cf-hint">Your location's latitude, e.g. 40.71. Weather comes from Open-Meteo (free, no account).</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfWeatherLongitude">Longitude</label>
+                            <input id="cfWeatherLongitude" type="number" step="any" min="-180" max="180" />
+                            <div class="cf-hint">Your location's longitude, e.g. -74.01.</div>
+                        </div>
+                        <div class="cf-field"><label><input type="checkbox" id="cfWeatherFahrenheit" /> Show temperature in &deg;F</label></div>
+                    </div>
+                </div>
                 <div class="cf-actions">
                     <button type="button" class="cf-btn cf-btn-primary" data-cf="save-settings">Save settings</button>
                 </div>

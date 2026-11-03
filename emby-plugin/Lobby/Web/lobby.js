@@ -200,6 +200,10 @@ define([], function () {
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
                 $('#cf' + k).value = s[k];
             });
+            $('#cfWeatherEnabled').checked = !!s.WeatherEnabled;
+            $('#cfWeatherFahrenheit').checked = !!s.WeatherFahrenheit;
+            $('#cfWeatherLatitude').value = s.WeatherLatitude || '';
+            $('#cfWeatherLongitude').value = s.WeatherLongitude || '';
             renderFallback();
         }
 
@@ -217,6 +221,10 @@ define([], function () {
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
                 s[k] = parseInt($('#cf' + k).value, 10) || 0;
             });
+            s.WeatherEnabled = $('#cfWeatherEnabled').checked;
+            s.WeatherFahrenheit = $('#cfWeatherFahrenheit').checked;
+            s.WeatherLatitude = parseFloat($('#cfWeatherLatitude').value) || 0;
+            s.WeatherLongitude = parseFloat($('#cfWeatherLongitude').value) || 0;
             return s;
         }
 
@@ -308,6 +316,35 @@ define([], function () {
                     show(smsg, 'Settings saved.', true);
                     return loadSeerrUsers(true).then(function () { renderSettings(); renderLinks(); });
                 }, function (err) { show(smsg, err.message, false); }).then(function () { loading(false); });
+            } else if (name === 'weather-geo') {
+                var gm = cf('weather-lookup-msg');
+                if (!navigator.geolocation) { show(gm, 'This browser has no location support.', false); return; }
+                show(gm, 'Asking this browser for its location…', true);
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    $('#cfWeatherLatitude').value = pos.coords.latitude.toFixed(4);
+                    $('#cfWeatherLongitude').value = pos.coords.longitude.toFixed(4);
+                    show(gm, 'Filled in your coordinates. Save settings to keep them.', true);
+                }, function () { show(gm, 'Could not get this browser\'s location.', false); });
+            } else if (name === 'weather-zip') {
+                var zm = cf('weather-lookup-msg');
+                var zip = $('#cfWeatherZip').value.trim();
+                var country = ($('#cfWeatherCountry').value.trim() || 'us').toLowerCase();
+                if (!zip) { show(zm, 'Enter a ZIP / postal code first.', false); return; }
+                show(zm, 'Looking up ' + zip + '…', true);
+                var wx = new XMLHttpRequest();
+                wx.open('GET', 'https://api.zippopotam.us/' + encodeURIComponent(country) + '/' + encodeURIComponent(zip), true);
+                wx.onload = function () {
+                    if (wx.status >= 200 && wx.status < 300) {
+                        try {
+                            var place = JSON.parse(wx.responseText).places[0];
+                            $('#cfWeatherLatitude').value = (+place.latitude).toFixed(4);
+                            $('#cfWeatherLongitude').value = (+place.longitude).toFixed(4);
+                            show(zm, 'Found ' + place['place name'] + (place['state abbreviation'] ? ', ' + place['state abbreviation'] : '') + '. Save settings to keep it.', true);
+                        } catch (e) { show(zm, 'Unexpected response from the lookup service.', false); }
+                    } else { show(zm, 'No match for that ZIP / postal code.', false); }
+                };
+                wx.onerror = function () { show(zm, 'Could not reach the lookup service.', false); };
+                wx.send();
             } else if (name === 'sync-links') {
                 var lmsg = cf('links-message');
                 loading(true);

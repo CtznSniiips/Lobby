@@ -75,6 +75,14 @@
     hdmi: '<path d="M3.5 8.5h17v4.2l-2.6 3.3H6.1l-2.6-3.3Z"/><path d="M7.5 11.6h9"/>',
     soundbar: '<rect x="2" y="9" width="20" height="6.5" rx="2.2"/><circle cx="6.5" cy="12.25" r="1.4"/><circle cx="17.5" cy="12.25" r="1.4"/><path d="M10.5 12.25h3"/>',
     gamepad: '<path d="M7.2 8h9.6a4 4 0 0 1 3.9 3.2l.8 4.1a2.4 2.4 0 0 1-4.1 2.1L15.6 16H8.4l-1.8 1.4a2.4 2.4 0 0 1-4.1-2.1l.8-4.1A4 4 0 0 1 7.2 8Z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="15.5" cy="11.6" r=".6"/><circle cx="17.3" cy="13.4" r=".6"/>',
+    'wx-sun': '<circle cx="12" cy="12" r="4.3"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M18.7 5.3l-1.5 1.5M6.8 17.2l-1.5 1.5"/>',
+    'wx-moon': '<path d="M20 14.4A8 8 0 1 1 9.6 4a6.5 6.5 0 0 0 10.4 10.4Z"/>',
+    'wx-cloud': '<path d="M7 18h10a4 4 0 0 0 .3-8A5.5 5.5 0 0 0 6.5 11 3.5 3.5 0 0 0 7 18Z"/>',
+    'wx-partly': '<circle cx="8" cy="8" r="3"/><path d="M8 2.6v1.6M3.4 8H5M4.5 4.5l1.1 1.1M11.5 8H13M11.4 4.5l-1.1 1.1"/><path d="M11 19h7a3 3 0 0 0 .2-6A4 4 0 0 0 10.6 14 2.6 2.6 0 0 0 11 19Z"/>',
+    'wx-fog': '<path d="M4 9h16M3 12.5h18M5 16h14"/>',
+    'wx-rain': '<path d="M7 14h10a3.5 3.5 0 0 0 .3-7A5 5 0 0 0 7 9.5 3.2 3.2 0 0 0 7 14Z"/><path d="M9 16.5l-1 2.5M12.5 16.5l-1 2.5M16 16.5l-1 2.5"/>',
+    'wx-snow': '<path d="M7 14h10a3.5 3.5 0 0 0 .3-7A5 5 0 0 0 7 9.5 3.2 3.2 0 0 0 7 14Z"/><path d="M9 18h.01M12.3 19.6h.01M15.6 18h.01M10.6 20.8h.01M14 21h.01"/>',
+    'wx-storm': '<path d="M7 13h10a3.5 3.5 0 0 0 .3-7A5 5 0 0 0 7 8.5 3.2 3.2 0 0 0 7 13Z"/><path d="M13 14l-3 4h3l-1 3"/>',
     warn: '<path d="M12 4 2.8 19.5h18.4Z"/><path d="M12 10v4.5M12 17.3v.1"/>'
   };
 
@@ -96,7 +104,7 @@
   var INPUTS = [];
   var W = { i: 0, timer: 0, src: null, back: 0, pre: null, preImg: null, band: 0, side: 0 };
   var M = { cfg: null, data: null, rows: [], loading: false, error: null, at: 0, request: 0, unauthorized: false,
-    featured: [], cols: {}, row: 0, settings: null, settingsLoading: false, settingsError: null, saving: null, note: null, timer: 0 };
+    featured: [], cols: {}, row: 0, settings: null, settingsLoading: false, settingsError: null, saving: null, note: null, timer: 0, weather: null, weatherCfg: null };
   var MEDIA_KINDS = ['movie', 'episode', 'series', 'program', 'discover'];
   var REASON_NAMES = { game: 'Your team', resume: 'Continue watching', nextup: 'Up next', 'new': 'New in your library', trending: 'Trending' };
   var STATUS_NAMES = { available: 'Available', partial: 'Partly available', processing: 'Processing', requested: 'Requested' };
@@ -125,6 +133,7 @@
   /* Rows and featured titles always change together. */
   function setHome(data) {
     M.rows = data ? cleanRows(data) : []; M.featured = data ? cleanFeatured(data) : [];
+    M.weatherCfg = cleanWeather(data); refreshWeather();
     if (!M.featured.length) pickFeatured();
     W.i = clamp(W.i, 0, Math.max(0, M.featured.length - 1));
   }
@@ -1906,6 +1915,38 @@
   }
   function greeting() { var h = new Date().getHours(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
   function wDateText() { var d = new Date(); return DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate(); }
+  var weatherTimer = 0;
+  function cleanWeather(data) { var w = data && data.Weather; if (!w || typeof w.Latitude !== 'number' || typeof w.Longitude !== 'number') return null; return { lat: w.Latitude, lon: w.Longitude, f: !!w.Fahrenheit }; }
+  function weatherUrl(c) { return 'https://api.open-meteo.com/v1/forecast?latitude=' + encodeURIComponent(c.lat) + '&longitude=' + encodeURIComponent(c.lon) + '&current=temperature_2m,weather_code,is_day&temperature_unit=' + (c.f ? 'fahrenheit' : 'celsius'); }
+  function weatherIcon(code, day) {
+    if (code === 0) return day ? 'wx-sun' : 'wx-moon';
+    if (code === 1 || code === 2) return day ? 'wx-partly' : 'wx-cloud';
+    if (code === 3) return 'wx-cloud';
+    if (code === 45 || code === 48) return 'wx-fog';
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'wx-snow';
+    if (code >= 95) return 'wx-storm';
+    if (code >= 51 && code <= 82) return 'wx-rain';
+    return 'wx-cloud';
+  }
+  function applyWeather(w) { M.weather = w; if (layoutNow() === 'watch') render(); }
+  function refreshWeather() {
+    clearTimeout(weatherTimer); weatherTimer = 0;
+    var c = M.weatherCfg;
+    if (!c) { if (M.weather) applyWeather(null); return; }
+    if (document.hidden) return;
+    var xhr = new XMLHttpRequest();
+    try { xhr.open('GET', weatherUrl(c), true); } catch (e) { return; }
+    xhr.timeout = 10000;
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { var cur = JSON.parse(xhr.responseText).current;
+          if (cur && typeof cur.temperature_2m === 'number') applyWeather({ temp: Math.round(cur.temperature_2m), code: cur.weather_code | 0, day: cur.is_day !== 0 });
+        } catch (e) {}
+      }
+    };
+    try { xhr.send(); } catch (e) {}
+    weatherTimer = setTimeout(refreshWeather, 1800000);
+  }
   function wTop(f) { if (M.featured.length) f.zone = 'whero'; else if (wBands().length) wEnterBand(f, wBands(), 0, 0); else wRail(f); }
   function wDock(f) { var n = dockItems().length; if (n) { f.zone = 'wapps'; f.a = clamp(f.a || 0, 0, n - 1); } }
   /* The Watch dock: Home apps, then the TV's HDMI inputs. */
@@ -2165,7 +2206,7 @@
       if (zone === 'wband') { row = bands[fb].rows[f.s]; focusItem = row ? row.items[mediaCol(row).i] : null; }
     }
     it = focusItem || M.featured[W.i] || null;
-    setHTML(wTopEl, '<span>' + esc(wDateText()) + '</span><span class="wt-time">' + esc(clockText() + (new Date().getHours() < 12 ? ' AM' : ' PM')) + '</span>');
+    setHTML(wTopEl, (M.weather ? '<span class="wt-wx">' + icon(weatherIcon(M.weather.code, M.weather.day)) + '<span class="wt-temp">' + M.weather.temp + '\u00b0</span></span>' : '') + '<span>' + esc(wDateText()) + '</span><span class="wt-time">' + esc(clockText() + (new Date().getHours() < 12 ? ' AM' : ' PM')) + '</span>');
     watchEl.className = 'watch is-on' + (focusItem ? ' is-browsing' : '') + (shift > 0 ? ' is-scrolled' : '');
     renderWatchRail(zone, live);
     renderWatchHero(zone, live, it, !!focusItem, shift);
@@ -3021,17 +3062,17 @@
   window.addEventListener('focus', function () { release(); focusStage(); after(); updateClock(); });
   document.addEventListener('visibilitychange', function () {
     heldKeys = {};
-    if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); clearTimeout(M.timer); clearTimeout(W.timer); W.timer = 0; clearTimeout(saverTimer); saverTimer = 0; }
+    if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); clearTimeout(M.timer); clearTimeout(W.timer); W.timer = 0; clearTimeout(saverTimer); saverTimer = 0; clearTimeout(weatherTimer); weatherTimer = 0; }
     else {
       release();
       refreshMedia(false);
       refreshInputs();
       if (S.c.bg === 'photo' && !S.pending && !S.previewBundle && (!committedBundle || S.bundleKey !== bundleKey(S.c))) setLook({}, { transient: true, startup: true });
-      after(); updateClock(); focusStage(); armSaver();
+      after(); updateClock(); focusStage(); armSaver(); refreshWeather();
     }
   });
   window.addEventListener('resize', fit);
-  QA.fireSaver = fireSaver; QA.vibrant = wVibrant; QA.saverMs = saverMs;
+  QA.fireSaver = fireSaver; QA.vibrant = wVibrant; QA.saverMs = saverMs; QA.weatherIcon = weatherIcon; QA.applyWeather = applyWeather;
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
   var NAV = { left: 'left', right: 'right', up: 'up', down: 'down', ok: 'ok', enter: 'ok', back: 'back', escape: 'back' };
