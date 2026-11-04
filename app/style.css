@@ -805,7 +805,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wd{width:10px;height:10px;margin-left:12px;border-radius:5px;background:rgba(255,255,255,.4);transition:width var(--t) var(--ease),background 140ms linear;cursor:pointer}
 .wd.is-on{width:28px;background:#fff}
 .w-top{position:absolute;right:72px;top:58px;display:flex;font-size:26px;line-height:36px;font-weight:500;color:var(--soft);text-shadow:var(--glow)}
-.wt-wx{display:inline-flex;align-items:center;margin-right:22px}
+.wt-wx{display:inline-flex;align-items:center;margin-left:28px}
 .wt-wx .ico{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-right:9px}
 .wt-temp{font-variant-numeric:tabular-nums}
 .wt-time{margin-left:28px;color:var(--ink)}

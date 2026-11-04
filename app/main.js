@@ -2206,7 +2206,7 @@
       if (zone === 'wband') { row = bands[fb].rows[f.s]; focusItem = row ? row.items[mediaCol(row).i] : null; }
     }
     it = focusItem || M.featured[W.i] || null;
-    setHTML(wTopEl, (M.weather ? '<span class="wt-wx">' + icon(weatherIcon(M.weather.code, M.weather.day)) + '<span class="wt-temp">' + M.weather.temp + '\u00b0</span></span>' : '') + '<span>' + esc(wDateText()) + '</span><span class="wt-time">' + esc(clockText() + (new Date().getHours() < 12 ? ' AM' : ' PM')) + '</span>');
+    setHTML(wTopEl, '<span>' + esc(wDateText()) + '</span><span class="wt-time">' + esc(clockText() + (new Date().getHours() < 12 ? ' AM' : ' PM')) + '</span>' + (M.weather ? '<span class="wt-wx">' + icon(weatherIcon(M.weather.code, M.weather.day)) + '<span class="wt-temp">' + M.weather.temp + '\u00b0</span></span>' : ''));
     watchEl.className = 'watch is-on' + (focusItem ? ' is-browsing' : '') + (shift > 0 ? ' is-scrolled' : '');
     renderWatchRail(zone, live);
     renderWatchHero(zone, live, it, !!focusItem, shift);
