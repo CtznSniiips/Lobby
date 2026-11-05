@@ -40,7 +40,8 @@
   var SAVER_VALUES = [0, 2, 5, 10, 15, 30];
   var KEY = 'cleanframe.home.v1', storageOk = true, catalog = { loading: false, loaded: false, error: null, request: 0, revision: 0 };
   var QA = window.ShoreQA = { minuteMs: window.ShoreQA && window.ShoreQA.minuteMs || 60000, pollMs: window.ShoreQA && window.ShoreQA.pollMs || 3000, staleMs: window.ShoreQA && window.ShoreQA.staleMs || 30000,
-    featureMs: window.ShoreQA && window.ShoreQA.featureMs || 9000 };
+    featureMs: window.ShoreQA && window.ShoreQA.featureMs || 9000,
+    dismissHoldMs: window.ShoreQA && window.ShoreQA.dismissHoldMs || 600 };
   var FONTS = {
     manrope: { name: 'Manrope', family: 'Manrope', display: 600, ui: 500, clock: 500 },
     montreal: { name: 'Neue Montreal', family: 'Study Montreal', display: 300, ui: 400, clock: 300 },
@@ -102,7 +103,7 @@
      so an unpaired Home is unchanged. */
   var Media = window.LobbyMedia;
   var INPUTS = [];
-  var W = { i: 0, timer: 0, src: null, back: 0, pre: null, preImg: null, band: 0, side: 0 };
+  var W = { i: 0, timer: 0, src: null, back: 0, pre: null, preImg: null, band: 0, side: 0, okArming: null };
   var M = { cfg: null, data: null, rows: [], loading: false, error: null, at: 0, request: 0, unauthorized: false,
     featured: [], cols: {}, row: 0, settings: null, settingsLoading: false, settingsError: null, saving: null, note: null, timer: 0, weather: null, weatherCfg: null };
   var MEDIA_KINDS = ['movie', 'episode', 'series', 'program', 'discover'];
@@ -2046,6 +2047,62 @@
     else return;
     watchKey(t, 'ok');
   }
+  /* Continue Watching dismiss: hold OK on an in-progress card to clear its resume point. Only the saved
+     resume position is cleared on the server; the title's watched/unwatched status is left as it was. */
+  function wDismissTarget() {
+    var t = top();
+    if (!t || t.id !== 'home' || layoutNow() !== 'watch' || t.f.zone !== 'wband') return null;
+    var bands = wBands(), band = bands[t.f.b];
+    if (!band) return null;
+    var row = band.rows[t.f.s];
+    if (!row || row.id !== 'continue') return null;
+    var it = row.items[mediaCol(row).i];
+    return it && it.action === 'resume' && it.playId ? it : null;
+  }
+  var wOk = { timer: 0, item: null, fired: false };
+  function wStartOkHold() {
+    var it = wDismissTarget();
+    if (!it) return false;
+    wOk.item = it; wOk.fired = false; W.okArming = it.id; render();
+    wOk.timer = setTimeout(function () {
+      wOk.timer = 0; wOk.fired = true; W.okArming = null;
+      var item = wOk.item; wOk.item = null;
+      if (item) wDismiss(item);
+    }, QA.dismissHoldMs);
+    return true;
+  }
+  function wEndOkHold() {
+    if (!wOk.timer && !wOk.item && !wOk.fired && !W.okArming) return;
+    var fired = wOk.fired, item = wOk.item;
+    clearTimeout(wOk.timer); wOk.timer = 0; wOk.item = null; wOk.fired = false;
+    if (W.okArming) { W.okArming = null; render(); }
+    if (!fired && item) press('ok');
+  }
+  function wCancelOkHold() {
+    clearTimeout(wOk.timer); wOk.timer = 0; wOk.item = null; wOk.fired = false; W.okArming = null;
+  }
+  function wDismiss(it) {
+    if (!it || !it.playId) return;
+    var id = it.id, f;
+    M.rows.forEach(function (r) { r.items = r.items.filter(function (x) { return x.id !== id; }); });
+    M.rows = M.rows.filter(function (r) { return r.items.length > 0; });
+    var t = top();
+    if (t && t.id === 'home' && t.f.zone === 'wband') {
+      f = t.f;
+      var bands = wBands();
+      if (!bands.length) wTop(f);
+      else {
+        f.b = clamp(f.b, 0, bands.length - 1);
+        f.s = clamp(f.s, 0, bands[f.b].rows.length - 1);
+        var row = bands[f.b].rows[f.s], c = mediaCol(row);
+        c.i = clamp(c.i, 0, Math.max(0, row.items.length - 1));
+      }
+    }
+    render();
+    Media.dismissResume(it.playId, function (err) {
+      if (err) { S.note = 'Could not remove from Continue Watching.'; refreshMedia(true); }
+    });
+  }
   /* Featured titles change every few seconds while Home is in view, wherever focus is; while a card has
      focus only the background changes, and the top keeps describing the card. */
   function syncWatch() {
@@ -2120,7 +2177,9 @@
       meta = mediaMeta(it);
       html = '<p class="wi-greet">' + esc(greeting()) + '</p><h2 class="wi-head is-title">' + esc(it.title) + '</h2>'
         + (it.overview ? '<p class="wi-body">' + esc(it.overview) + '</p>' : '')
-        + '<div class="wi-act"><span class="wi-hint"><span class="remote-key">OK</span><span>' + esc(mediaVerb(it)) + '</span></span>' + (meta ? '<span class="wi-meta">' + esc(meta) + '</span>' : '') + '</div>';
+        + '<div class="wi-act"><span class="wi-hint"><span class="remote-key">OK</span><span>' + esc(mediaVerb(it)) + '</span></span>'
+        + (it.action === 'resume' && it.playId ? '<span class="wi-hint wi-hint-sub"><span class="remote-key">Hold OK</span><span>Remove</span></span>' : '')
+        + (meta ? '<span class="wi-meta">' + esc(meta) + '</span>' : '') + '</div>';
     } else {
       head = it.tagline || it.title; verb = mediaVerb(it);
       meta = [REASON_NAMES[it.reason] || '', it.kind === 'program' ? [it.channel, it.airing ? 'On now' : 'Starts ' + timeText(it.start)].join(' · ') : it.meta || mediaMeta(it)].filter(function (p) { return !!p; }).join(' · ');
@@ -2141,7 +2200,9 @@
   }
   function wCardHtml(it, row) {
     var style = wStyle(row), sub = mediaMeta(it);
-    return mediaCardHtml(it, row) + (style === 'card' ? '<span class="wc-label"><span class="wc-title">' + esc(it.title) + '</span>' + (sub ? '<span class="wc-sub">' + esc(sub) + '</span>' : '') + '</span>' : '');
+    return mediaCardHtml(it, row)
+      + (it.action === 'resume' && it.playId ? '<span class="wc-x" aria-hidden="true">×</span>' : '')
+      + (style === 'card' ? '<span class="wc-label"><span class="wc-title">' + esc(it.title) + '</span>' + (sub ? '<span class="wc-sub">' + esc(sub) + '</span>' : '') + '</span>' : '');
   }
   function renderWatchRow(el, row, b, s, width, focusRow, visible) {
     var style = wStyle(row), size = WG[style], c = mediaCol(row), win = wWindow(c, row.items.length, size, width), clip, trackEl;
@@ -2163,7 +2224,7 @@
         img.onerror = function () { this.className = 'is-missing'; };
         img.src = src;
       }
-      card.className = 'mc wc' + (isFocus ? ' is-focus' : '');
+      card.className = 'mc wc' + (isFocus ? ' is-focus' : '') + (item.action === 'resume' && item.playId ? ' wc-removable' : '') + (W.okArming === item.id ? ' is-arming' : '');
       card.style.width = size.w + 'px'; card.style.height = size.h + 'px';
       card.style.transform = 'translate3d(' + (i * size.pitch) + 'px,0,0)';
       card.style.visibility = i >= win.first - 1 && i <= win.first + win.vis ? '' : 'hidden';
@@ -3055,13 +3116,14 @@
     if (!k || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     ev.preventDefault();
     if (k === 'ok' || k === 'back') { if (ev.repeat || heldKeys[code]) return; heldKeys[code] = true; }
+    if (k === 'ok' && wStartOkHold()) return;
     press(k);
   });
-  document.addEventListener('keyup', function (ev) { delete heldKeys[ev.keyCode]; });
-  window.addEventListener('blur', function () { heldKeys = {}; });
+  document.addEventListener('keyup', function (ev) { if (KEYS[ev.keyCode] === 'ok') wEndOkHold(); delete heldKeys[ev.keyCode]; });
+  window.addEventListener('blur', function () { wCancelOkHold(); heldKeys = {}; });
   window.addEventListener('focus', function () { release(); focusStage(); after(); updateClock(); });
   document.addEventListener('visibilitychange', function () {
-    heldKeys = {};
+    heldKeys = {}; wCancelOkHold();
     if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); clearTimeout(M.timer); clearTimeout(W.timer); W.timer = 0; clearTimeout(saverTimer); saverTimer = 0; clearTimeout(weatherTimer); weatherTimer = 0; }
     else {
       release();
@@ -3073,6 +3135,7 @@
   });
   window.addEventListener('resize', fit);
   QA.fireSaver = fireSaver; QA.vibrant = wVibrant; QA.saverMs = saverMs; QA.weatherIcon = weatherIcon; QA.applyWeather = applyWeather;
+  QA.dismissTarget = wDismissTarget; QA.dismiss = wDismiss;
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
   var NAV = { left: 'left', right: 'right', up: 'up', down: 'down', ok: 'ok', enter: 'ok', back: 'back', escape: 'back' };
