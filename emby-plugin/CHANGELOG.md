@@ -2,7 +2,11 @@
 
 ## 0.9.0
 
-- **Manage Continue Watching:** hold **OK** on an in-progress card in Continue Watching to remove it. `POST /Lobby/Resume/Dismiss` clears only that item's saved resume position, so it leaves Continue Watching while its watched/unwatched status is kept exactly as it was. (Version leapfrogs 0.8.0, which is the separate live-sports-only PR.)
+- **Manage Continue Watching:** hold **OK** on an in-progress card in Continue Watching to remove it. `POST /Lobby/Resume/Dismiss` clears only that item's saved resume position, so it leaves Continue Watching while its watched/unwatched status is kept exactly as it was.
+
+## 0.8.0
+
+- New **Live sports only** server setting (plugin page, on by default): the featured area and the "Your teams" row show only programmes the guide flags as "Live", leaving out replays, encores and preview/highlight shows. Turn it off to show all matching sports. (With it on, if your guide provider doesn't mark live broadcasts, the sports surfaces will be empty.)
 
 ## 0.7.0
 

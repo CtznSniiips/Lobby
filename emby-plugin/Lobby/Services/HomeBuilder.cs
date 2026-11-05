@@ -730,7 +730,12 @@ namespace Lobby.Services
             return null;
         }
 
-        /// <summary>Sports programmes in the guide between two times, soonest first.</summary>
+        /// <summary>
+        /// Sports programmes in the guide between two times, soonest first. When the server's
+        /// "Live sports only" setting is on (the default), only programmes the guide flags as "Live"
+        /// are returned, so replays, encores and preview shows are left out of both the featured area
+        /// and the "Your teams" row.
+        /// </summary>
         public BaseItemDto[] GetSportsPrograms(User user, DateTimeOffset from, DateTimeOffset to, DtoOptions dtoOptions, CancellationToken ct)
         {
             var result = _liveTv.GetPrograms(new InternalItemsQuery(user)
@@ -743,7 +748,13 @@ namespace Lobby.Services
                 DtoOptions = dtoOptions ?? new DtoOptions(false),
             }, ct);
 
-            return result?.Items ?? new BaseItemDto[0];
+            var items = result?.Items ?? new BaseItemDto[0];
+            if (Plugin.Instance.Configuration.SportsLiveOnly)
+            {
+                items = items.Where(p => p.IsLive == true).ToArray();
+            }
+
+            return items;
         }
 
         public async Task<HomeResponse> Search(TvDevice tv, string query, CancellationToken ct)
