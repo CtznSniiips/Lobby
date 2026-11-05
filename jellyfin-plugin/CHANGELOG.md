@@ -12,4 +12,9 @@
   `.UtcDateTime`), an array's LINQ `Count()` extension used where `Length` was needed, and
   `InternalItemsQuery` having no way to filter by several TMDB ids at once (now matched after the query
   instead of in it).
+- Fixed: a continuing episode in the Watch hero could show a blurry backdrop — the Episode branch of
+  `MapFeaturedLibrary` used `ParentBackdropItemId`/`ParentBackdropImageTags`, which inherits from the
+  nearest ancestor with an image and can land on a lower-resolution season (or even the episode's own)
+  image instead of the series' real fanart. The hero now looks up the series' own backdrop and logo
+  directly.
 - Not yet verified against a running Jellyfin server — see the Build section of the README.
