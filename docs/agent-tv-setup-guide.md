@@ -270,6 +270,8 @@ Exercise **restore**, query the values and check the physical Home destination b
 
 **Avoid the startup-setting trap:** “Start with Smart Hub Home” off and “Autorun Last App” on proved last-app resume only. It did not establish a fixed launcher after another app was used. With the later native Home assignment, **Home autostart was intentionally enabled**. Don't blindly repeat the earlier toggle instructions after native routing. Samsung's [start-screen guide](https://www.samsung.com/sg/support/tv-audio-video/enable-or-disable-the-start-screen-option-on-your-2025-samsung-smart-tv/) describes ordinary startup options, not this reassignment.
 
+That toggle is still useful on its own, just not as a stand-in for this stage: for someone who doesn't want to touch native Home routing at all, README's [Reach Lobby with one press](../README.md#reach-lobby-with-one-press) covers pairing Autorun Last App with a Home-bar reorder as a lower-risk alternative to everything in this section.
+
 ### Physical checks before calling it complete
 
 | Check | Required observation |
