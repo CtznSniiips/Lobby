@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Entities;
+using Jellyfin.Data.Enums;
 using Lobby.Configuration;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -582,7 +583,7 @@ namespace Lobby.Services
 
                 if (parts.Count == 0 && d.ProductionYear.HasValue) parts.Add(d.ProductionYear.Value.ToString(CultureInfo.InvariantCulture));
                 if (!string.IsNullOrWhiteSpace(d.OfficialRating)) parts.Add(d.OfficialRating);
-                if (d.Genres != null && d.Genres.Count > 0) parts.Add(d.Genres[0]);
+                if (d.Genres != null && d.Genres.Length > 0) parts.Add(d.Genres[0]);
                 item.Tagline = First(d.Taglines);
                 item.BackdropUrl = Image(d.Id, ImageType.Backdrop, d.BackdropImageTags?.FirstOrDefault());
                 item.LogoUrl = Image(d.Id, ImageType.Logo, Tag(d, ImageType.Logo));
@@ -674,13 +675,14 @@ namespace Lobby.Services
                 return;
             }
 
-            var ids = candidates.Select(i => i.TmdbId.Value.ToString(CultureInfo.InvariantCulture)).Distinct().ToList();
+            // Jellyfin's InternalItemsQuery has no way to filter by "any of several TMDB ids" in one
+            // query (HasAnyProviderId only takes a single provider/value pair), so this scans every
+            // movie/series and matches by TMDB id below instead of narrowing the query itself.
             var found = _library.GetItemList(new InternalItemsQuery(user)
             {
                 Recursive = true,
                 IncludeItemTypes = new[] { BaseItemKind.Movie, BaseItemKind.Series },
-                AnyProviderIdEquals = ids.Select(id => new KeyValuePair<string, string>("Tmdb", id)).ToList(),
-                // Jellyfin only loads the fields asked for; load whole items (ids, provider ids) for the few matches.
+                // Jellyfin only loads the fields asked for; load whole items (ids, provider ids).
                 DtoOptions = new DtoOptions(true),
             });
 
@@ -763,8 +765,9 @@ namespace Lobby.Services
             var result = await _liveTv.GetPrograms(new InternalItemsQuery(user)
             {
                 IsSports = true,
-                MinEndDate = from,
-                MaxStartDate = to,
+                // InternalItemsQuery's date-range filters are DateTime (UTC), not DateTimeOffset.
+                MinEndDate = from.UtcDateTime,
+                MaxStartDate = to.UtcDateTime,
                 OrderBy = new[] { (ItemSortBy.StartDate, SortOrder.Ascending) },
                 Limit = 5000,
                 DtoOptions = effectiveOptions,
@@ -983,8 +986,8 @@ namespace Lobby.Services
                 Overview = p.Overview,
                 ChannelName = p.ChannelName,
                 ChannelNumber = p.ChannelNumber,
-                StartDate = p.StartDate?.UtcDateTime.ToString("o"),
-                EndDate = p.EndDate?.UtcDateTime.ToString("o"),
+                StartDate = p.StartDate?.ToString("o"),
+                EndDate = p.EndDate?.ToString("o"),
                 IsAiring = airing,
                 PlayItemId = p.ChannelId.HasValue ? p.ChannelId.Value.ToString("N") : null,
                 DefaultAction = PlayAction.Play,

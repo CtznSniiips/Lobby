@@ -10,6 +10,7 @@ using Lobby.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Lobby.Controllers
 {
@@ -671,7 +672,7 @@ namespace Lobby.Controllers
             catch (Exception ex)
             {
                 Runtime.Logger.LogError(ex, "could not read sports listings for the team picker");
-                response.Teams = SportsTeams.Collect(Enumerable.Empty<Tuple<string, string, DateTimeOffset?>>(), tv.SportsTeams);
+                response.Teams = SportsTeams.Collect(Enumerable.Empty<Tuple<string, string, DateTime?>>(), tv.SportsTeams);
                 response.Message = "Couldn't read the TV guide. Is Live TV set up in Jellyfin?";
             }
 

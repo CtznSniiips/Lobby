@@ -235,7 +235,7 @@ namespace Lobby.Controllers
                         PairedUtc = t.PairedUtc,
                         LastSeenUtc = t.LastSeenUtc,
                         JellyfinAppControllable = tvSession != null && tvSession.IsActive && tvSession.SupportsRemoteControl,
-                        JellyfinAppLastSeenUtc = tvSession?.LastActivityDate.UtcDateTime.ToString("o"),
+                        JellyfinAppLastSeenUtc = tvSession?.LastActivityDate.ToString("o"),
                     };
                 }).ToList(),
                 PendingPairings = Runtime.Tvs.GetPendingPairings().Select(p => new PairingView
@@ -260,7 +260,7 @@ namespace Lobby.Controllers
                         Client = s.Client,
                         ApplicationVersion = s.ApplicationVersion,
                         UserName = s.UserName,
-                        LastActivityUtc = s.LastActivityDate.UtcDateTime.ToString("o"),
+                        LastActivityUtc = s.LastActivityDate.ToString("o"),
                         SupportsRemoteControl = s.SupportsRemoteControl,
                         IsActive = s.IsActive,
                     }).ToList(),

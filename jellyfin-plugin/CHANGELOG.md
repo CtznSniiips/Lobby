@@ -6,4 +6,10 @@
 - Fixed several API-shape mistakes CI's first real build caught (no `IServerEntryPoint`/`IHasThumbImage` in
   Jellyfin's plugin API, `IDtoService.GetBaseItemDtos` is synchronous, `ILiveTvManager.GetPrograms` instead of
   a guessed `GetProgramsAsync`), cross-checked against the `jellyfin/jellyfin` v10.9.11 source.
+- Fixed a second round of build errors: missing `Jellyfin.Data.Enums` usings (`BaseItemKind`/`ItemSortBy`/
+  `SortOrder`), `InternalItemsQuery`'s date filters being `DateTime` rather than `DateTimeOffset`, a missing
+  `using Microsoft.Extensions.Logging;`, `SessionInfo.LastActivityDate` already being `DateTime` (no
+  `.UtcDateTime`), an array's LINQ `Count()` extension used where `Length` was needed, and
+  `InternalItemsQuery` having no way to filter by several TMDB ids at once (now matched after the query
+  instead of in it).
 - Not yet verified against a running Jellyfin server — see the Build section of the README.

@@ -117,7 +117,7 @@ namespace Lobby.Services
         }
 
         /// <summary>Teams across many listings, merged case-insensitively and grouped by league.</summary>
-        public static List<GuideTeam> Collect(IEnumerable<Tuple<string, string, DateTimeOffset?>> listings, IEnumerable<string> selected)
+        public static List<GuideTeam> Collect(IEnumerable<Tuple<string, string, DateTime?>> listings, IEnumerable<string> selected)
         {
             var chosen = new HashSet<string>(selected ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
             var byName = new Dictionary<string, GuideTeam>(StringComparer.OrdinalIgnoreCase);
@@ -132,7 +132,7 @@ namespace Lobby.Services
                 }
 
                 // Count a game once even when several channels carry it.
-                var gameKey = string.Join("|", teams.OrderBy(t => t, StringComparer.OrdinalIgnoreCase)) + "|" + listing.Item3?.UtcDateTime.ToString("o");
+                var gameKey = string.Join("|", teams.OrderBy(t => t, StringComparer.OrdinalIgnoreCase)) + "|" + listing.Item3?.ToString("o");
                 var newGame = seenGames.Add(gameKey);
 
                 foreach (var team in teams)
@@ -153,7 +153,7 @@ namespace Lobby.Services
                         entry.Games++;
                     }
 
-                    var start = listing.Item3?.UtcDateTime.ToString("o");
+                    var start = listing.Item3?.ToString("o");
                     if (start != null && (entry.NextStartDate == null || string.CompareOrdinal(start, entry.NextStartDate) < 0))
                     {
                         entry.NextStartDate = start;
