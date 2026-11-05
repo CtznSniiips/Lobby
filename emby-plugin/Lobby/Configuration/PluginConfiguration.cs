@@ -55,7 +55,7 @@ namespace Lobby.Configuration
         /// <summary>Base URL of the game-thumbs service, e.g. http://192.168.1.5:3000 or https://thumbs.example.com. IP or FQDN; http:// is assumed when no scheme is given.</summary>
         public string GameThumbsUrl { get; set; }
 
-        /// <summary>game-thumbs matchup style, 1-4.</summary>
+        /// <summary>game-thumbs matchup style, 1-6.</summary>
         public int GameThumbsStyle { get; set; } = 1;
 
         /// <summary>Paired TVs.</summary>
