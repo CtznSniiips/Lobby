@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- **Manage Continue Watching:** hold **OK** on an in-progress card in Continue Watching to remove it. `POST /Lobby/Resume/Dismiss` clears only that item's saved resume position, so it leaves Continue Watching while its watched/unwatched status is kept exactly as it was. (Version leapfrogs 0.8.0, which is the separate live-sports-only PR.)
+
 ## 0.7.0
 
 - Version bump so the per-TV weather build is distinguishable from the earlier 0.6.0 build that still had the old global weather settings. No code changes from 0.6.0's final state.

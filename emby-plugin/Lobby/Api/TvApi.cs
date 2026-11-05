@@ -8,6 +8,7 @@ using Lobby.Configuration;
 using Lobby.Services;
 using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Net;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Services;
 
 namespace Lobby.Api
@@ -77,6 +78,20 @@ namespace Lobby.Api
 
         /// <summary>Optional explicit start position. For "resume" the saved position is used when omitted.</summary>
         public long? StartPositionTicks { get; set; }
+    }
+
+    [Route("/Lobby/Resume/Dismiss", "POST", Summary = "Clears an item's saved resume position so it leaves Continue Watching. Watched/unwatched status is kept.")]
+    [Unauthenticated]
+    public class DismissResume : IReturn<DismissResumeResponse>
+    {
+        public string ItemId { get; set; }
+    }
+
+    public class DismissResumeResponse
+    {
+        /// <summary>ok when a resume point was cleared, unchanged when there was none.</summary>
+        public string Status { get; set; }
+        public string ItemId { get; set; }
     }
 
     [Route("/Lobby/Settings", "GET", Summary = "This TV's settings: rows (in order, with visibility) and playback timing.")]
@@ -533,6 +548,36 @@ namespace Lobby.Api
                 DelayMs = timing.PlayDelayMs,
                 TimeoutSeconds = timing.PlayTimeoutSeconds,
             }).ConfigureAwait(false);
+        }
+
+        public object Post(DismissResume request)
+        {
+            var tv = Authenticate();
+            var user = Runtime.Home.GetUser(tv);
+
+            if (string.IsNullOrWhiteSpace(request.ItemId) || !long.TryParse(request.ItemId.Trim(), out var itemId))
+            {
+                throw new ArgumentException("ItemId must be an Emby item id.");
+            }
+
+            var item = Runtime.LibraryManager.GetItemById(itemId);
+            if (item == null || !item.IsVisibleStandalone(user))
+            {
+                throw new ResourceNotFoundException("Item " + request.ItemId + " was not found.");
+            }
+
+            var data = Runtime.UserDataManager.GetUserData(user, item);
+            var cleared = false;
+            if (data != null && data.PlaybackPositionTicks > 0)
+            {
+                // Clear only the resume point so the title leaves Continue Watching;
+                // Played/unwatched status is left exactly as it was.
+                data.PlaybackPositionTicks = 0;
+                Runtime.UserDataManager.SaveUserData(user, item, data, UserDataSaveReason.Import, CancellationToken.None);
+                cleared = true;
+            }
+
+            return new DismissResumeResponse { Status = cleared ? "ok" : "unchanged", ItemId = request.ItemId };
         }
 
         public object Get(GetTvSettings request)
