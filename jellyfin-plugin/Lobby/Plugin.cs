@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Lobby.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
-using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
 namespace Lobby
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
+    // Jellyfin's plugin API has no IHasThumbImage (Emby's plugin-icon interface): a plugin's
+    // icon comes from its repository manifest, not the DLL. thumb.png stays embedded only for
+    // parity with the Emby plugin's project layout; nothing in Jellyfin reads it at runtime.
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         public static readonly Guid PluginId = new Guid("5af002f7-cede-48af-8901-0bae7eec0e4e");
 
@@ -32,14 +33,6 @@ namespace Lobby
             "Seerr discovery and requests, and one-press playback on paired TVs.";
 
         public override Guid Id => PluginId;
-
-        public ImageFormat ThumbImageFormat => ImageFormat.Png;
-
-        public Stream GetThumbImage()
-        {
-            var type = GetType();
-            return type.Assembly.GetManifestResourceStream(type.Namespace + ".thumb.png");
-        }
 
         public IEnumerable<PluginPageInfo> GetPages()
         {

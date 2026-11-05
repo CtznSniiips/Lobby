@@ -266,7 +266,7 @@ namespace Lobby.Controllers
                     }).ToList(),
                 JellyfinUsers = users
                     .OrderBy(u => u.Username, StringComparer.OrdinalIgnoreCase)
-                    .Select(u => new JellyfinUserView { Id = u.Id.ToString("N"), Name = u.Username, IsDisabled = u.HasPermission(MediaBrowser.Model.Entities.PermissionKind.IsDisabled) })
+                    .Select(u => new JellyfinUserView { Id = u.Id.ToString("N"), Name = u.Username, IsDisabled = u.HasPermission(Jellyfin.Data.Enums.PermissionKind.IsDisabled) })
                     .ToList(),
                 Links = c.UserLinks,
                 QueuedPlayCount = Runtime.Playback.PendingCount,

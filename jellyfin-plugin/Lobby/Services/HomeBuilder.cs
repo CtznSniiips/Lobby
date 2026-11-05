@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Entities;
 using Lobby.Configuration;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -226,7 +227,7 @@ namespace Lobby.Services
                         DtoOptions = dtoOptions,
                     });
 
-                    var mapped = (await _dto.GetBaseItemDtosAsync(items, dtoOptions, user).ConfigureAwait(false)).Select(d => MapLibraryItem(d, PlayAction.Resume)).ToList();
+                    var mapped = _dto.GetBaseItemDtos(items, dtoOptions, user).Select(d => MapLibraryItem(d, PlayAction.Resume)).ToList();
                     foreach (var m in mapped)
                     {
                         resumeIds.Add(m.Id);
@@ -242,7 +243,7 @@ namespace Lobby.Services
                 {
                     var result = _tv.GetNextUp(new NextUpQuery { UserId = user.Id, Limit = fetch + resumeIds.Count }, dtoOptions);
                     var items = result?.Items ?? Array.Empty<BaseItem>();
-                    var dtos = await _dto.GetBaseItemDtosAsync(items, dtoOptions, user).ConfigureAwait(false);
+                    var dtos = _dto.GetBaseItemDtos(items, dtoOptions, user);
                     return dtos
                         .Select(d => MapLibraryItem(d, PlayAction.Play))
                         .Where(i => !resumeIds.Contains(i.Id))
@@ -263,7 +264,7 @@ namespace Lobby.Services
                         Limit = fetch + resumeIds.Count,
                         DtoOptions = dtoOptions,
                     });
-                    var dtos = await _dto.GetBaseItemDtosAsync(items, dtoOptions, user).ConfigureAwait(false);
+                    var dtos = _dto.GetBaseItemDtos(items, dtoOptions, user);
                     return dtos
                         .Select(d => MapLibraryItem(d, PlayAction.Play))
                         .Where(i => !resumeIds.Contains(i.Id))
@@ -276,14 +277,16 @@ namespace Lobby.Services
             {
                 await AddRow(response, built, TvSettings.LiveNow, "landscape", async () =>
                 {
+                    // GetRecommendedProgramsAsync already returns BaseItemDto results (unlike
+                    // GetNextUp, which returns bare BaseItem and needs a separate DTO conversion).
                     var result = await _liveTv.GetRecommendedProgramsAsync(new InternalItemsQuery(user)
                     {
                         IsAiring = true,
                         Limit = fetch,
                         DtoOptions = dtoOptions,
-                    }, ct).ConfigureAwait(false);
+                    }, dtoOptions, ct).ConfigureAwait(false);
 
-                    var dtos = await _dto.GetBaseItemDtosAsync(result?.Items ?? Array.Empty<BaseItem>(), dtoOptions, user).ConfigureAwait(false);
+                    var dtos = result?.Items ?? Array.Empty<BaseItemDto>();
                     return dtos.Select(MapProgram).Where(p => p.PlayItemId != null).ToList();
                 }).ConfigureAwait(false);
             }
@@ -442,8 +445,8 @@ namespace Lobby.Services
             });
 
             // The featured area needs background art; a title without it stays in its row instead.
-            var resumeDtos = await _dto.GetBaseItemDtosAsync(resume, options, user).ConfigureAwait(false);
-            var latestDtos = await _dto.GetBaseItemDtosAsync(latest, options, user).ConfigureAwait(false);
+            var resumeDtos = _dto.GetBaseItemDtos(resume, options, user);
+            var latestDtos = _dto.GetBaseItemDtos(latest, options, user);
             var fromResume = resumeDtos.Select(d => MapFeaturedLibrary(user, d, "resume")).Where(i => i.BackdropUrl != null).ToList();
             var fromLatest = latestDtos.Select(d => MapFeaturedLibrary(user, d, "new")).Where(i => i.BackdropUrl != null).ToList();
 
@@ -709,7 +712,7 @@ namespace Lobby.Services
                 {
                     c.Keys.Add("series:" + match.Id.ToString("N"));
                     var next = _tv.GetNextUp(new NextUpQuery { UserId = user.Id, SeriesId = match.Id, Limit = 1 }, dtoOptions);
-                    var nextDtos = next?.Items != null ? await _dto.GetBaseItemDtosAsync(next.Items, dtoOptions, user).ConfigureAwait(false) : null;
+                    var nextDtos = next?.Items != null ? _dto.GetBaseItemDtos(next.Items, dtoOptions, user) : null;
                     play = next?.Items?.FirstOrDefault() ?? match;
                 }
                 else
@@ -753,19 +756,21 @@ namespace Lobby.Services
         /// </summary>
         public async Task<BaseItemDto[]> GetSportsPrograms(User user, DateTimeOffset from, DateTimeOffset to, DtoOptions dtoOptions, CancellationToken ct)
         {
-            var result = await _liveTv.GetProgramsAsync(new InternalItemsQuery(user)
+            var effectiveOptions = dtoOptions ?? new DtoOptions(false);
+
+            // Note: ILiveTvManager's guide-query method is GetPrograms (no "Async" suffix), and it
+            // already returns BaseItemDto results, so there's no separate DTO-conversion step here.
+            var result = await _liveTv.GetPrograms(new InternalItemsQuery(user)
             {
                 IsSports = true,
                 MinEndDate = from,
                 MaxStartDate = to,
                 OrderBy = new[] { (ItemSortBy.StartDate, SortOrder.Ascending) },
                 Limit = 5000,
-                DtoOptions = dtoOptions ?? new DtoOptions(false),
-            }, ct).ConfigureAwait(false);
+                DtoOptions = effectiveOptions,
+            }, effectiveOptions, ct).ConfigureAwait(false);
 
-            var baseItems = result?.Items ?? Array.Empty<BaseItem>();
-            var items = await _dto.GetBaseItemDtosAsync(baseItems, dtoOptions ?? new DtoOptions(false), user).ConfigureAwait(false);
-            var array = items.ToArray();
+            var array = result?.Items ?? Array.Empty<BaseItemDto>();
             if (Plugin.Instance.Configuration.SportsLiveOnly)
             {
                 array = array.Where(p => p.IsLive == true).ToArray();
@@ -809,7 +814,7 @@ namespace Lobby.Services
 
             var libraryRow = new HomeRow { Id = "search-library", Title = "In your library", Layout = "poster" };
             var tmdbInLibrary = new HashSet<string>();
-            var dtos = await _dto.GetBaseItemDtosAsync(items, dtoOptions, user).ConfigureAwait(false);
+            var dtos = _dto.GetBaseItemDtos(items, dtoOptions, user);
             foreach (var d in dtos)
             {
                 libraryRow.Items.Add(MapLibraryItem(d, d.UserData?.PlaybackPositionTicks > 0 ? PlayAction.Resume : PlayAction.Play));

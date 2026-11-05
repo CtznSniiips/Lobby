@@ -69,13 +69,16 @@ dotnet build -c Release -p:JellyfinRefDir=/path/to/jellyfin-server/bin
 > logic — pairing, Seerr linking, row building, sports matching, playback dispatch) onto Jellyfin's SDK
 > (`MediaBrowser.Controller`/`MediaBrowser.Model` as Jellyfin ships them, ASP.NET Core MVC controllers in place
 > of Emby's ServiceStack routes, `Guid` item/user ids in place of Emby's decimal ids, and
-> `Microsoft.Extensions.Logging` in place of Emby's `ILogManager`). It has **not yet been compiled against a
-> real Jellyfin SDK or run against a live Jellyfin server** — the sandbox this was written in had no network
-> path to NuGet. Treat the first build (`dotnet build` above, or the CI workflow) as the real first checkpoint:
-> expect to fix a handful of signature mismatches against whatever `JellyfinSdkVersion` you build against,
-> particularly around `ITVSeriesManager.GetNextUp` and `ILiveTvManager`'s program-query methods, which are the
-> calls this port is least certain about. Please open an issue (or better, a PR) with whatever the compiler
-> says once you've run it for the first time.
+> `Microsoft.Extensions.Logging` in place of Emby's `ILogManager`). The first CI run against the real
+> `Jellyfin.Controller`/`Jellyfin.Model` 10.9.11 packages caught several API-shape mistakes (Jellyfin has no
+> `IServerEntryPoint` or `IHasThumbImage` — plugin startup now goes through an `IHostedService` registered by
+> `PluginServiceRegistrator`, a replacement that only exists because Jellyfin's plugin API uses it internally
+> too; `IDtoService.GetBaseItemDtos` is synchronous, not `GetBaseItemDtosAsync`; `ILiveTvManager`'s guide method
+> is `GetPrograms`, not `GetProgramsAsync`, and both of its program queries already return `BaseItemDto`
+> directly), which have since been fixed and cross-checked line-by-line against a local checkout of the
+> `jellyfin/jellyfin` v10.9.11 source. It has **not yet run against a live Jellyfin server** — that, and a real
+> compile on a machine with NuGet access, is the next real checkpoint. Please open an issue (or better, a PR)
+> if either turns up something this review missed.
 
 ## Release
 

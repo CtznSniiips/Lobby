@@ -1,20 +1,25 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Entities;
 using Lobby.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.LiveTv;
-using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Controller.TV;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Lobby
 {
     /// <summary>
-    /// Server entry point. Creates the long-lived Lobby services and exposes them to the REST endpoints.
+    /// Replaces Emby's <c>IServerEntryPoint</c> (removed from Jellyfin's plugin API): registered as a
+    /// singleton <see cref="IHostedService"/> by <see cref="PluginServiceRegistrator"/>, so the host
+    /// constructs it once at startup and calls <see cref="StartAsync"/>. Creates the long-lived Lobby
+    /// services and exposes them to the REST endpoints via <see cref="Current"/>.
     /// </summary>
-    public class LobbyRuntime : IServerEntryPoint
+    public class LobbyRuntime : IHostedService
     {
         public LobbyRuntime(
             ISessionManager sessionManager,
@@ -52,25 +57,27 @@ namespace Lobby
         public PlaybackDispatcher Playback { get; }
         public HomeBuilder Home { get; }
 
-        public MediaBrowser.Controller.Entities.User[] AllUsers()
+        public User[] AllUsers()
         {
             return UserManager.Users.ToArray();
         }
 
-        public Task RunAsync()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("Lobby started: {TvCount} paired TV(s), {LinkCount} account link(s)",
                 Plugin.Instance.Configuration.Tvs.Length, Plugin.Instance.Configuration.UserLinks.Length);
             return Task.CompletedTask;
         }
 
-        public void Dispose()
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             Playback.Dispose();
             if (Current == this)
             {
                 Current = null;
             }
+
+            return Task.CompletedTask;
         }
     }
 }

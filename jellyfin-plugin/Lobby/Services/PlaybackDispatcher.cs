@@ -232,16 +232,17 @@ namespace Lobby.Services
 
             if (order.Action == PlayAction.Details)
             {
-                var command = new GeneralCommand
-                {
-                    Name = GeneralCommandType.DisplayContent,
-                    ControllingUserId = Guid.TryParse(controllingUserId, out var cu) ? cu : Guid.Empty,
-                    Arguments = new Dictionary<string, string>
+                // GeneralCommand.Arguments has no setter in Jellyfin (only Name/ControllingUserId do) -
+                // the dictionary has to go through the constructor instead of an object initializer.
+                var command = new GeneralCommand(new Dictionary<string, string>
                     {
                         { "ItemId", order.ItemId.ToString("N") },
                         { "ItemType", order.ItemType ?? string.Empty },
                         { "ItemName", order.ItemName ?? string.Empty },
-                    },
+                    })
+                {
+                    Name = GeneralCommandType.DisplayContent,
+                    ControllingUserId = Guid.TryParse(controllingUserId, out var cu) ? cu : Guid.Empty,
                 };
 
                 await _sessions.SendGeneralCommand(null, session.Id, command, CancellationToken.None).ConfigureAwait(false);
