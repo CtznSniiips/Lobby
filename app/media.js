@@ -118,6 +118,7 @@
     details: function (mediaType, tmdbId, done) { api('GET', '/Details?MediaType=' + encodeURIComponent(mediaType) + '&TmdbId=' + encodeURIComponent(tmdbId), undefined, done, 15000); },
     request: function (body, done) { api('POST', '/Request', body, done, 20000); },
     play: function (itemId, action, done) { api('POST', '/Play', { ItemId: itemId, Action: action }, done); },
-    dismissResume: function (itemId, done) { api('POST', '/Resume/Dismiss', { ItemId: itemId }, done); }
+    dismissResume: function (itemId, done) { api('POST', '/Resume/Dismiss', { ItemId: itemId }, done); },
+    search: function (query, done) { api('GET', '/Search?query=' + encodeURIComponent(query), undefined, done, 15000); }
   };
 }());
