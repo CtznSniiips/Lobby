@@ -130,6 +130,9 @@ namespace Lobby.Api
         public bool ShowSeerrPopularMovies { get; set; }
         public bool ShowSeerrPopularShows { get; set; }
         public bool SportsLiveOnly { get; set; }
+        public bool GameThumbsEnabled { get; set; }
+        public string GameThumbsUrl { get; set; }
+        public int GameThumbsStyle { get; set; }
     }
 
     public class TvView
@@ -347,6 +350,9 @@ namespace Lobby.Api
                 c.ShowSeerrPopularMovies = request.ShowSeerrPopularMovies;
                 c.ShowSeerrPopularShows = request.ShowSeerrPopularShows;
                 c.SportsLiveOnly = request.SportsLiveOnly;
+                c.GameThumbsEnabled = request.GameThumbsEnabled;
+                c.GameThumbsUrl = (request.GameThumbsUrl ?? string.Empty).Trim();
+                c.GameThumbsStyle = Clamp(request.GameThumbsStyle, 1, 4, 1);
             });
 
             return ToView(Plugin.Instance.Configuration);
@@ -496,6 +502,9 @@ namespace Lobby.Api
                 ShowSeerrPopularMovies = c.ShowSeerrPopularMovies,
                 ShowSeerrPopularShows = c.ShowSeerrPopularShows,
                 SportsLiveOnly = c.SportsLiveOnly,
+                GameThumbsEnabled = c.GameThumbsEnabled,
+                GameThumbsUrl = c.GameThumbsUrl,
+                GameThumbsStyle = c.GameThumbsStyle < 1 ? 1 : c.GameThumbsStyle,
             };
         }
 

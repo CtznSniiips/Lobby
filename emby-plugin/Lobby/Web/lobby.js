@@ -208,11 +208,12 @@ define([], function () {
             $('#cfSeerrKey').value = '';
             $('#cfSeerrKey').placeholder = s.HasSeerrApiKey ? 'Saved. Leave blank to keep it' : 'Paste your Seerr API key';
             $('#cfRequestsEnabled').checked = !!s.RequestsEnabled;
+            $('#cfGameThumbsUrl').value = s.GameThumbsUrl || '';
             ['ShowContinueWatching', 'ShowNextUp', 'ShowRecentlyAdded', 'ShowLiveNow', 'ShowSports', 'ShowSeerrTrending',
-                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly'].forEach(function (k) {
+                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly', 'GameThumbsEnabled'].forEach(function (k) {
                 $('#cf' + k).checked = !!s[k];
             });
-            ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
+            ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes', 'GameThumbsStyle'].forEach(function (k) {
                 $('#cf' + k).value = s[k];
             });
             renderFallback();
@@ -223,13 +224,14 @@ define([], function () {
                 SeerrUrl: $('#cfSeerrUrl').value.trim(),
                 SeerrApiKey: $('#cfSeerrKey').value.trim(),
                 RequestsEnabled: $('#cfRequestsEnabled').checked,
-                FallbackSeerrUserId: parseInt($('#cfFallback').value, 10) || 0
+                FallbackSeerrUserId: parseInt($('#cfFallback').value, 10) || 0,
+                GameThumbsUrl: $('#cfGameThumbsUrl').value.trim()
             };
             ['ShowContinueWatching', 'ShowNextUp', 'ShowRecentlyAdded', 'ShowLiveNow', 'ShowSports', 'ShowSeerrTrending',
-                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly'].forEach(function (k) {
+                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly', 'GameThumbsEnabled'].forEach(function (k) {
                 s[k] = $('#cf' + k).checked;
             });
-            ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
+            ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes', 'GameThumbsStyle'].forEach(function (k) {
                 s[k] = parseInt($('#cf' + k).value, 10) || 0;
             });
             return s;
