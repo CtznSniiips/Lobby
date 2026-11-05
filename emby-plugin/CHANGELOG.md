@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+- The plugin's catalog icon now uses the new Lobby logo (the lit archway with app tiles), matching the TV app's launcher icon.
+
 ## 0.9.1
 
 - Fixed: the **Live sports only** checkbox on the plugin page floated away from its label (Emby's global form styles). It now sits inline beside its label like the other toggles.
