@@ -1882,11 +1882,10 @@
      the top area describes the focused title instead of the featured one. */
   var W_RAIL = ['art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
   var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, labels: 60, bottom: 924,
-    tile: { w: 240, h: 135, pitch: 254 }, card: { w: 256, h: 144, pitch: 272 }, poster: { w: 162, h: 243, pitch: 178 }, app: { w: 168, h: 96, pitch: 176 } };
+    tile: { w: 240, h: 135, pitch: 254 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  /* Seerr rows are artwork tiles; the sports row uses portrait poster art (Live TV matchup graphics are
-     taller than wide); library and other Live TV rows carry a landscape card with a title and detail line. */
-  function wStyle(row) { return row.id === 'sports' ? 'poster' : row.id.indexOf('seerr-') === 0 ? 'tile' : 'card'; }
+  /* Seerr rows are artwork only, as tiles; library and Live TV rows carry a title and detail line. */
+  function wStyle(row) { return row.id.indexOf('seerr-') === 0 ? 'tile' : 'card'; }
   /* One row per band. Continue Watching and Next Up merge into a single Continue Watching row:
      titles in progress first, then the next episodes. */
   function wBands() {
@@ -2216,7 +2215,7 @@
     trackEl.style.transform = 'translate3d(' + (-win.first * size.pitch) + 'px,0,0)';
     keyed(trackEl, row.items.map(function (item, i) { return { key: item.id, item: item, i: i }; }), function (card, ce) {
       var item = ce.item, i = ce.i, isFocus = focusRow && i === c.i, near = visible && i >= win.first - 1 && i <= win.first + win.vis + 1, img;
-      var src = near ? Media.image(style === 'poster' ? item.poster || item.landscape : item.landscape || item.poster, Math.round(size.w * 1.5)) : '';
+      var src = near ? Media.image(style === 'tile' ? item.landscape || item.poster : item.landscape || item.poster, Math.round(size.w * 1.5)) : '';
       setContent(card, [item.id, item.status, item.progress, item.airing, item.title, item.subtitle, style].join('|'), function () { return wCardHtml(item, row); });
       img = card.querySelector('img');
       if (src && img._src !== src) {

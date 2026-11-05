@@ -185,6 +185,25 @@
                             <div class="cf-hint">Show only programmes the guide flags as Live in the featured area and Your Teams, hiding replays and preview shows. Needs a guide that marks live broadcasts.</div>
                         </div>
                         <div class="cf-field">
+                            <label class="cf-toggle"><input type="checkbox" id="cfGameThumbsEnabled" /> Use game-thumbs for sports art</label>
+                            <div class="cf-hint">Replace the guide's sports images with clean 16:9 matchup graphics from a <a href="https://github.com/sethwv/game-thumbs" target="_blank" rel="noopener">game-thumbs</a> service, on both the cards and the hero.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfGameThumbsUrl">game-thumbs address</label>
+                            <input id="cfGameThumbsUrl" type="text" placeholder="192.168.1.5:3000 or thumbs.example.com" />
+                            <div class="cf-hint">IP:port for a self-hosted instance, or a hostname for a cloud one. http:// is assumed when no scheme is given.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfGameThumbsStyle">game-thumbs style</label>
+                            <select id="cfGameThumbsStyle" class="cf-inline-select">
+                                <option value="1">1 — Horizontal split</option>
+                                <option value="2">2 — Gradient blend</option>
+                                <option value="3">3 — Minimalist badge (light)</option>
+                                <option value="4">4 — Minimalist badge (dark)</option>
+                            </select>
+                            <div class="cf-hint">Which matchup design to request.</div>
+                        </div>
+                        <div class="cf-field">
                             <label for="cfPlayDelayMs">Delay before sending play (ms)</label>
                             <input id="cfPlayDelayMs" type="number" min="0" max="15000" step="100" />
                             <div class="cf-hint">After a freshly launched Emby app connects, wait this long before sending play so it finishes loading. Raise it if playback sometimes doesn't start. Not used when Emby is already running.</div>

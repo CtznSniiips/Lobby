@@ -80,19 +80,28 @@
     request('GET', url + '/emby/Lobby/Pair/Status?PairingId=' + encodeURIComponent(id) + '&Secret=' + encodeURIComponent(secret), undefined, null, 10000, done);
   }
 
-  function cachedHome() { var c = read(CACHE_KEY); return c && c.data && Array.isArray(c.data.Rows) ? c.data : null; }
+  function cachedHome() { var c = read(CACHE_KEY); if (c && c.data && Array.isArray(c.data.Rows)) { allowThumbs(c.data); return c.data; } return null; }
   function home(done) {
     api('GET', '/Home', undefined, function (err, data) {
-      if (!err && data && Array.isArray(data.Rows)) store(CACHE_KEY, { at: Date.now(), data: data });
+      if (!err && data && Array.isArray(data.Rows)) { store(CACHE_KEY, { at: Date.now(), data: data }); allowThumbs(data); }
       done(err, data);
     }, 15000);
   }
 
-  /* Emby paths are server-relative; TMDB posters are already absolute. */
+  /* The game-thumbs base URL the paired server reports (when enabled), so the TV may load matchup
+     images from that one host. Captured from each home response; empty disables the allowance. */
+  var thumbsBase = '';
+  function allowThumbs(data) {
+    var b = data && typeof data.GameThumbsBase === 'string' ? data.GameThumbsBase : '';
+    thumbsBase = /^https?:\/\/[^/]+$/.test(b) ? b : '';
+  }
+
+  /* Emby paths are server-relative; TMDB posters and game-thumbs matchups are already absolute. */
   function image(path, width) {
     var c = config();
     if (typeof path !== 'string' || !path) return '';
     if (/^https:\/\/image\.tmdb\.org\//.test(path)) return path;
+    if (thumbsBase && path.indexOf(thumbsBase + '/') === 0) return path;
     if (!c || path.charAt(0) !== '/' || path.charAt(1) === '/') return '';
     return c.url + path + (path.indexOf('?') >= 0 ? '&' : '?') + 'maxWidth=' + Math.round(width || 400) + '&quality=85';
   }

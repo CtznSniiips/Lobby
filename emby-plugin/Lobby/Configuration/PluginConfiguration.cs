@@ -49,6 +49,15 @@ namespace Lobby.Configuration
         /// <summary>When true (default), the featured area and "Your teams" row show only sports the guide flags as Live.</summary>
         public bool SportsLiveOnly { get; set; } = true;
 
+        /// <summary>When true, sports cards and backdrops use matchup art from a game-thumbs service instead of the guide image.</summary>
+        public bool GameThumbsEnabled { get; set; }
+
+        /// <summary>Base URL of the game-thumbs service, e.g. http://192.168.1.5:3000 or https://thumbs.example.com. IP or FQDN; http:// is assumed when no scheme is given.</summary>
+        public string GameThumbsUrl { get; set; }
+
+        /// <summary>game-thumbs matchup style, 1-4.</summary>
+        public int GameThumbsStyle { get; set; } = 1;
+
         /// <summary>Paired TVs.</summary>
         public TvDevice[] Tvs { get; set; } = new TvDevice[0];
 

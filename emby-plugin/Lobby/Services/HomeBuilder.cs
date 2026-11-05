@@ -108,6 +108,9 @@ namespace Lobby.Services
 
         /// <summary>Weather location for the TV to fetch and show, or null when off/unset.</summary>
         public WeatherConfig Weather { get; set; }
+
+        /// <summary>Base URL of the game-thumbs service when enabled, so the TV may load matchup art from it. Null when off.</summary>
+        public string GameThumbsBase { get; set; }
     }
 
     public class WeatherConfig
@@ -170,6 +173,7 @@ namespace Lobby.Services
                 EmbyUserId = user.Id.ToString("N"),
                 RequestsEnabled = config.RequestsEnabled && _seerr.IsConfigured,
                 GeneratedUtc = DateTime.UtcNow.ToString("o"),
+                GameThumbsBase = config.GameThumbsEnabled ? GameThumbsBaseUrl(config.GameThumbsUrl) : null,
             };
 
             if (tv.WeatherEnabled && (tv.WeatherLatitude != 0 || tv.WeatherLongitude != 0))
@@ -518,7 +522,8 @@ namespace Lobby.Services
                 item.FeatureReason = "game";
                 // The matchup heads the featured area; the league sits beside it, or the channel logo when there is one.
                 item.Tagline = string.IsNullOrWhiteSpace(game.EpisodeTitle) ? null : game.EpisodeTitle;
-                item.BackdropUrl = Image(game.Id, ImageType.Thumb, Tag(game, ImageType.Thumb))
+                item.BackdropUrl = GameThumbUrl(game.Name, game.EpisodeTitle)
+                                   ?? Image(game.Id, ImageType.Thumb, Tag(game, ImageType.Thumb))
                                    ?? Image(game.Id, ImageType.Backdrop, game.BackdropImageTags?.FirstOrDefault());
                 item.LogoUrl = Image(game.ChannelId, ImageType.Primary, game.ChannelPrimaryImageTag);
                 games.Add(item);
@@ -981,7 +986,86 @@ namespace Lobby.Services
                                 ?? Image(p.Id, ImageType.Primary, Tag(p, ImageType.Primary))
                                 ?? channelLogo;
             item.PosterUrl = Image(p.Id, ImageType.Primary, Tag(p, ImageType.Primary)) ?? channelLogo;
+
+            // When a game-thumbs service is configured, a clean 16:9 matchup graphic replaces the guide
+            // image on both the card and the hero backdrop.
+            var matchup = GameThumbUrl(p.Name, p.EpisodeTitle);
+            if (matchup != null)
+            {
+                item.LandscapeUrl = matchup;
+                item.BackdropUrl = matchup;
+            }
             return item;
+        }
+
+        /// <summary>
+        /// A 16:9 matchup thumbnail URL from the configured game-thumbs service, or null when it's off,
+        /// unset, or the listing's league/teams can't be resolved. Team names are matched flexibly by the
+        /// service, so the guide's names are passed through as-is.
+        /// </summary>
+        private static string GameThumbUrl(string name, string episodeTitle)
+        {
+            var cfg = Plugin.Instance.Configuration;
+            if (!cfg.GameThumbsEnabled)
+            {
+                return null;
+            }
+            var baseUrl = GameThumbsBaseUrl(cfg.GameThumbsUrl);
+            if (baseUrl == null)
+            {
+                return null;
+            }
+            var teams = SportsTeams.ExtractTeams(name, episodeTitle, out var league);
+            if (teams.Count < 2)
+            {
+                return null;
+            }
+            var code = LeagueCode(league, name);
+            if (code == null)
+            {
+                return null;
+            }
+            var style = cfg.GameThumbsStyle >= 1 && cfg.GameThumbsStyle <= 6 ? cfg.GameThumbsStyle : 1;
+            return baseUrl + "/" + code + "/" + Uri.EscapeDataString(teams[0]) + "/" + Uri.EscapeDataString(teams[1])
+                   + "/thumb?aspect=16-9&logo=true&style=" + style.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>scheme://host[:port] for the configured game-thumbs service, or null when it isn't a usable URL.</summary>
+        public static string GameThumbsBaseUrl(string text)
+        {
+            var s = (text ?? string.Empty).Trim().TrimEnd('/');
+            if (s.Length == 0)
+            {
+                return null;
+            }
+            if (!s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !s.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                s = "http://" + s;
+            }
+            return Uri.TryCreate(s, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                ? uri.GetLeftPart(UriPartial.Authority)
+                : null;
+        }
+
+        /// <summary>Maps the guide's league label (and programme name) to a game-thumbs league code, or null when unknown.</summary>
+        private static string LeagueCode(string league, string name)
+        {
+            var s = ((league ?? string.Empty) + " " + (name ?? string.Empty)).ToLowerInvariant();
+            if (s.Contains("wnba")) return "wnba";
+            if (s.Contains("nba")) return "nba";
+            if (s.Contains("nhl")) return "nhl";
+            if (s.Contains("nfl")) return "nfl";
+            if (s.Contains("college football") || s.Contains("ncaa football")) return "ncaaf";
+            if (s.Contains("college basketball") || s.Contains("ncaa basketball")) return "ncaab";
+            if (s.Contains("mlb") || (s.Contains("baseball") && !s.Contains("college"))) return "mlb";
+            if (s.Contains("mls")) return "mls";
+            if (s.Contains("premier league") || s.Contains("epl")) return "epl";
+            if (s.Contains("la liga") || s.Contains("laliga")) return "laliga";
+            if (s.Contains("bundesliga")) return "bundesliga";
+            if (s.Contains("serie a")) return "seriea";
+            if (s.Contains("ligue 1")) return "ligue1";
+            if (s.Contains("champions league")) return "uefa";
+            return null;
         }
 
         private static HomeItem MapSeerr(SeerrMedia m)
