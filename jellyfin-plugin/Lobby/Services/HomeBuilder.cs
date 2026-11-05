@@ -773,7 +773,8 @@ namespace Lobby.Services
                 DtoOptions = effectiveOptions,
             }, effectiveOptions, ct).ConfigureAwait(false);
 
-            var array = result?.Items ?? Array.Empty<BaseItemDto>();
+            // QueryResult<T>.Items is IReadOnlyList<T>, not an array.
+            var array = (result?.Items ?? Array.Empty<BaseItemDto>()).ToArray();
             if (Plugin.Instance.Configuration.SportsLiveOnly)
             {
                 array = array.Where(p => p.IsLive == true).ToArray();
