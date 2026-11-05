@@ -4,7 +4,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { openPreview, root } from './browser.mjs';
 
-const SERVER = 'http://cf.test:8096', TOKEN = 'tok_0123456789abcdefghijklmnop', EMBY_APP = 'vYmY3ACVaa.emby';
+const SERVER = 'https://cf.test:8096', TOKEN = 'tok_0123456789abcdefghijklmnop', EMBY_APP = 'vYmY3ACVaa.emby';
 const out = root + '.local/qa/media/';
 mkdirSync(out, { recursive: true });
 const report = { scope: 'Production UI in Chromium; mocked Lobby plugin API and Tizen API; no network.', checks: [], failures: [], pageErrors: [] };
@@ -164,7 +164,7 @@ async function handle(route) {
 function installHarness({ paired, cacheHome, staleMs, look, featureMs, catalog, sources, dock }) {
   if (!sessionStorage.getItem('__seeded')) {
     localStorage.setItem('cleanframe.home.v1', JSON.stringify({ dock: dock || ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'], wallpaper: 'misty', mode: 'fixed', lastApp: 'netflix', theme: 'shore', ...(look ? { look: { layout: look } } : {}) }));
-    if (paired) localStorage.setItem('lobby.server.v1', JSON.stringify({ url: 'http://cf.test:8096', token: 'tok_0123456789abcdefghijklmnop', tvName: 'Living Room' }));
+    if (paired) localStorage.setItem('lobby.server.v1', JSON.stringify({ url: 'https://cf.test:8096', token: 'tok_0123456789abcdefghijklmnop', tvName: 'Living Room' }));
     if (cacheHome) localStorage.setItem('lobby.home.cache.v1', JSON.stringify({ at: 1, data: cacheHome }));
     sessionStorage.setItem('__seeded', '1');
   }
@@ -259,8 +259,15 @@ async function main() {
       await current.keyboard.press('6'); await shot('connect-keypad');
       for (let i = 0; i < 13; i++) await current.keyboard.press('Backspace');
       check('Backspace deletes rather than closing', (await state()).view === 'connect' && (await current.locator('.cn-field').textContent()).trim() === '192.168.1.10');
-      // The mocked server has a hostname, which the keypad can't type.
-      await current.evaluate(() => ShoreQA.typeAddress('cf.test:8096'));
+      for (let i = 0; i < 12; i++) await current.keyboard.press('Backspace');
+      // The mocked server has a hostname: ABC switches to the hostname pad, which connects over https.
+      check('ABC offers the hostname pad', (await current.locator('[data-action="connect.key.mode"]').textContent()).trim() === 'ABC');
+      await act('connect.key.mode');
+      check('the hostname pad explains https', (await current.locator('.s-sub').textContent()).includes('https'));
+      check('123 switches back to the IP pad', (await current.locator('[data-action="connect.key.mode"]').textContent()).trim() === '123');
+      await current.keyboard.type('CF.TEST:8096');
+      check('letters are accepted on the hostname pad', (await current.locator('.cn-field').textContent()).trim() === 'CF.TEST:8096');
+      await shot('connect-keypad-fqdn');
       await act('connect.key.go');
       await until(() => ShoreQA.state().media.step === 'code');
       check('pairing code shown', (await current.locator('.cn-code').textContent()).trim() === 'K7QX');
@@ -282,7 +289,7 @@ async function main() {
     await run('Pairing failures explain themselves', async () => {
       api = freshApi({ unreachable: true }); await page();
       await scene('settings'); await act('settings.group.media');
-      await current.evaluate(() => ShoreQA.typeAddress('cf.test'));
+      await current.evaluate(() => ShoreQA.typeAddress('cf.test:8096'));
       await act('connect.key.go');
       await until(() => ShoreQA.state().media.step === 'error');
       check('unreachable server', (await current.locator('.s-sub').textContent()).includes('Couldn’t reach cf.test:8096'));
@@ -292,7 +299,7 @@ async function main() {
       await until(() => ShoreQA.state().media.step === 'error' && document.querySelector('.s-sub').textContent.includes('plugin'));
       check('missing plugin named', (await current.locator('.s-sub').textContent()).includes('Lobby plugin isn’t installed'));
       await act('act.edit');
-      check('Change address returns to the keypad with the address kept', (await state()).media.step === 'address' && (await current.locator('.cn-field').textContent()).trim() === 'cf.test');
+      check('Change address returns to the keypad with the address kept', (await state()).media.step === 'address' && (await current.locator('.cn-field').textContent()).trim() === 'cf.test:8096');
       await nav('back');
       check('Back closes Connect', (await state()).view === 'settings');
     });

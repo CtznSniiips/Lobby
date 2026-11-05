@@ -727,6 +727,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .bg-light .cn-key{background:rgba(29,26,22,.06)}
 .cn-key.is-wide{width:366px;font-size:34px}
 .cn-key.is-focus{background:var(--solid);color:var(--solid-ink)}
+/* Hostname pad: six columns of letters need narrower keys to stay inside the same width. */
+.cn-pad.is-fqdn .cn-key{width:184px;font-size:32px}
+.cn-pad.is-fqdn .cn-key.is-wide{width:216px;font-size:24px}
 .cn-help{margin-top:24px;font-size:26px;line-height:36px;color:var(--mute)}
 .cn-code{margin-top:8px;font-size:168px;line-height:190px;font-weight:600;letter-spacing:.18em;font-variant-numeric:tabular-nums}
 .cn-steps{margin-top:24px;max-width:1240px;font-size:32px;line-height:46px;color:var(--ink)}

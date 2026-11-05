@@ -13,12 +13,22 @@ function client(seed = {}) {
   return { media: window.LobbyMedia, store };
 }
 
-test('server addresses default to http and port 8096', () => {
+test('IP addresses default to http and port 8096', () => {
   const { media } = client();
   assert.equal(media.normalise('192.168.1.10'), 'http://192.168.1.10:8096');
   assert.equal(media.normalise(' 192.168.1.10:8920 '), 'http://192.168.1.10:8920');
-  assert.equal(media.normalise('https://emby.home.lan/'), 'https://emby.home.lan:8096');
-  assert.equal(media.normalise('emby:80'), 'http://emby:80');
+});
+
+test('hostnames always use https, defaulting to port 443', () => {
+  const { media } = client();
+  assert.equal(media.normalise('emby.home.lan'), 'https://emby.home.lan:443');
+  // An explicit http:// is overridden: a hostname is never reached over plain http.
+  assert.equal(media.normalise('https://emby.home.lan/'), 'https://emby.home.lan:443');
+  assert.equal(media.normalise('http://emby.home.lan'), 'https://emby.home.lan:443');
+  // An explicit port is kept.
+  assert.equal(media.normalise('emby:8920'), 'https://emby:8920');
+  // Hostnames are stored lower-cased, however they were typed (e.g. from the TV's keyboard).
+  assert.equal(media.normalise('EMBY.Home.LAN:8920'), 'https://emby.home.lan:8920');
 });
 
 test('invalid addresses are refused', () => {
