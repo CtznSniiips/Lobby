@@ -733,6 +733,36 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .cn-wait{margin-top:20px;font-size:28px;line-height:40px;color:var(--mute)}
 .cn-acts{top:760px}
 
+/* Unified search */
+.sr-field{position:absolute;left:140px;top:84px;width:1640px;height:88px;display:flex;align-items:center;font-size:52px;line-height:88px;font-weight:600;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;box-shadow:inset 0 -2px 0 0 var(--line)}
+.sr-q{overflow:hidden;text-overflow:ellipsis}
+.sr-q.is-empty{color:var(--faint)}
+.sr-caret{flex:0 0 auto;width:3px;height:52px;margin-left:8px;background:currentColor;opacity:.7;animation:srBlink 1.05s step-end infinite}
+@keyframes srBlink{50%{opacity:0}}
+.sr-body{position:absolute;left:140px;top:220px;width:1640px;bottom:72px}
+.sr-pad{position:absolute;left:0;top:4px;width:516px}
+.sr-row{display:flex;margin-bottom:12px}
+.sr-key{width:76px;height:68px;margin-right:12px;border:none;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:32px;font-weight:600;color:var(--ink);background:rgba(246,241,231,.08);transition:background-color 120ms linear,color 120ms linear}
+.sr-key:last-child{margin-right:0}
+.bg-light .sr-key{background:rgba(29,26,22,.06)}
+.sr-key.is-wide{width:auto;flex:1;padding:0 16px;font-size:26px}
+.sr-key.is-focus{background:var(--solid);color:var(--solid-ink)}
+.sr-results{position:absolute;left:576px;top:0;right:0;bottom:0;overflow:hidden}
+.sr-status{margin:12px 0 0;font-size:30px;line-height:42px;color:var(--mute);max-width:980px}
+.sr-warn{margin:0 0 18px;font-size:26px;line-height:36px;color:var(--warn)}
+.sr-group{margin-bottom:30px}
+.sr-group-title{margin:0 0 14px;font-size:28px;line-height:34px;font-weight:600;color:var(--ink)}
+.sr-strip{overflow:hidden}
+.sr-track{display:flex;transition:transform 200ms ease}
+.sr-card{position:relative;flex:0 0 auto;width:140px;margin-right:16px;padding:0;border:none;background:none;text-align:left;color:var(--ink);font-family:inherit}
+.sr-art{position:relative;display:block;width:140px;height:210px;border-radius:12px;overflow:hidden;background:rgba(246,241,231,.1)}
+.bg-light .sr-art{background:rgba(29,26,22,.08)}
+.sr-art img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
+.sr-card.is-focus .sr-art{box-shadow:0 0 0 3px var(--solid),0 12px 28px rgba(0,0,0,.45)}
+.sr-card-title{display:block;margin-top:8px;font-size:21px;line-height:26px;max-height:52px;overflow:hidden;font-weight:500}
+.sr-card-year{color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.sr-track{transition:none}.sr-caret{animation:none}}
+
 /* Emby & Seerr settings and team picker */
 .ls-view{position:absolute;left:112px;top:236px;width:1696px;height:704px;overflow:hidden}
 .ls-in{position:absolute;left:0;top:0;width:100%;transition:transform var(--t) var(--ease)}

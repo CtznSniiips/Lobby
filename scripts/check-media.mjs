@@ -116,6 +116,18 @@ async function handle(route) {
   if (api.unauthorized || auth !== 'Lobby ' + TOKEN) return json(401, { Message: 'This TV is not paired with Lobby (or was removed). Pair it again.' });
   const op = path.slice('/emby/Lobby'.length);
   if (op === '/Home') return json(200, homeJson());
+  if (op.startsWith('/Search')) {
+    const q = (url.searchParams.get('query') || '').trim();
+    const rows = q.length >= 2 ? [
+      { Id: 'search-library', Title: 'In your library', Layout: 'poster', Items: [
+        { Id: '101', Kind: 'movie', Title: 'Arrival', Year: 2016, PosterUrl: '/emby/Items/101/Images/Primary?tag=b', PlayItemId: '101', DefaultAction: 'play' }
+      ] },
+      { Id: 'search-seerr', Title: 'Request from Seerr', Layout: 'poster', Items: [
+        { Id: 'movie:603', Kind: 'discover', Title: 'The Matrix', Year: 1999, TmdbId: 603, MediaType: 'movie', RequestStatus: 'none', PosterUrl: 'https://image.tmdb.org/t/p/w342/m.jpg', DefaultAction: 'request' }
+      ] }
+    ] : [];
+    return json(200, { TvName: 'Living Room', UserName: 'steve', RequestsEnabled: api.requestsEnabled, Warnings: [], Rows: rows });
+  }
   if (op === '/Settings' && method === 'GET') return json(200, settingsJson());
   if (op === '/Settings' && method === 'POST') {
     api.saves.push(body); api.customized = true;
@@ -458,6 +470,27 @@ async function main() {
       check('unlinked account explained', (await current.locator('.rq-status').textContent()).includes('isn’t linked to a Seerr account'));
     });
 
+    await run('Unified search: keyboard, library and Seerr results', async () => {
+      api = freshApi(); await page({ paired: true });
+      await current.evaluate(() => ShoreQA.openSearch());
+      check('Search opens from the rail control', (await state()).view === 'search');
+      check('the on-screen keyboard shows every key', await current.locator('.sr-key').count() === 39);
+      check('no results prompt before typing', (await current.locator('.sr-status').textContent()).includes('at least two letters'));
+      // Type "AB" on the on-screen keys (A is the first key); a short pause then triggers the search.
+      await nav('ok');                 // A
+      await nav('right'); await nav('ok'); // B -> "AB"
+      await until(() => document.querySelectorAll('.sr-group').length === 2);
+      check('both result groups render', (await current.locator('.sr-group-title').allTextContents()).join('|') === 'In your library|Request from Seerr');
+      check('results show library and Seerr cards', await current.locator('.sr-card').count() === 2);
+      check('the search query reached the server', api.calls.some(c => c.path.endsWith('/Search') && c.search.includes('query=AB')), api.calls.map(c => c.path));
+      // Into the results and play the library title.
+      await nav('down', 'down', 'down', 'down', 'down', 'down', 'down');
+      check('Down from the keyboard enters the results', (await where()).zone === 'results');
+      await nav('ok');
+      await untilNode(() => api.plays.length > 0);
+      check('OK on a library result plays it', api.plays[0].ItemId === '101', api.plays);
+    });
+
     await run('Emby & Seerr settings change this TV', async () => {
       api = freshApi(); await page({ paired: true });
       await scene('settings'); await act('settings.group.media');
@@ -560,10 +593,10 @@ async function main() {
       await nav('right');
       check('Right from the last title wraps to the first', (await state()).media.featuredIndex === 0);
       await nav('left');
-      check('Left from the first title reaches the rail', (await where()).focusAction === 'util.art');
+      check('Left from the first title reaches the rail', (await where()).focusAction === 'util.search');
       check('the rail names the focused control', await current.locator('.wr-btn.is-focus .wr-label').evaluate(el => getComputedStyle(el).opacity) !== '0');
-      await nav('down', 'down');
-      check('the rail holds Art Mode, All apps and Settings', (await where()).focusAction === 'util.settings');
+      await nav('down', 'down', 'down');
+      check('the rail holds Search, Art Mode, All apps and Settings', (await where()).focusAction === 'util.settings');
       await nav('down');
       check('Down from Settings reaches the app dock', (await where()).focusAction === 'home.app.stremio', await where());
       await nav('left');

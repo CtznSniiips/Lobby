@@ -54,11 +54,12 @@
   var LOOK_VALUES = { bg: ['dark', 'light', 'photo'], layout: ['list', 'dock', 'watch'], apps: ['icons', 'both', 'text'], font: Object.keys(FONTS).filter(function (id) { return id === 'manrope' || PRIVATE_FONTS.indexOf(id) >= 0; }), controls: ['icons', 'both', 'text'], focus: ['type', 'glass'], material: ['soft', 'frost', 'tint'] };
   var LOOK_NAMES = { bg: 'Background', layout: 'Layout', apps: 'Apps', font: 'Font', controls: 'Home controls', focus: 'Focus', material: 'Material' };
   var VALUE_NAMES = { dark: 'Dark', light: 'Light', photo: 'Photo', list: 'List', dock: 'Dock', watch: 'Watch', type: 'Type', glass: 'Glass', soft: 'Soft', frost: 'Frost', tint: 'Clear tint', icons: 'Icons', both: 'Icons and text', text: 'Text' };
-  var UTIL = { art: ['Art Mode', 'art'], apps: ['All apps', 'apps'], arrange: ['Arrange', 'arrange'], settings: ['Settings', 'settings'] };
+  var UTIL = { search: ['Search', 'search'], art: ['Art Mode', 'art'], apps: ['All apps', 'apps'], arrange: ['Arrange', 'arrange'], settings: ['Settings', 'settings'] };
   var MSG = {
     leave: { title: 'Leave Home?', line: 'Open Samsung Home?', note: '', actions: [['stay', 'Stay'], ['samsung', 'Samsung Home']] }
   };
   var SVG = {
+    search: '<circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4.8 4.8"/>',
     art: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="9.8" r="1.5"/><path d="m4.5 17.5 4.5-4.5 3 3 2.5-2.5 5 5"/>',
     apps: '<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
     arrange: '<path d="M4 8.5h14M15 5.5l3 3-3 3M20 15.5H6M9 12.5l-3 3 3 3"/>',
@@ -625,7 +626,8 @@
     return { prev: v ? 'up' : 'left', next: v ? 'down' : 'right', out: v ? 'right' : 'up', inn: v ? 'left' : 'down' };
   }
   function utilAction(u) {
-    if (u === 'art') perform('Art Mode', FrameDevice.art);
+    if (u === 'search') openSearch();
+    else if (u === 'art') perform('Art Mode', FrameDevice.art);
     else if (u === 'apps') openApps();
     else openSettings();
   }
@@ -637,6 +639,39 @@
     push({ id: 'appearance', group: group, f: { action: action } });
   }
   function openMessage(key) { push({ id: 'message', msg: key, f: { b: 0 } }); }
+  var SEARCHPAD = [
+    ['A', 'B', 'C', 'D', 'E', 'F'],
+    ['G', 'H', 'I', 'J', 'K', 'L'],
+    ['M', 'N', 'O', 'P', 'Q', 'R'],
+    ['S', 'T', 'U', 'V', 'W', 'X'],
+    ['Y', 'Z', '0', '1', '2', '3'],
+    ['4', '5', '6', '7', '8', '9'],
+    ['space', 'del', 'clear']
+  ];
+  function openSearch() { push({ id: 'search', query: '', results: null, loading: false, warn: '', token: 0, timer: 0, f: { zone: 'pad', r: 0, c: 0, row: 0, col: 0 } }); }
+  /* A keystroke from the on-screen keys or a real keyboard; search follows a short pause in typing. */
+  function searchType(t, key) {
+    if (key === 'del') t.query = t.query.slice(0, -1);
+    else if (key === 'clear') t.query = '';
+    else if (key === 'space') { if (t.query.length && t.query.length < 80 && t.query.slice(-1) !== ' ') t.query += ' '; }
+    else if (key.length === 1 && t.query.length < 80) t.query += key;
+    searchRun(t);
+  }
+  function searchRun(t) {
+    var q = t.query.trim(), token = ++t.token;
+    clearTimeout(t.timer); t.timer = 0;
+    if (q.length < 2) { t.results = null; t.loading = false; t.warn = ''; return; }
+    t.loading = true;
+    t.timer = setTimeout(function () {
+      Media.search(q, function (err, data) {
+        if (top() !== t || token !== t.token) return;
+        t.loading = false;
+        if (err) { t.results = []; t.warn = 'Search is unavailable right now.'; }
+        else { t.results = cleanRows(data); t.warn = data && Array.isArray(data.Warnings) && data.Warnings[0] ? data.Warnings[0] : ''; }
+        render();
+      });
+    }, 380);
+  }
   function openApps() {
     var e = { id: 'apps', mode: 'browse', top: 0, f: { zone: 'grid', i: Math.max(0, ALPHA.indexOf(S.appsFocus)), h: 0 } };
     push(e); refreshCatalog(); return e;
@@ -1372,6 +1407,45 @@
     }
   };
 
+  /* ---------- Unified search: on-screen keyboard, then library and Seerr results ---------- */
+  V.search = {
+    sheet: true,
+    norm: function (t) {
+      var f = t.f, rows = t.results || [];
+      if (f.zone === 'results' && !rows.length) f.zone = 'pad';
+      if (f.zone === 'pad') {
+        f.r = clamp(f.r, 0, SEARCHPAD.length - 1); f.c = clamp(f.c, 0, SEARCHPAD[f.r].length - 1);
+      } else {
+        f.row = clamp(f.row, 0, rows.length - 1); f.col = clamp(f.col, 0, rows[f.row].items.length - 1);
+      }
+    },
+    key: function (t, k) {
+      var f = t.f, rows = t.results || [];
+      if (k.indexOf('type:') === 0) { searchType(t, k.slice(5)); return; }
+      if (k === 'back') { clearTimeout(t.timer); pop(); return; }
+      if (f.zone === 'pad') {
+        if (k === 'up' && f.r > 0) f.r--;
+        else if (k === 'down') { if (f.r < SEARCHPAD.length - 1) f.r++; else if (rows.length) f.zone = 'results'; }
+        else if (k === 'left' && f.c > 0) f.c--;
+        else if (k === 'right') { if (f.c < SEARCHPAD[f.r].length - 1) f.c++; else if (rows.length) f.zone = 'results'; }
+        else if (k === 'ok') searchType(t, SEARCHPAD[f.r][f.c]);
+        f.c = clamp(f.c, 0, SEARCHPAD[clamp(f.r, 0, SEARCHPAD.length - 1)].length - 1);
+        return;
+      }
+      if (!rows.length) { f.zone = 'pad'; return; }
+      f.row = clamp(f.row, 0, rows.length - 1); f.col = clamp(f.col, 0, rows[f.row].items.length - 1);
+      if (k === 'left') { if (f.col > 0) f.col--; else f.zone = 'pad'; }
+      else if (k === 'right') { if (f.col < rows[f.row].items.length - 1) f.col++; }
+      else if (k === 'up') { if (f.row > 0) { f.row--; f.col = clamp(f.col, 0, rows[f.row].items.length - 1); } else f.zone = 'pad'; }
+      else if (k === 'down') { if (f.row < rows.length - 1) { f.row++; f.col = clamp(f.col, 0, rows[f.row].items.length - 1); } }
+      else if (k === 'ok') mediaOk(rows[f.row].items[f.col]);
+    },
+    point: function (t, z, i) {
+      if (z === 'key') { t.f.zone = 'pad'; t.f.r = Math.floor(i / 100); t.f.c = i % 100; this.key(t, 'ok'); }
+      else if (z === 'res') { t.f.zone = 'results'; t.f.row = Math.floor(i / 100); t.f.col = i % 100; this.key(t, 'ok'); }
+    }
+  };
+
   /* ---------- Emby & Seerr settings and team picker: scrolling lists ---------- */
   var LS_VIEW = 704, LS_LINE = 104, LS_HEAD = 64;
   function openMediaSettings() {
@@ -1880,7 +1954,7 @@
      Rail (Art Mode, All apps, Settings) and a featured title at the top, then bands of rows:
      paired rows share a band side by side, and the Home apps come last. While a row has focus,
      the top area describes the focused title instead of the featured one. */
-  var W_RAIL = ['art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
+  var W_RAIL = ['search', 'art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
   var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, labels: 60, bottom: 924,
     tile: { w: 240, h: 135, pitch: 254 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -2661,6 +2735,10 @@
     connect: function () {
       return '<h2 class="s-title">Connect to Emby</h2><p class="s-sub" data-slot="sub" aria-live="polite"></p><div class="cn-body" data-slot="body"></div><div class="msg-acts cn-acts" data-slot="acts"></div>';
     },
+    search: function () {
+      return '<div class="sr-field" data-slot="field"></div>'
+        + '<div class="sr-body"><div class="sr-pad" data-slot="pad"></div><div class="sr-results" data-slot="results" aria-live="polite"></div></div>';
+    },
     mediaset: listFrame,
     teams: listFrame,
     inputs: listFrame
@@ -2876,6 +2954,37 @@
       setHTML(el.sub, sub);
       setHTML(el.body, html);
       setHTML(el.acts, t.step === 'address' ? '' : actButtons(connectActions(t), t.f.b));
+    },
+    search: function (t, el) {
+      var f = t.f, rows = t.results || [], pitch = 156;
+      setHTML(el.field, (t.query ? '<span class="sr-q">' + esc(t.query) + '</span>' : '<span class="sr-q is-empty">Search movies &amp; shows…</span>') + '<span class="sr-caret"></span>');
+      setHTML(el.pad, SEARCHPAD.map(function (row, r) {
+        return '<div class="sr-row">' + row.map(function (key, c) {
+          var label = key === 'del' ? '⌫' : key === 'clear' ? 'Clear' : key === 'space' ? 'Space' : key;
+          return '<button type="button" tabindex="-1" class="sr-key' + (key.length > 1 ? ' is-wide' : '') + (f.zone === 'pad' && f.r === r && f.c === c ? ' is-focus' : '')
+            + '" data-z="key" data-i="' + (r * 100 + c) + '" data-action="search.key.' + key + '" aria-label="' + esc(key === 'del' ? 'Delete' : label) + '">' + esc(label) + '</button>';
+        }).join('') + '</div>';
+      }).join(''));
+      var body;
+      if (t.loading && rows.length === 0) body = '<p class="sr-status">Searching…</p>';
+      else if (t.results === null) body = '<p class="sr-status">Type at least two letters to search your library and Seerr.</p>';
+      else if (!rows.length) body = '<p class="sr-status">' + esc(t.warn || 'Nothing found. Try another title.') + '</p>';
+      else {
+        body = (t.warn ? '<p class="sr-warn">' + esc(t.warn) + '</p>' : '') + rows.map(function (row, ri) {
+          var focusRow = f.zone === 'results' && f.row === ri, off = focusRow ? Math.max(0, f.col - 1) * pitch : 0;
+          return '<div class="sr-group"><h3 class="sr-group-title">' + esc(row.title) + '</h3>'
+            + '<div class="sr-strip"><div class="sr-track" style="transform:translate3d(' + (-off) + 'px,0,0)">'
+            + row.items.map(function (it, ci) {
+              var src = Media.image(it.poster || it.landscape, 320);
+              return '<button type="button" tabindex="-1" class="sr-card' + (focusRow && f.col === ci ? ' is-focus' : '')
+                + '" data-z="res" data-i="' + (ri * 100 + ci) + '" data-action="search.open.' + esc(it.id) + '" aria-label="' + esc(it.title) + '">'
+                + '<span class="sr-art">' + (src ? '<img alt="" src="' + esc(src) + '">' : '') + '<span class="mc-fallback">' + esc(it.title) + '</span></span>'
+                + mediaBadge(it)
+                + '<span class="sr-card-title">' + esc(it.title) + (it.year ? ' <span class="sr-card-year">' + it.year + '</span>' : '') + '</span></button>';
+            }).join('') + '</div></div></div>';
+        }).join('');
+      }
+      setHTML(el.results, body);
     },
     mediaset: fillList,
     teams: fillList,
@@ -3113,6 +3222,11 @@
     var code = ev.keyCode, k = KEYS[code], typed;
     if (code === 9) { ev.preventDefault(); return; }
     if (top().id === 'connect' && top().step === 'address' && !ev.metaKey && !ev.ctrlKey && !ev.altKey && (typed = typedKey(ev))) { ev.preventDefault(); press('type:' + typed); return; }
+    if (top().id === 'search' && !ev.metaKey && !ev.ctrlKey && !ev.altKey) {
+      if (ev.key && ev.key.length === 1 && /[A-Za-z0-9]/.test(ev.key)) { ev.preventDefault(); press('type:' + ev.key.toUpperCase()); return; }
+      if (ev.key === ' ' || code === 32) { ev.preventDefault(); press('type:space'); return; }
+      if (code === 8 || code === 46) { ev.preventDefault(); press('type:del'); return; }
+    }
     if (!k || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     ev.preventDefault();
     if (k === 'ok' || k === 'back') { if (ev.repeat || heldKeys[code]) return; heldKeys[code] = true; }
@@ -3136,6 +3250,8 @@
   window.addEventListener('resize', fit);
   QA.fireSaver = fireSaver; QA.vibrant = wVibrant; QA.saverMs = saverMs; QA.weatherIcon = weatherIcon; QA.applyWeather = applyWeather;
   QA.dismissTarget = wDismissTarget; QA.dismiss = wDismiss;
+  QA.openSearch = function () { openSearch(); render(); };
+  QA.searchResults = function (data) { var t = top(); if (t.id === 'search') { t.loading = false; t.results = cleanRows(data); t.warn = data && data.Warnings && data.Warnings[0] || ''; render(); } };
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
   var NAV = { left: 'left', right: 'right', up: 'up', down: 'down', ok: 'ok', enter: 'ok', back: 'back', escape: 'back' };
