@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.4
+
+- game-thumbs style now offers styles **5 (grid background)** and **6 (grid with team colours)** in addition to 1-4.
+
 ## 0.9.3
 
 - New **game-thumbs** option for sports art (plugin page): point Lobby at a [game-thumbs](https://github.com/sethwv/game-thumbs) service by IP:port or hostname and pick a matchup style (1-4), and sports cards and the hero backdrop use clean 16:9 matchup graphics instead of the guide's (often portrait, cropped) image. Teams are matched flexibly from the guide listing; leagues covered include NHL, NBA, WNBA, NFL, MLB, MLS, NCAA football/basketball and the major soccer leagues. Off by default; when off, the guide image is used as before. (The TV-side sports cards revert to landscape to match.)

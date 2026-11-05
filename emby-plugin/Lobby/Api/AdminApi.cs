@@ -352,7 +352,7 @@ namespace Lobby.Api
                 c.SportsLiveOnly = request.SportsLiveOnly;
                 c.GameThumbsEnabled = request.GameThumbsEnabled;
                 c.GameThumbsUrl = (request.GameThumbsUrl ?? string.Empty).Trim();
-                c.GameThumbsStyle = Clamp(request.GameThumbsStyle, 1, 4, 1);
+                c.GameThumbsStyle = Clamp(request.GameThumbsStyle, 1, 6, 1);
             });
 
             return ToView(Plugin.Instance.Configuration);
