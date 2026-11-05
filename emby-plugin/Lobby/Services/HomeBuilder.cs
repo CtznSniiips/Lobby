@@ -549,9 +549,19 @@ namespace Lobby.Services
                 }
 
                 // Play the next episode to watch; a show not started yet plays from the beginning.
+                // Queried directly by per-episode watched state rather than Emby's NextUp API, which can
+                // keep pointing at an already-watched episode (observed returning S1E1 for shows whose
+                // first episode was marked played) instead of advancing to the actual next unwatched one.
                 if (long.TryParse(d.Id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seriesId))
                 {
-                    var next = _tv.GetNextUp(new NextUpQuery { UserId = user.InternalId, SeriesId = seriesId, Limit = 1 }, user, new DtoOptions(false))?.Items?.FirstOrDefault();
+                    var next = _library.GetItemList(new InternalItemsQuery(user)
+                    {
+                        AncestorIds = new[] { seriesId },
+                        IncludeItemTypes = new[] { "Episode" },
+                        IsPlayed = false,
+                        OrderBy = new[] { ValueTuple.Create(ItemSortBy.AiredEpisodeOrder, SortOrder.Ascending) },
+                        Limit = 1,
+                    }).FirstOrDefault();
                     if (next != null)
                     {
                         item.PlayItemId = next.InternalId.ToString(CultureInfo.InvariantCulture);
