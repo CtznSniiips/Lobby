@@ -2,7 +2,7 @@
    as Tizen calls live in device.js. Nothing is sent until the owner pairs this TV. */
 (function () {
   'use strict';
-  var SERVER_KEY = 'lobby.server.v1', CACHE_KEY = 'lobby.home.cache.v1', DEFAULT_PORT = 8096;
+  var SERVER_KEY = 'lobby.server.v1', CACHE_KEY = 'lobby.home.cache.v1', DEFAULT_PORT = 8096, DEFAULT_TLS_PORT = 443;
 
   function read(key) {
     try { var raw = localStorage.getItem(key), v = raw ? JSON.parse(raw) : null; return v && typeof v === 'object' && !Array.isArray(v) ? v : null; }
@@ -22,15 +22,18 @@
   function save(url, token, tvName) { return store(SERVER_KEY, { url: url, token: token, tvName: tvName || '' }); }
   function forget() { store(SERVER_KEY, null); store(CACHE_KEY, null); }
 
-  /* "192.168.1.10" -> "http://192.168.1.10:8096". Returns null for anything else. */
+  /* "192.168.1.10" -> "http://192.168.1.10:8096"; a hostname instead of an address always
+     connects over https, on port 443 unless another port is given. Returns null for anything else. */
   function normalise(text) {
-    var s = String(text || '').trim().replace(/\/+$/, ''), scheme = 'http', m;
+    var s = String(text || '').trim().replace(/\/+$/, ''), scheme = 'http', m, isIp, port;
     m = /^(https?):\/\//i.exec(s);
     if (m) { scheme = m[1].toLowerCase(); s = s.slice(m[0].length); }
     m = /^([A-Za-z0-9](?:[A-Za-z0-9.\-]{0,251}[A-Za-z0-9])?)(?::(\d{1,5}))?$/.exec(s);
     if (!m) return null;
-    if (/^[\d.]+$/.test(m[1]) && !/^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/.test(m[1])) return null;
-    var port = m[2] ? Number(m[2]) : DEFAULT_PORT;
+    isIp = /^[\d.]+$/.test(m[1]);
+    if (isIp && !/^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)$/.test(m[1])) return null;
+    if (!isIp) { scheme = 'https'; m[1] = m[1].toLowerCase(); }
+    port = m[2] ? Number(m[2]) : (isIp ? DEFAULT_PORT : DEFAULT_TLS_PORT);
     if (port < 1 || port > 65535) return null;
     return scheme + '://' + m[1] + ':' + port;
   }

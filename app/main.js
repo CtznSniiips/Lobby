@@ -1310,16 +1310,26 @@
   };
 
   /* ---------- Connect: server address keypad and pairing code ---------- */
-  var KEYPAD = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['.', '0', ':'], ['del', 'go']];
+  /* IP pad: digits, '.' and ':' only, like the remote's own number keys. 'mode' swaps to the
+     hostname pad below for a server reached by name instead of address. */
+  var KEYPAD_IP = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['.', '0', ':'], ['mode', 'del', 'go']];
+  /* Hostname pad: letters plus the characters an FQDN needs ('.', '-', ':port'). A hostname
+     always connects over https, so there's no need for a scheme or a '/' key. */
+  var KEYPAD_FQDN = [
+    ['A', 'B', 'C', 'D', 'E', 'F'], ['G', 'H', 'I', 'J', 'K', 'L'], ['M', 'N', 'O', 'P', 'Q', 'R'],
+    ['S', 'T', 'U', 'V', 'W', 'X'], ['Y', 'Z', '0', '1', '2', '3'], ['4', '5', '6', '7', '8', '9'],
+    ['.', '-', ':', 'mode', 'del', 'go']
+  ];
+  function activePad(t) { return t.mode === 'fqdn' ? KEYPAD_FQDN : KEYPAD_IP; }
   function openConnect() {
     var c = Media.config();
     FrameDevice.digits();
-    push({ id: 'connect', step: 'address', text: c ? Media.host(c.url) : '', error: '', url: '', token: 0, poll: 0, pairing: null, server: null, tvName: '', f: { r: 0, c: 0, b: 0 } });
+    push({ id: 'connect', step: 'address', mode: 'ip', text: c ? Media.host(c.url) : '', error: '', url: '', token: 0, poll: 0, pairing: null, server: null, tvName: '', f: { r: 0, c: 0, b: 0 } });
   }
   function connectFail(t, message) { clearTimeout(t.poll); t.step = 'error'; t.error = message; t.f.b = 0; }
   function connectStart(t) {
     var url = Media.normalise(t.text), token;
-    if (!url) { t.error = 'Enter your Emby server’s address, like 192.168.1.10 or 192.168.1.10:8096.'; return; }
+    if (!url) { t.error = t.mode === 'fqdn' ? 'Enter your Emby server’s hostname, like jellyfin.example.com.' : 'Enter your Emby server’s address, like 192.168.1.10 or 192.168.1.10:8096.'; return; }
     t.url = url; t.step = 'checking'; t.error = ''; t.f.b = 0; token = ++t.token;
     Media.probe(url, function (err, info) {
       if (top() !== t || token !== t.token) return;
@@ -1361,6 +1371,7 @@
     }, QA.pollMs);
   }
   function connectType(t, key) {
+    if (key === 'mode') { t.mode = t.mode === 'fqdn' ? 'ip' : 'fqdn'; t.f.r = 0; t.f.c = 0; t.error = ''; return; }
     if (key === 'del') t.text = t.text.slice(0, -1);
     else if (key === 'go') { connectStart(t); return; }
     else if (t.text.length < 64) t.text += key;
@@ -1375,19 +1386,21 @@
   V.connect = {
     sheet: true,
     norm: function (t) {
-      t.f.r = clamp(t.f.r, 0, KEYPAD.length - 1); t.f.c = clamp(t.f.c, 0, KEYPAD[t.f.r].length - 1);
+      var pad = activePad(t);
+      t.f.r = clamp(t.f.r, 0, pad.length - 1); t.f.c = clamp(t.f.c, 0, pad[t.f.r].length - 1);
       if (t.step !== 'address') t.f.b = clamp(t.f.b, 0, connectActions(t).length - 1);
     },
     key: function (t, k) {
-      var f = t.f, A, a, width;
+      var f = t.f, A, a, pad;
       if (t.step === 'address') {
+        pad = activePad(t);
         if (k.indexOf('type:') === 0) { connectType(t, k.slice(5)); return; }
         if (k === 'back') { closeConnect(t); return; }
-        if (k === 'up' && f.r > 0) { width = KEYPAD[f.r].length; f.r--; f.c = width === 2 ? (f.c ? 2 : 0) : f.c; }
-        else if (k === 'down' && f.r < KEYPAD.length - 1) { f.r++; if (KEYPAD[f.r].length === 2) f.c = f.c === 0 ? 0 : 1; }
+        if (k === 'up' && f.r > 0) f.r--;
+        else if (k === 'down' && f.r < pad.length - 1) f.r++;
         else if (k === 'left' && f.c > 0) f.c--;
-        else if (k === 'right' && f.c < KEYPAD[f.r].length - 1) f.c++;
-        else if (k === 'ok') connectType(t, KEYPAD[f.r][f.c]);
+        else if (k === 'right' && f.c < pad[f.r].length - 1) f.c++;
+        else if (k === 'ok') connectType(t, pad[f.r][f.c]);
         return;
       }
       A = connectActions(t);
@@ -2929,16 +2942,19 @@
       setHTML(el.acts, actButtons(requestActions(t), t.f.b));
     },
     connect: function (t, el) {
-      var html = '', sub;
+      var html = '', sub, pad, isFqdn = t.mode === 'fqdn';
       if (t.step === 'address') {
-        sub = t.error ? '<span class="setting-error">' + esc(t.error) + '</span>' : 'Enter your Emby server’s address. The port is 8096 unless you changed it.';
-        html = '<div class="cn-field' + (t.text ? '' : ' is-empty') + '"><span>' + esc(t.text || '192.168.1.10') + '</span><span class="cn-caret"></span></div><div class="cn-pad">'
-          + KEYPAD.map(function (row, r) {
+        sub = t.error ? '<span class="setting-error">' + esc(t.error) + '</span>'
+          : isFqdn ? 'Enter your Emby server’s hostname. It connects securely over https, on port 443 unless you add one.'
+          : 'Enter your Emby server’s address. The port is 8096 unless you changed it.';
+        pad = activePad(t);
+        html = '<div class="cn-field' + (t.text ? '' : ' is-empty') + '"><span>' + esc(t.text || (isFqdn ? 'jellyfin.example.com' : '192.168.1.10')) + '</span><span class="cn-caret"></span></div><div class="cn-pad' + (isFqdn ? ' is-fqdn' : '') + '">'
+          + pad.map(function (row, r) {
             return '<div class="cn-row">' + row.map(function (key, c) {
-              var label = key === 'del' ? 'Delete' : key === 'go' ? 'Connect' : key;
-              return '<button type="button" tabindex="-1" class="cn-key' + (key.length > 1 ? ' is-wide' : '') + (key === 'go' ? ' is-go' : '') + (t.f.r === r && t.f.c === c ? ' is-focus' : '') + '" data-z="key" data-i="' + (r * 10 + c) + '" data-action="connect.key.' + key + '" aria-label="' + label + '">' + esc(label) + '</button>';
+              var label = key === 'del' ? 'Delete' : key === 'go' ? 'Connect' : key === 'mode' ? (isFqdn ? '123' : 'ABC') : key;
+              return '<button type="button" tabindex="-1" class="cn-key' + (key.length > 1 ? ' is-wide' : '') + (key === 'go' ? ' is-go' : '') + (t.f.r === r && t.f.c === c ? ' is-focus' : '') + '" data-z="key" data-i="' + (r * 10 + c) + '" data-action="connect.key.' + key + '" aria-label="' + (key === 'mode' ? (isFqdn ? 'Use an IP address' : 'Use a hostname') : label) + '">' + esc(label) + '</button>';
             }).join('') + '</div>';
-          }).join('') + '</div><p class="cn-help">Number keys on the remote work too.</p>';
+          }).join('') + '</div><p class="cn-help">' + (isFqdn ? 'A keyboard works too.' : 'Number keys on the remote work too.') + '</p>';
       } else if (t.step === 'checking') {
         sub = 'Looking for Emby at ' + esc(Media.host(t.url)) + '…';
       } else if (t.step === 'code') {
@@ -3208,9 +3224,12 @@
     pointAt(el);
   });
   var heldKeys = {};
-  /* Typing a server address: number keys, '.' and ':' from remotes and keyboards. */
-  function typedKey(ev) {
+  /* Typing a server address: number keys, '.' and ':' from remotes and keyboards; in the
+     hostname pad, letters and '-' too. */
+  function typedKey(ev, mode) {
     var code = ev.keyCode;
+    if (mode === 'fqdn' && ev.key && /^[A-Za-z]$/.test(ev.key)) return ev.key.toUpperCase();
+    if (mode === 'fqdn' && (ev.key === '-' || code === 189 || code === 173)) return '-';
     if (ev.key && /^[0-9.:]$/.test(ev.key)) return ev.key;
     if (code >= 48 && code <= 57) return String(code - 48);
     if (code >= 96 && code <= 105) return String(code - 96);
@@ -3221,7 +3240,7 @@
   document.addEventListener('keydown', function (ev) {
     var code = ev.keyCode, k = KEYS[code], typed;
     if (code === 9) { ev.preventDefault(); return; }
-    if (top().id === 'connect' && top().step === 'address' && !ev.metaKey && !ev.ctrlKey && !ev.altKey && (typed = typedKey(ev))) { ev.preventDefault(); press('type:' + typed); return; }
+    if (top().id === 'connect' && top().step === 'address' && !ev.metaKey && !ev.ctrlKey && !ev.altKey && (typed = typedKey(ev, top().mode))) { ev.preventDefault(); press('type:' + typed); return; }
     if (top().id === 'search' && !ev.metaKey && !ev.ctrlKey && !ev.altKey) {
       if (ev.key && ev.key.length === 1 && /[A-Za-z0-9]/.test(ev.key)) { ev.preventDefault(); press('type:' + ev.key.toUpperCase()); return; }
       if (ev.key === ' ' || code === 32) { ev.preventDefault(); press('type:space'); return; }
