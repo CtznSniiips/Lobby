@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- Fixed: the **Live sports only** checkbox on the plugin page floated away from its label (Emby's global form styles). It now sits inline beside its label like the other toggles.
+
 ## 0.9.0
 
 - **Manage Continue Watching:** hold **OK** on an in-progress card in Continue Watching to remove it. `POST /Lobby/Resume/Dismiss` clears only that item's saved resume position, so it leaves Continue Watching while its watched/unwatched status is kept exactly as it was.
