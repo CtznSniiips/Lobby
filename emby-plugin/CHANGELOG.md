@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- Sports now shows **only programmes the guide flags as "Live"** — in both the featured area and the "Your teams" row. Replays, encores and preview/highlight shows for your teams are left out, so what appears is airing live. (If your guide provider doesn't mark live broadcasts, the sports surfaces will be empty.)
+
 ## 0.7.0
 
 - Version bump so the per-TV weather build is distinguishable from the earlier 0.6.0 build that still had the old global weather settings. No code changes from 0.6.0's final state.
