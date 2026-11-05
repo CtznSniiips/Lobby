@@ -2,7 +2,7 @@
 
 ## 0.8.0
 
-- Sports now shows **only programmes the guide flags as "Live"** — in both the featured area and the "Your teams" row. Replays, encores and preview/highlight shows for your teams are left out, so what appears is airing live. (If your guide provider doesn't mark live broadcasts, the sports surfaces will be empty.)
+- New **Live sports only** server setting (plugin page, on by default): the featured area and the "Your teams" row show only programmes the guide flags as "Live", leaving out replays, encores and preview/highlight shows. Turn it off to show all matching sports. (With it on, if your guide provider doesn't mark live broadcasts, the sports surfaces will be empty.)
 
 ## 0.7.0
 

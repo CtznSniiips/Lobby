@@ -46,6 +46,9 @@ namespace Lobby.Configuration
         public bool ShowSeerrPopularMovies { get; set; } = true;
         public bool ShowSeerrPopularShows { get; set; } = true;
 
+        /// <summary>When true (default), the featured area and "Your teams" row show only sports the guide flags as Live.</summary>
+        public bool SportsLiveOnly { get; set; } = true;
+
         /// <summary>Paired TVs.</summary>
         public TvDevice[] Tvs { get; set; } = new TvDevice[0];
 
