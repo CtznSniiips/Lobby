@@ -840,7 +840,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wt-wx .ico{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-right:9px}
 .wt-temp{font-variant-numeric:tabular-nums}
 .wt-time{margin-left:28px;color:var(--ink)}
-.w-rail{position:absolute;left:52px;top:150px;width:80px;z-index:2;transition:opacity var(--t) linear}
+.w-rail{position:absolute;left:52px;top:60px;width:80px;z-index:2;transition:opacity var(--t) linear}
 .watch.is-scrolled .w-rail{opacity:0}
 .watch.is-scrolled .wi-body,.watch.is-scrolled .wi-greet{display:none}
 .wr-btn{position:relative;display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 0 18px;padding:0;border:0;border-radius:36px;background:transparent;color:var(--soft);font:inherit;cursor:pointer;transition:background 140ms linear,color 140ms linear,transform var(--t) var(--ease)}
