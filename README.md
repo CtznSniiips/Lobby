@@ -69,6 +69,16 @@ Use the staged [Samsung The Frame setup guide](docs/agent-tv-setup-guide.md) to 
 
 Signing supports an ignored `.local/signing.json` based on `signing.example.json`: select your SDK, existing certificate profile and your own SDK-generated app identity. See [local signing setup](docs/development.md#local-tv-tools-and-signing). The TV installation commands and native Home helper still contain reference-machine assumptions. Your agent must check the installed-app IDs and each device stage with you. Installing the app and assigning the remote Home button are separate steps.
 
+### Reach Lobby with one press
+
+Installing Lobby and making it the thing your physical Home button opens are different steps, with very different risk.
+
+**Full replacement:** the native-Home-routing stage of the [setup guide](docs/agent-tv-setup-guide.md) reassigns what the physical Home button opens, using this project's guarded native-Home helper. It's the closest thing to a stock Home screen, but Samsung doesn't document the mechanism, it's model/firmware-specific, and it needs a recovery baseline before you touch it. Treat it as something you do deliberately for your own TV, not a set of instructions to hand someone else.
+
+**Quicker and lower-risk:** in TV Settings → General → Start Screen Options, turn on **Autorun Last App**, open Lobby once so it becomes the last app you used, then move its tile to the first position in the Home bar (press and hold the tile, or use the remote's move option). The TV then tends to come back up in Lobby the next time it's turned on, and even on a run where it doesn't, Lobby's tile is the first thing the physical Home button shows you — one extra press away rather than buried in the row. This doesn't touch native Home routing at all, so there's nothing to recover if you change your mind.
+
+We haven't independently verified this year by year on Lobby; it's reported to work reliably on at least one 2017 Samsung TV, with some community reports that 2019/2020 models don't reopen the last app this way. Try it and check your own model before relying on it.
+
 | Area | Evidence and limits |
 | --- | --- |
 | Reference hardware | Samsung QA55LS03DAWXXY / LS03D, firmware 2130.0, Tizen 9.0, 32-bit ARM |
