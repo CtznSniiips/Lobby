@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.5
+
+- Fixed: a show featured in the hero as "New in your library" could show the wrong episode (e.g. S1 E1 on a show you'd already started) — the hero now looks up the next unwatched episode directly from per-episode watched state instead of trusting Emby's NextUp API, which could keep pointing at an already-played episode.
+
 ## 0.9.4
 
 - game-thumbs style now offers styles **5 (grid background)** and **6 (grid with team colours)** in addition to 1-4.
