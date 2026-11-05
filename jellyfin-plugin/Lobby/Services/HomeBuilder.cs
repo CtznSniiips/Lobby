@@ -448,8 +448,8 @@ namespace Lobby.Services
             // The featured area needs background art; a title without it stays in its row instead.
             var resumeDtos = _dto.GetBaseItemDtos(resume, options, user);
             var latestDtos = _dto.GetBaseItemDtos(latest, options, user);
-            var fromResume = resumeDtos.Select(d => MapFeaturedLibrary(user, d, "resume")).Where(i => i.BackdropUrl != null).ToList();
-            var fromLatest = latestDtos.Select(d => MapFeaturedLibrary(user, d, "new")).Where(i => i.BackdropUrl != null).ToList();
+            var fromResume = resumeDtos.Select(d => MapFeaturedLibrary(user, d, "resume", options)).Where(i => i.BackdropUrl != null).ToList();
+            var fromLatest = latestDtos.Select(d => MapFeaturedLibrary(user, d, "new", options)).Where(i => i.BackdropUrl != null).ToList();
 
             var fromTrending = new List<HomeItem>();
             var trending = trendingTask == null ? null : await trendingTask.ConfigureAwait(false);
@@ -543,7 +543,7 @@ namespace Lobby.Services
             return games;
         }
 
-        private HomeItem MapFeaturedLibrary(User user, BaseItemDto d, string reason)
+        private HomeItem MapFeaturedLibrary(User user, BaseItemDto d, string reason, DtoOptions options)
         {
             HomeItem item;
             var parts = new List<string>();
@@ -599,11 +599,15 @@ namespace Lobby.Services
                     }
 
                     BaseItem series = d.SeriesId.HasValue ? _library.GetItemById(d.SeriesId.Value) : null;
+                    var seriesDto = series != null ? _dto.GetBaseItemDtos(new[] { series }, options, user).FirstOrDefault() : null;
 
                     item.Tagline = series?.Tagline;
                     item.Overview = string.IsNullOrWhiteSpace(d.Overview) ? series?.Overview : d.Overview;
-                    item.BackdropUrl = Image(d.ParentBackdropItemId, ImageType.Backdrop, d.ParentBackdropImageTags?.FirstOrDefault());
-                    item.LogoUrl = Image(d.ParentLogoItemId, ImageType.Logo, d.ParentLogoImageTag);
+                    // The hero wants the show's own fanart. Parent*ItemId inherits from the nearest ancestor
+                    // that has an image, which can land on a lower-resolution season (or episode) image
+                    // instead of the series' real backdrop, making Continue Watching look blurry here.
+                    item.BackdropUrl = seriesDto != null ? Image(seriesDto.Id, ImageType.Backdrop, seriesDto.BackdropImageTags?.FirstOrDefault()) : null;
+                    item.LogoUrl = seriesDto != null ? Image(seriesDto.Id, ImageType.Logo, Tag(seriesDto, ImageType.Logo)) : null;
                 }
                 else
                 {

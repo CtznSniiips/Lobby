@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.6
+
+- Fixed: a continuing episode in the Watch hero could show a blurry backdrop — the Episode branch of
+  `MapFeaturedLibrary` used `ParentBackdropItemId`/`ParentBackdropImageTags`, which inherits from the
+  nearest ancestor with an image and can land on a lower-resolution season (or even the episode's own)
+  image instead of the series' real fanart. The hero now looks up the series' own backdrop and logo
+  directly.
+
 ## 0.9.5
 
 - Fixed: a show featured in the hero as "New in your library" could show the wrong episode (e.g. S1 E1 on a show you'd already started) — the hero now looks up the next unwatched episode directly from per-episode watched state instead of trusting Emby's NextUp API, which could keep pointing at an already-played episode.
