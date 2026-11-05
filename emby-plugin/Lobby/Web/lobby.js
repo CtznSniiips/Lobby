@@ -209,7 +209,7 @@ define([], function () {
             $('#cfSeerrKey').placeholder = s.HasSeerrApiKey ? 'Saved. Leave blank to keep it' : 'Paste your Seerr API key';
             $('#cfRequestsEnabled').checked = !!s.RequestsEnabled;
             ['ShowContinueWatching', 'ShowNextUp', 'ShowRecentlyAdded', 'ShowLiveNow', 'ShowSports', 'ShowSeerrTrending',
-                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows'].forEach(function (k) {
+                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly'].forEach(function (k) {
                 $('#cf' + k).checked = !!s[k];
             });
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {
@@ -226,7 +226,7 @@ define([], function () {
                 FallbackSeerrUserId: parseInt($('#cfFallback').value, 10) || 0
             };
             ['ShowContinueWatching', 'ShowNextUp', 'ShowRecentlyAdded', 'ShowLiveNow', 'ShowSports', 'ShowSeerrTrending',
-                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows'].forEach(function (k) {
+                'ShowSeerrPopularMovies', 'ShowSeerrPopularShows', 'SportsLiveOnly'].forEach(function (k) {
                 s[k] = $('#cf' + k).checked;
             });
             ['RowLimit', 'SportsLookaheadHours', 'PlayDelayMs', 'PlayTimeoutSeconds', 'RememberRequesterMinutes'].forEach(function (k) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- New **Live sports only** server setting (plugin page, on by default): the featured area and the "Your teams" row show only programmes the guide flags as "Live", leaving out replays, encores and preview/highlight shows. Turn it off to show all matching sports. (With it on, if your guide provider doesn't mark live broadcasts, the sports surfaces will be empty.)
+
 ## 0.7.0
 
 - Version bump so the per-TV weather build is distinguishable from the earlier 0.6.0 build that still had the old global weather settings. No code changes from 0.6.0's final state.

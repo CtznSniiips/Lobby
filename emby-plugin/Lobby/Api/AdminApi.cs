@@ -129,6 +129,7 @@ namespace Lobby.Api
         public bool ShowSeerrTrending { get; set; }
         public bool ShowSeerrPopularMovies { get; set; }
         public bool ShowSeerrPopularShows { get; set; }
+        public bool SportsLiveOnly { get; set; }
     }
 
     public class TvView
@@ -345,6 +346,7 @@ namespace Lobby.Api
                 c.ShowSeerrTrending = request.ShowSeerrTrending;
                 c.ShowSeerrPopularMovies = request.ShowSeerrPopularMovies;
                 c.ShowSeerrPopularShows = request.ShowSeerrPopularShows;
+                c.SportsLiveOnly = request.SportsLiveOnly;
             });
 
             return ToView(Plugin.Instance.Configuration);
@@ -493,6 +495,7 @@ namespace Lobby.Api
                 ShowSeerrTrending = c.ShowSeerrTrending,
                 ShowSeerrPopularMovies = c.ShowSeerrPopularMovies,
                 ShowSeerrPopularShows = c.ShowSeerrPopularShows,
+                SportsLiveOnly = c.SportsLiveOnly,
             };
         }
 
