@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lobby</title>
+</head>
+<body>
+<div id="lobbyConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox" data-controller="__plugin/lobbyjs">
+    <style>
+        #lobbyConfigPage .cf-section { margin: 0 0 2.5em; }
+        #lobbyConfigPage .cf-section > h2 { margin: 0 0 .3em; }
+        #lobbyConfigPage .cf-help { opacity: .7; margin: 0 0 1em; font-size: .92em; line-height: 1.45; }
+        #lobbyConfigPage .cf-card { border: 1px solid rgba(128,128,128,.35); border-radius: 8px; padding: 1em 1.2em; margin: 0 0 1em; background: rgba(128,128,128,.06); }
+        #lobbyConfigPage .cf-card-head { display: flex; align-items: center; gap: 1em; flex-wrap: wrap; margin-bottom: .8em; }
+        #lobbyConfigPage .cf-card-title { font-size: 1.15em; font-weight: 600; }
+        #lobbyConfigPage .cf-code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.6em; letter-spacing: .15em; font-weight: 700; padding: .1em .5em; border-radius: 6px; background: rgba(82,181,75,.18); }
+        #lobbyConfigPage .cf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .9em 1.2em; }
+        #lobbyConfigPage .cf-field label { display: block; font-size: .85em; opacity: .75; margin-bottom: .3em; }
+        /* Keep checkbox controls beside their labels; Jellyfin's global form styles can float/expand them. */
+        #lobbyConfigPage .cf-field label.cf-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: .5em;
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+        }
+        #lobbyConfigPage .cf-field label.cf-toggle input[type="checkbox"] {
+            float: none !important;
+            position: static !important;
+            flex: 0 0 auto;
+            width: 1.1em;
+            height: 1.1em;
+            margin: 0 !important;
+            padding: 0;
+        }
+        #lobbyConfigPage .cf-field input, #lobbyConfigPage .cf-field select, #lobbyConfigPage .cf-field textarea,
+        #lobbyConfigPage .cf-inline-select {
+            width: 100%; box-sizing: border-box; font: inherit; color: inherit; padding: .5em .6em;
+            background: rgba(128,128,128,.12); border: 1px solid rgba(128,128,128,.4); border-radius: 4px;
+        }
+        #lobbyConfigPage .cf-field select option, #lobbyConfigPage .cf-inline-select option { color: #111; }
+        #lobbyConfigPage .cf-field textarea { min-height: 3.2em; resize: vertical; }
+        #lobbyConfigPage .cf-hint { font-size: .8em; opacity: .65; margin-top: .35em; line-height: 1.4; }
+        #lobbyConfigPage .cf-summary { font-size: .88em; opacity: .85; margin: -.2em 0 .9em; }
+        #lobbyConfigPage .cf-actions { display: flex; gap: .6em; flex-wrap: wrap; margin-top: 1em; }
+        #lobbyConfigPage .cf-btn { font: inherit; color: inherit; cursor: pointer; padding: .5em 1.1em; border-radius: 4px; border: 1px solid rgba(128,128,128,.5); background: rgba(128,128,128,.15); }
+        #lobbyConfigPage .cf-btn:hover { background: rgba(128,128,128,.28); }
+        #lobbyConfigPage .cf-btn-primary { background: #52b54b; border-color: #52b54b; color: #fff; }
+        #lobbyConfigPage .cf-btn-primary:hover { background: #48a142; }
+        #lobbyConfigPage .cf-btn-danger { border-color: rgba(220,70,70,.7); color: #e06363; }
+        #lobbyConfigPage .cf-status { font-size: .88em; opacity: .85; }
+        #lobbyConfigPage .cf-dot { display: inline-block; width: .6em; height: .6em; border-radius: 50%; margin-right: .35em; background: #999; vertical-align: middle; }
+        #lobbyConfigPage .cf-dot.ok { background: #52b54b; }
+        #lobbyConfigPage .cf-dot.warn { background: #d9a53b; }
+        #lobbyConfigPage .cf-empty { opacity: .65; font-style: italic; padding: .4em 0 1em; }
+        #lobbyConfigPage .cf-links { width: 100%; border-collapse: collapse; }
+        #lobbyConfigPage .cf-links td, #lobbyConfigPage .cf-links th { text-align: left; padding: .6em .5em; border-bottom: 1px solid rgba(128,128,128,.25); vertical-align: middle; }
+        #lobbyConfigPage .cf-links th { font-size: .85em; opacity: .7; font-weight: 600; }
+        #lobbyConfigPage .cf-chip { display: inline-flex; align-items: center; gap: .4em; padding: .2em .3em .2em .7em; margin: .15em .3em .15em 0; border-radius: 999px; background: rgba(128,128,128,.18); font-size: .92em; }
+        #lobbyConfigPage .cf-chip.suggested { background: rgba(217,165,59,.2); border: 1px dashed rgba(217,165,59,.8); }
+        #lobbyConfigPage .cf-badge { font-size: .72em; text-transform: uppercase; letter-spacing: .05em; opacity: .75; }
+        #lobbyConfigPage .cf-chip button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0 .35em; opacity: .75; }
+        #lobbyConfigPage .cf-chip button:hover { opacity: 1; }
+        #lobbyConfigPage .cf-inline-select { width: auto; min-width: 12em; padding: .3em .4em; }
+        #lobbyConfigPage .cf-message { margin-top: .6em; font-size: .92em; }
+        #lobbyConfigPage .cf-message.ok { color: #52b54b; }
+        #lobbyConfigPage .cf-message.err { color: #e06363; }
+        #lobbyConfigPage .cf-checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .2em 1.2em; }
+        #lobbyConfigPage .cf-checks label { display: flex; align-items: center; gap: .5em; padding: .35em 0; cursor: pointer; }
+        #lobbyConfigPage .cf-checks input { width: 1.1em; height: 1.1em; }
+    </style>
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <div class="cf-section">
+                <h1 style="margin-bottom:.2em;">Lobby</h1>
+                <p class="cf-help">
+                    Server side of the Lobby home screen for Samsung TVs. Pair each TV here, pick the Jellyfin account it uses,
+                    and link Jellyfin accounts to Seerr so requests from the TV are made by the right person.
+                </p>
+            </div>
+
+            <!-- TVs -->
+            <div class="cf-section">
+                <div class="cf-card-head" style="margin-bottom:.3em;">
+                    <h2 style="margin:0;">TVs</h2>
+                    <button type="button" class="cf-btn" data-cf="refresh">Refresh</button>
+                </div>
+                <p class="cf-help">
+                    Start pairing in Lobby on the TV and its code appears below. For one-press playback, Lobby needs to know which
+                    Jellyfin app session belongs to the TV: open the Jellyfin app on that TV once, press Refresh, then choose it under <b>Jellyfin app on this TV</b>.
+                    If Jellyfin uses the TV's hardware ID, it's matched automatically.
+                </p>
+                <div data-cf="pending"></div>
+                <div data-cf="tvs"></div>
+            </div>
+
+            <!-- Seerr -->
+            <div class="cf-section">
+                <h2>Seerr</h2>
+                <p class="cf-help">The API key is under Seerr → Settings → General. It stays on this server and is never sent to TVs.</p>
+                <div class="cf-card">
+                    <div class="cf-grid">
+                        <div class="cf-field">
+                            <label for="cfSeerrUrl">Seerr URL</label>
+                            <input id="cfSeerrUrl" type="url" placeholder="http://192.168.1.10:5055" />
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfSeerrKey">API key</label>
+                            <input id="cfSeerrKey" type="password" autocomplete="new-password" />
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfFallback">Request as (Jellyfin users with no linked Seerr account)</label>
+                            <select id="cfFallback"></select>
+                        </div>
+                    </div>
+                    <div class="cf-checks" style="margin-top:.8em;">
+                        <label><input type="checkbox" id="cfRequestsEnabled" /> Allow requests from TVs</label>
+                    </div>
+                    <div class="cf-actions">
+                        <button type="button" class="cf-btn cf-btn-primary" data-cf="save-settings">Save</button>
+                        <button type="button" class="cf-btn" data-cf="test-seerr">Test connection</button>
+                    </div>
+                    <div class="cf-message" data-cf="seerr-message"></div>
+                </div>
+            </div>
+
+            <!-- Links -->
+            <div class="cf-section">
+                <div class="cf-card-head" style="margin-bottom:.3em;">
+                    <h2 style="margin:0;">Account links</h2>
+                    <button type="button" class="cf-btn" data-cf="sync-links">Sync from Seerr</button>
+                </div>
+                <p class="cf-help">
+                    <b>Sync</b> links Seerr accounts that already sign in with Jellyfin (auto), and suggests matches by username or email
+                    (dashed; press ✓ to confirm). Suggestions aren't used until confirmed. Link several Seerr accounts to one Jellyfin account
+                    for a shared login, and the TV asks who's requesting.
+                </p>
+                <div class="cf-card">
+                    <table class="cf-links">
+                        <thead><tr><th style="width:28%;">Jellyfin user</th><th>Seerr accounts</th></tr></thead>
+                        <tbody data-cf="links"></tbody>
+                    </table>
+                    <div class="cf-actions">
+                        <button type="button" class="cf-btn cf-btn-primary" data-cf="save-links">Save links</button>
+                    </div>
+                    <div class="cf-message" data-cf="links-message"></div>
+                </div>
+            </div>
+
+            <!-- TV defaults -->
+            <div class="cf-section">
+                <h2>TV defaults</h2>
+                <p class="cf-help">
+                    Each TV can change these in Lobby's own settings on the TV. These values apply to newly paired TVs,
+                    and to any TV that hasn't changed its settings (or was reset from its card above).
+                </p>
+                <div class="cf-card">
+                    <div class="cf-field" style="margin-bottom:.4em;"><label>Home rows shown by default</label></div>
+                    <div class="cf-checks">
+                        <label><input type="checkbox" id="cfShowContinueWatching" /> Continue Watching</label>
+                        <label><input type="checkbox" id="cfShowNextUp" /> Next Up</label>
+                        <label><input type="checkbox" id="cfShowRecentlyAdded" /> Recently Added</label>
+                        <label><input type="checkbox" id="cfShowLiveNow" /> On Now (Live TV)</label>
+                        <label><input type="checkbox" id="cfShowSports" /> Your Teams (Live TV sports)</label>
+                        <label><input type="checkbox" id="cfShowSeerrTrending" /> Trending (Seerr)</label>
+                        <label><input type="checkbox" id="cfShowSeerrPopularMovies" /> Popular Movies (Seerr)</label>
+                        <label><input type="checkbox" id="cfShowSeerrPopularShows" /> Popular Shows (Seerr)</label>
+                    </div>
+                    <div class="cf-grid" style="margin-top:1em;">
+                        <div class="cf-field">
+                            <label for="cfRowLimit">Items per row</label>
+                            <input id="cfRowLimit" type="number" min="1" max="100" />
+                            <div class="cf-hint">The most items any one row shows.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfSportsLookaheadHours">Sports look-ahead (hours)</label>
+                            <input id="cfSportsLookaheadHours" type="number" min="1" max="168" />
+                            <div class="cf-hint">Your Teams shows games on now, plus any starting within this many hours.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label class="cf-toggle"><input type="checkbox" id="cfSportsLiveOnly" /> Live sports only</label>
+                            <div class="cf-hint">Show only programmes the guide flags as Live in the featured area and Your Teams, hiding replays and preview shows. Needs a guide that marks live broadcasts.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label class="cf-toggle"><input type="checkbox" id="cfGameThumbsEnabled" /> Use game-thumbs for sports art</label>
+                            <div class="cf-hint">Replace the guide's sports images with clean 16:9 matchup graphics from a <a href="https://github.com/sethwv/game-thumbs" target="_blank" rel="noopener">game-thumbs</a> service, on both the cards and the hero.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfGameThumbsUrl">game-thumbs address</label>
+                            <input id="cfGameThumbsUrl" type="text" placeholder="192.168.1.5:3000 or thumbs.example.com" />
+                            <div class="cf-hint">IP:port for a self-hosted instance, or a hostname for a cloud one. http:// is assumed when no scheme is given.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfGameThumbsStyle">game-thumbs style</label>
+                            <select id="cfGameThumbsStyle" class="cf-inline-select">
+                                <option value="1">1 — Horizontal split</option>
+                                <option value="2">2 — Gradient blend</option>
+                                <option value="3">3 — Minimalist badge (light)</option>
+                                <option value="4">4 — Minimalist badge (dark)</option>
+                                <option value="5">5 — Grid background</option>
+                                <option value="6">6 — Grid with team colours</option>
+                            </select>
+                            <div class="cf-hint">Which matchup design to request.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfPlayDelayMs">Delay before sending play (ms)</label>
+                            <input id="cfPlayDelayMs" type="number" min="0" max="15000" step="100" />
+                            <div class="cf-hint">After a freshly launched Jellyfin app connects, wait this long before sending play so it finishes loading. Raise it if playback sometimes doesn't start. Not used when Jellyfin is already running.</div>
+                        </div>
+                        <div class="cf-field">
+                            <label for="cfPlayTimeoutSeconds">Wait for Jellyfin app (seconds)</label>
+                            <input id="cfPlayTimeoutSeconds" type="number" min="5" max="300" />
+                            <div class="cf-hint">How long a play request waits for the Jellyfin app to connect before it's dropped (e.g. Jellyfin didn't launch or is on a sign-in screen).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 style="margin-top:1.6em;">Requests</h2>
+                <div class="cf-card">
+                    <div class="cf-grid">
+                        <div class="cf-field">
+                            <label for="cfRememberRequesterMinutes">Remember last requester (minutes)</label>
+                            <input id="cfRememberRequesterMinutes" type="number" min="0" max="1440" />
+                            <div class="cf-hint">On a shared Jellyfin account, whoever requested last from a TV is pre-selected in its "who's requesting" list for this long. 0 turns this off.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cf-actions">
+                    <button type="button" class="cf-btn cf-btn-primary" data-cf="save-settings">Save settings</button>
+                </div>
+                <div class="cf-message" data-cf="settings-message"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

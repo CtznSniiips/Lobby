@@ -1,0 +1,133 @@
+name: Jellyfin plugin release
+
+# Manually publishes a GitHub Release for the Jellyfin plugin:
+#   - version comes from <Version> in jellyfin-plugin/Lobby/Lobby.csproj
+#   - release notes come from that version's "## x.y.z" section in jellyfin-plugin/CHANGELOG.md
+#   - Lobby.dll is built by the regular "Jellyfin plugin" workflow and attached
+# Tag: jellyfin-plugin-v<version>. Bump <Version> and add a CHANGELOG section before running.
+
+on:
+  workflow_dispatch:
+    inputs:
+      jellyfin_version:
+        description: 'Jellyfin SDK version the released DLL is compiled against'
+        required: false
+        default: '10.9.11'
+      prerelease:
+        description: 'Mark as a pre-release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jellyfin-plugin-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Check version and notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read version
+        id: version
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' jellyfin-plugin/Lobby/Lobby.csproj | head -n1)
+          if [ -z "$version" ]; then
+            echo "::error file=jellyfin-plugin/Lobby/Lobby.csproj::No <Version> found"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=jellyfin-plugin-v$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing Lobby Jellyfin plugin $version"
+
+      - name: Check the tag is new
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::$TAG already exists. Bump <Version> in Lobby.csproj and add a CHANGELOG section first."
+            exit 1
+          fi
+
+      - name: Extract release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; if ($2 == v) { found = 1; next } }
+            found { print }
+            END { if (!found) exit 1 }
+          ' jellyfin-plugin/CHANGELOG.md > notes.md || {
+            echo "::error file=jellyfin-plugin/CHANGELOG.md::No '## $VERSION' section found"
+            exit 1
+          }
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error file=jellyfin-plugin/CHANGELOG.md::The '## $VERSION' section is empty"
+            exit 1
+          fi
+          cat notes.md
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: notes.md
+          if-no-files-found: error
+
+  build:
+    name: Build
+    needs: prepare
+    uses: ./.github/workflows/jellyfin-plugin.yml
+    with:
+      jellyfin_version: ${{ inputs.jellyfin_version }}
+
+  release:
+    name: Publish release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Lobby-jellyfin-${{ inputs.jellyfin_version }}
+          path: dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-notes
+          path: .
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          JELLYFIN: ${{ inputs.jellyfin_version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          set -euo pipefail
+          test -s dist/Lobby.dll
+          {
+            cat notes.md
+            echo
+            echo "---"
+            echo "Built against the Jellyfin $JELLYFIN SDK. Install via the plugin's repository manifest, or copy \`Lobby.dll\` into your Jellyfin plugins folder (in its own \`Lobby\` subfolder) and restart Jellyfin."
+          } > body.md
+
+          args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Lobby Jellyfin plugin $VERSION" --notes-file body.md)
+          if [ "$PRERELEASE" = "true" ]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$TAG" dist/Lobby.dll "${args[@]}"
+          echo "Published $TAG"

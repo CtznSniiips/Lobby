@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Lobby</RootNamespace>
+    <AssemblyName>Lobby</AssemblyName>
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Description>Server side of the Lobby Samsung TV home screen: home rows, Seerr requests and remote playback for paired TVs (Jellyfin).</Description>
+    <Authors>CtznSniiips</Authors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Nullable>disable</Nullable>
+    <!-- Jellyfin SDK version this plugin is built against. -->
+    <JellyfinSdkVersion>10.9.11</JellyfinSdkVersion>
+  </PropertyGroup>
+
+  <!-- Normal build: reference the Jellyfin SDK from NuGet. -->
+  <ItemGroup Condition="'$(JellyfinRefDir)' == ''">
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinSdkVersion)" PrivateAssets="all" />
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinSdkVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Offline build: dotnet build -p:JellyfinRefDir=/path/to/jellyfin/server-assemblies -->
+  <ItemGroup Condition="'$(JellyfinRefDir)' != ''">
+    <Reference Include="MediaBrowser.Common"><HintPath>$(JellyfinRefDir)/MediaBrowser.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="MediaBrowser.Controller"><HintPath>$(JellyfinRefDir)/MediaBrowser.Controller.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="MediaBrowser.Model"><HintPath>$(JellyfinRefDir)/MediaBrowser.Model.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Jellyfin.Data"><HintPath>$(JellyfinRefDir)/Jellyfin.Data.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Jellyfin.Extensions"><HintPath>$(JellyfinRefDir)/Jellyfin.Extensions.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Web\*" />
+    <EmbeddedResource Include="Web\lobby.html" />
+    <EmbeddedResource Include="Web\lobby.js" />
+    <None Remove="thumb.png" />
+    <EmbeddedResource Include="thumb.png" />
+  </ItemGroup>
+
+</Project>

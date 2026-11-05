@@ -2,7 +2,7 @@
 
 A home screen for Samsung The Frame that starts with what you watch: your Emby server's Continue Watching, Live TV and teams, Seerr's trending titles, and your apps, with an interface made for the TV remote.
 
-Lobby is a fork of [CleanFrame](https://github.com/nthnclrk/CleanFrame) by nthnclrk, which provides the quiet home screen, wallpapers, settings and TV tooling. Lobby adds the Watch layout and an Emby plugin. Unless a section mentions Lobby, the notes below are CleanFrame's and describe the original author's TV and setup.
+Lobby is a fork of [CleanFrame](https://github.com/nthnclrk/CleanFrame) by nthnclrk, which provides the quiet home screen, wallpapers, settings and TV tooling. Lobby adds the Watch layout and a server plugin — for Emby or Jellyfin. Unless a section mentions Lobby, the notes below are CleanFrame's and describe the original author's TV and setup.
 
 ![CleanFrame browser preview using the bundled Manrope font](docs/images/cleanframe-dock.jpg)
 
@@ -37,11 +37,13 @@ The public preview uses the included Manrope, Geist and Newsreader fonts.
 
 The glass and blur are rendered ahead of time. The TV loads the finished images and uses transforms and opacity for focus feedback.
 
-## Lobby: Emby and Seerr on Home
+## Lobby: Emby/Jellyfin and Seerr on Home
 
-Lobby adds rows from your own Emby server and Seerr to Home: Continue Watching, On Now, games for teams you follow, and Seerr's Trending and Popular lists. OK resumes or plays in the Emby app, or requests a title in Seerr as the right person. The Watch layout puts a rotating featured title at the top (including your teams' games when they're about to start), with one row per band below and your apps in a dock along the bottom.
+Lobby adds rows from your own Emby or Jellyfin server and Seerr to Home: Continue Watching, On Now, games for teams you follow, and Seerr's Trending and Popular lists. OK resumes or plays in the Emby/Jellyfin app, or requests a title in Seerr as the right person. The Watch layout puts a rotating featured title at the top (including your teams' games when they're about to start), with one row per band below and your apps in a dock along the bottom.
 
-1. Install the Lobby Emby plugin from [`emby-plugin/`](emby-plugin/README.md) and set up Seerr and account links on its page.
+Lobby ships a plugin for each server, built from the same design and talking the same TV-facing API:
+
+1. Install whichever plugin matches your server — [`emby-plugin/`](emby-plugin/README.md) for Emby, [`jellyfin-plugin/`](jellyfin-plugin/README.md) for Jellyfin — and set up Seerr and account links on its page.
 2. On the TV: Settings → Emby & Seerr → Connect, enter the server address and approve the code on the plugin page.
 3. Choose rows, order, teams and playback timing in Settings → Emby & Seerr. Those settings belong to the TV and are kept on the server.
 
@@ -112,6 +114,7 @@ The browser checks use isolated Chromium profiles and a loopback preview. They n
 | [Asset sources](docs/asset-sources.md) | Photo credits and verification of the bundled third-party assets |
 | `.local/`, `dist/` | Ignored private setup, recovery data, generated files and packages |
 | [`emby-plugin/`](emby-plugin/README.md) | Lobby Emby plugin: home rows, Seerr requests and remote playback for paired TVs |
+| [`jellyfin-plugin/`](jellyfin-plugin/README.md) | Lobby Jellyfin plugin: the same features and TV API, for a Jellyfin server |
 
 ## Contribute
 
