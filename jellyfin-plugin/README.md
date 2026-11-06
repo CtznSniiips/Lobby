@@ -14,6 +14,13 @@ onto Jellyfin's plugin SDK: the same features, the same TV-facing API shape, a d
 
 Seerr's URL and API key stay on the Jellyfin server. TVs only ever hold their own Lobby token.
 
+<p>
+  <img src="../docs/screenshots/lobby-watch-hero.png" alt="Watch layout with a featured title and Continue Watching" width="49%">
+  <img src="../docs/screenshots/lobby-dock-rows.png" alt="Dock layout with Lobby's rows above the app dock" width="49%">
+</p>
+
+*(Invented titles — see [`docs/screenshots/README.md`](../docs/screenshots/README.md#lobby-screenshots-lobby-png). Both layouts run on whichever server is paired; this plugin provides the same rows and API as the Emby plugin.)*
+
 ## Install
 
 1. Download `Lobby.dll` from the latest [release](https://github.com/CtznSniiips/Lobby/releases) tagged

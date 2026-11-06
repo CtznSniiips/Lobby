@@ -11,6 +11,13 @@ Seerr's URL and API key stay on the Emby server. TVs only ever hold their own Lo
 
 Tested on Emby Server **4.10.2.0**. CI also builds against 4.9.1.90.
 
+<p>
+  <img src="../docs/screenshots/lobby-request.png" alt="TV request screen with cast, crew and who's requesting" width="49%">
+  <img src="../docs/screenshots/lobby-teams.png" alt="Team picker for Your Teams" width="49%">
+</p>
+
+*(Invented title, cast and teams — see [`docs/screenshots/README.md`](../docs/screenshots/README.md#lobby-screenshots-lobby-png).)*
+
 ## Install
 
 1. Download `Lobby.dll` from the latest [release](https://github.com/CtznSniiips/Lobby/releases) tagged `emby-plugin-v…`. For an unreleased build, use the artifact `Lobby-emby-4.10.2.0` from the latest **Emby plugin** workflow run.

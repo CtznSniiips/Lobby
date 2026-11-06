@@ -18,7 +18,8 @@
     "check:tools": "python3 -B scripts/test-tools.py",
     "lint": "eslint app",
     "check:device": "node --test scripts/test-device.mjs scripts/test-media.mjs",
-    "check:performance": "node scripts/check-performance.mjs"
+    "check:performance": "node scripts/check-performance.mjs",
+    "screenshots:readme": "node scripts/generate-readme-screenshots.mjs"
   },
   "devDependencies": {
     "eslint": "10.13.0",
