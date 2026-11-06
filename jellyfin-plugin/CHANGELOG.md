@@ -17,4 +17,14 @@
   nearest ancestor with an image and can land on a lower-resolution season (or even the episode's own)
   image instead of the series' real fanart. The hero now looks up the series' own backdrop and logo
   directly.
-- Not yet verified against a running Jellyfin server — see the Build section of the README.
+- Fixed: the plugin's settings page loaded but was entirely non-functional — every field blank, every
+  button dead, nothing saved. The page split its controller into a second embedded resource (`lobby.js`)
+  loaded via `data-controller="__plugin/lobbyjs"` and wrapped in `define([], function () {...})`, an
+  Emby-web AMD/RequireJS convention that current jellyfin-web doesn't provide (`Uncaught ReferenceError:
+  define is not defined`), so the controller threw immediately and never attached a single listener. The
+  controller is now a plain inline `<script>` in `lobby.html` itself, matching the convention in
+  [jellyfin/jellyfin-plugin-template](https://github.com/jellyfin/jellyfin-plugin-template)'s own
+  `configPage.html`, and listens for `pageshow` instead of `viewshow` to match it.
+- First real verification against a running Jellyfin server, which caught the issue above. Still worth
+  a careful look at the TV-pairing and Seerr-linking flows end to end; this confirmed the settings page
+  loads and the admin API round-trips, not every feature.

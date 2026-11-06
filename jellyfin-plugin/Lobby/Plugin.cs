@@ -36,17 +36,19 @@ namespace Lobby
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
+            // Just the one page: the controller script is inlined in lobby.html as a plain <script>
+            // tag, not a separate "__plugin/..." AMD module. Current jellyfin-web has no RequireJS/AMD
+            // loader (that's an Emby-web-only mechanism), so a second embedded-resource page loaded via
+            // data-controller and wrapped in define([], function () {...}) throws
+            // "ReferenceError: define is not defined" and the whole controller silently never runs -
+            // the page renders (static HTML needs no JS) but every field stays blank and every button
+            // is dead, because nothing ever attached a listener.
             return new[]
             {
                 new PluginPageInfo
                 {
                     Name = "lobby",
                     EmbeddedResourcePath = GetType().Namespace + ".Web.lobby.html",
-                },
-                new PluginPageInfo
-                {
-                    Name = "lobbyjs",
-                    EmbeddedResourcePath = GetType().Namespace + ".Web.lobby.js",
                 },
             };
         }
