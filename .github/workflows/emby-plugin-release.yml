@@ -3,7 +3,8 @@ name: Emby plugin release
 # Manually publishes a GitHub Release for the Emby plugin:
 #   - version comes from <Version> in emby-plugin/Lobby/Lobby.csproj
 #   - release notes come from that version's "## x.y.z" section in emby-plugin/CHANGELOG.md
-#   - Lobby.dll is built by the regular "Emby plugin" workflow and attached
+#   - Lobby.dll is built by the regular "Emby plugin" workflow, zipped and attached (many browsers
+#     block a bare .dll download), alongside the raw .dll for a manual plugins-folder copy
 # Tag: emby-plugin-v<version>. Bump <Version> and add a CHANGELOG section before running.
 
 on:
@@ -108,6 +109,20 @@ jobs:
           name: release-notes
           path: .
 
+      - name: Zip the plugin for download
+        id: zip
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          test -s dist/Lobby.dll
+          zip_name="lobby-emby-${VERSION}.zip"
+          # -j: no directory entries, so Lobby.dll sits at the zip's root, ready to drop straight
+          # into Emby's plugins folder.
+          zip -j "$zip_name" dist/Lobby.dll
+          echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
+          echo "Zipped $zip_name"
+
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -115,19 +130,21 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
           EMBY: ${{ inputs.emby_version }}
           PRERELEASE: ${{ inputs.prerelease }}
+          ZIP_NAME: ${{ steps.zip.outputs.zip_name }}
         run: |
           set -euo pipefail
           test -s dist/Lobby.dll
+          test -s "$ZIP_NAME"
           {
             cat notes.md
             echo
             echo "---"
-            echo "Built against Emby Server $EMBY. Copy \`Lobby.dll\` into your Emby \`plugins\` folder and restart Emby."
+            echo "Built against Emby Server $EMBY. Download \`$ZIP_NAME\`, unzip it, and copy \`Lobby.dll\` into your Emby \`plugins\` folder, then restart Emby. (\`Lobby.dll\` is also attached directly, for anyone who can download a raw .dll.)"
           } > body.md
 
           args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Lobby Emby plugin $VERSION" --notes-file body.md)
           if [ "$PRERELEASE" = "true" ]; then
             args+=(--prerelease)
           fi
-          gh release create "$TAG" dist/Lobby.dll "${args[@]}"
+          gh release create "$TAG" "$ZIP_NAME" dist/Lobby.dll "${args[@]}"
           echo "Published $TAG"

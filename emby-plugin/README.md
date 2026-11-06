@@ -13,8 +13,8 @@ Tested on Emby Server **4.10.2.0**. CI also builds against 4.9.1.90.
 
 ## Install
 
-1. Download `Lobby.dll` from the latest [release](https://github.com/CtznSniiips/Lobby/releases) tagged `emby-plugin-v…`. For an unreleased build, use the artifact `Lobby-emby-4.10.2.0` from the latest **Emby plugin** workflow run.
-2. Copy it into your Emby `plugins` folder, e.g. `/config/plugins` in the Docker container or `programdata/plugins`.
+1. Download `lobby-emby-<version>.zip` from the latest [release](https://github.com/CtznSniiips/Lobby/releases) tagged `emby-plugin-v…` (a plain `Lobby.dll` is attached too, but some browsers block downloading a bare `.dll`). For an unreleased build, use the artifact `Lobby-emby-4.10.2.0` from the latest **Emby plugin** workflow run.
+2. Unzip it and copy `Lobby.dll` into your Emby `plugins` folder, e.g. `/config/plugins` in the Docker container or `programdata/plugins`.
 3. If you used it under its old name, delete `ClearFrame.dll` from the plugins folder and `ClearFrame.xml` from `plugins/configuration`. Lobby keeps its own settings, so set up Seerr and pair each TV again.
 4. Restart Emby.
 
@@ -96,4 +96,4 @@ Releases are published by hand from Actions → **Emby plugin release** → Run 
 2. Add a `## <version>` section to `CHANGELOG.md`. It becomes the release notes.
 3. Merge to `main`, then run the workflow. Choose the Emby version to build against (default 4.10.2.0) and optionally mark it as a pre-release.
 
-The workflow refuses to run if the tag `emby-plugin-v<version>` already exists, or if the changelog has no section for that version. It builds through the regular **Emby plugin** workflow, so the release uses the same checks, then creates the tag and a GitHub Release with `Lobby.dll` attached.
+The workflow refuses to run if the tag `emby-plugin-v<version>` already exists, or if the changelog has no section for that version. It builds through the regular **Emby plugin** workflow, so the release uses the same checks, then creates the tag and a GitHub Release with `lobby-emby-<version>.zip` (the recommended download) and the raw `Lobby.dll` both attached.
