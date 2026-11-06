@@ -26,20 +26,27 @@ const ROWS = [
   { Id: 'seerr-tv', Title: 'Popular Shows', Source: 'seerr' }
 ];
 const soon = new Date(Date.now() + 3 * 3600e3).toISOString(), began = new Date(Date.now() - 1800e3).toISOString(), ends = new Date(Date.now() + 1800e3).toISOString();
-const art$ = t => '/emby/Items/' + encodeURIComponent(t) + '/Images/Primary?tag=x';
+// card$: a 16:9 thumbnail (continue watching, next up, live TV, sports). poster$: a 2:3 movie/show
+// poster (Seerr rows, the request screen). The dimensions are carried in the query string so the
+// mock image handler renders each at the right aspect instead of stretching one shape to fit both.
+const card$ = t => '/emby/Items/' + encodeURIComponent(t) + '/Images/Primary?tag=x&kind=card&w=320&h=180';
+const poster$ = t => '/emby/Items/' + encodeURIComponent(t) + '/Images/Primary?tag=x&kind=poster&w=360&h=540';
 const ITEMS = {
   continue: [
-    { Id: '101', Kind: 'movie', Title: 'Paper Moonlight', Year: 2022, LandscapeUrl: '/emby/Items/101/Images/Backdrop?tag=a', PosterUrl: art$('Paper Moonlight'), ProgressPercent: 42, PlayItemId: '101', DefaultAction: 'resume' },
-    { Id: '102', Kind: 'episode', Title: 'Glass Orchard', Subtitle: 'S2:E3 · The Long Tide', LandscapeUrl: art$('Glass Orchard'), ProgressPercent: 12, PlayItemId: '102', DefaultAction: 'resume' },
-    { Id: '103', Kind: 'movie', Title: 'The Tin Garden', Year: 2021, LandscapeUrl: art$('The Tin Garden'), PlayItemId: '103', DefaultAction: 'resume', ProgressPercent: 80 }
+    { Id: '101', Kind: 'movie', Title: 'Paper Moonlight', Year: 2022, LandscapeUrl: '/emby/Items/101/Images/Backdrop?tag=a', PosterUrl: poster$('Paper Moonlight'), ProgressPercent: 42, PlayItemId: '101', DefaultAction: 'resume' },
+    { Id: '102', Kind: 'episode', Title: 'Glass Orchard', Subtitle: 'S2:E3 · The Long Tide', LandscapeUrl: card$('Glass Orchard'), ProgressPercent: 12, PlayItemId: '102', DefaultAction: 'resume' },
+    { Id: '103', Kind: 'movie', Title: 'The Tin Garden', Year: 2021, LandscapeUrl: card$('The Tin Garden'), PlayItemId: '103', DefaultAction: 'resume', ProgressPercent: 80 }
   ],
-  nextup: Array.from({ length: 9 }, (_, i) => ({ Id: String(200 + i), Kind: 'episode', Title: 'Harbor Signal', Subtitle: 'S1:E' + (i + 2) + ' · Episode', LandscapeUrl: art$('Harbor Signal ' + (i + 2)), PlayItemId: String(200 + i), DefaultAction: 'play' })),
-  livenow: [{ Id: 'p1', Kind: 'program', Title: 'Evening Report', Subtitle: 'Local news', ChannelName: 'Civic 4', PlayItemId: '901', DefaultAction: 'play', StartDate: began, EndDate: ends, IsAiring: true, ProgressPercent: 50, LandscapeUrl: art$('Evening Report') }],
-  sports: [{ Id: 'p2', Kind: 'program', Title: 'River City Hockey League', Subtitle: 'Rockets at Comets', ChannelName: 'Metro Sports Network', PlayItemId: '902', DefaultAction: 'play', StartDate: soon, EndDate: soon, IsAiring: false, LandscapeUrl: art$('Rockets at Comets') }],
+  nextup: Array.from({ length: 9 }, (_, i) => ({ Id: String(200 + i), Kind: 'episode', Title: 'Harbor Signal', Subtitle: 'S1:E' + (i + 2) + ' · Episode', LandscapeUrl: card$('Harbor Signal ' + (i + 2)), PlayItemId: String(200 + i), DefaultAction: 'play' })),
+  livenow: [{ Id: 'p1', Kind: 'program', Title: 'Evening Report', Subtitle: 'Local news', ChannelName: 'Civic 4', PlayItemId: '901', DefaultAction: 'play', StartDate: began, EndDate: ends, IsAiring: true, ProgressPercent: 50, LandscapeUrl: card$('Evening Report') }],
+  sports: [{ Id: 'p2', Kind: 'program', Title: 'River City Hockey League', Subtitle: 'Rockets at Comets', ChannelName: 'Metro Sports Network', PlayItemId: '902', DefaultAction: 'play', StartDate: soon, EndDate: soon, IsAiring: false, LandscapeUrl: card$('Rockets at Comets') }],
+  // Both URLs are set: the Dock/List poster-layout row and the request screen use PosterUrl
+  // (2:3), but the Watch layout always prefers LandscapeUrl when present, so without one it would
+  // stretch the tall poster art into a 16:9 card.
   'seerr-trending': Array.from({ length: 14 }, (_, i) => ({ Id: 'movie:' + (500 + i), Kind: 'discover', Title: 'Program ' + (i + 1), Year: 2020 + (i % 5), TmdbId: 500 + i, MediaType: i % 3 ? 'movie' : 'tv',
-    RequestStatus: i === 0 ? 'available' : i === 1 ? 'requested' : i === 4 ? 'partial' : 'none', PosterUrl: art$('Program ' + (i + 1)), Overview: 'A story about ' + (i + 1) + ' things.',
+    RequestStatus: i === 0 ? 'available' : i === 1 ? 'requested' : i === 4 ? 'partial' : 'none', PosterUrl: poster$('Program ' + (i + 1)), LandscapeUrl: card$('Program ' + (i + 1)), Overview: 'A story about ' + (i + 1) + ' things.',
     ...(i === 0 ? { PlayItemId: '701', PlayAction: 'resume', DefaultAction: 'resume' } : i === 4 ? { PlayItemId: '702', PlayAction: 'play', DefaultAction: 'request' } : { DefaultAction: 'request' }) })),
-  'seerr-movies': [{ Id: 'movie:502', Kind: 'discover', Title: 'Low Tide Harbor', Year: 2022, TmdbId: 502, MediaType: 'movie', RequestStatus: 'none', PosterUrl: art$('Low Tide Harbor'), DefaultAction: 'request' }],
+  'seerr-movies': [{ Id: 'movie:502', Kind: 'discover', Title: 'Low Tide Harbor', Year: 2022, TmdbId: 502, MediaType: 'movie', RequestStatus: 'none', PosterUrl: poster$('Low Tide Harbor'), LandscapeUrl: card$('Low Tide Harbor'), DefaultAction: 'request' }],
   'seerr-tv': []
 };
 const FEATURED = [
@@ -79,41 +86,88 @@ function homeJson(api) {
   };
 }
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
-/* Generated "poster"/"still" art, not a flat placeholder: a small abstract composition seeded
-   from the (invented) title, so the same title always looks the same but every title differs.
-   Purely procedural shapes and gradients — no photo, artwork or logo is used or referenced. */
+/* Generated poster/thumbnail art, built to read as a real poster or streaming thumbnail at a
+   glance: a sky, a horizon (skyline, mountains or sea), often a silhouetted figure, and a proper
+   title treatment (big, bold, letter-spaced, over a scrim) — composed from a small, curated set
+   of "movie grade" colour palettes rather than random hues, which is what made the first pass
+   look like abstract noise instead of key art. Everything is procedural SVG, seeded from the
+   (invented) title so the same title always looks the same: no photo, artwork or logo involved. */
 function seedOf(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function rng(seed) { return function () { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function art(text, w, h) {
-  const clean = text.replace(/[<&]/g, ''), rnd = rng(seedOf(clean));
-  const hue = Math.round(rnd() * 360), hue2 = (hue + 40 + Math.round(rnd() * 60)) % 360;
-  const shapes = [];
-  const blobs = 3 + Math.floor(rnd() * 2);
-  for (let i = 0; i < blobs; i++) {
-    const cx = Math.round(rnd() * w), cy = Math.round(rnd() * h * 0.75), r = Math.round((0.18 + rnd() * 0.22) * Math.max(w, h));
-    const bh = Math.round((hue + 60 + rnd() * 240) % 360);
-    shapes.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="hsl(' + bh + ',62%,58%)" opacity="' + (0.22 + rnd() * 0.18).toFixed(2) + '" filter="url(#blur)"/>');
+const pick = (rnd, arr) => arr[Math.floor(rnd() * arr.length)];
+const PALETTES = [
+  { sky: ['#2b3a67', '#0b0f1f'], horizon: '#05060c', accent: '#f2c572' },   // moody night thriller
+  { sky: ['#d98a3d', '#2a1a2e'], horizon: '#160d16', accent: '#ffe3a3' },   // sunset drama
+  { sky: ['#6fb3b8', '#0c2b2e'], horizon: '#07181a', accent: '#e8fff6' },   // teal adventure
+  { sky: ['#3c2a52', '#0a0612'], horizon: '#050309', accent: '#ff6fae' },   // neon sci-fi
+  { sky: ['#4c6b3f', '#0d1a0c'], horizon: '#060c05', accent: '#d8f27a' },   // forest mystery
+  { sky: ['#8a3b3b', '#180808'], horizon: '#0b0404', accent: '#ffb199' }    // crime red
+];
+function wrap(text, max, maxLines) {
+  const words = text.split(' '); const lines = []; let line = '';
+  for (const w of words) {
+    const next = line ? line + ' ' + w : w;
+    if (next.length > max && line) { lines.push(line); line = w; } else line = next;
   }
-  // Either a sunburst disc or a mountain silhouette, picked from the seed, for a bit of poster-like variety.
-  if (rnd() > 0.5) {
-    shapes.push('<circle cx="' + Math.round(w * (0.3 + rnd() * 0.4)) + '" cy="' + Math.round(h * 0.38) + '" r="' + Math.round(h * 0.16) + '" fill="hsl(' + hue2 + ',70%,72%)" opacity="0.8"/>');
-  } else {
-    const baseY = Math.round(h * 0.78), peak = Math.round(h * (0.35 + rnd() * 0.15));
-    shapes.push('<polygon points="0,' + h + ' ' + Math.round(w * 0.2) + ',' + peak + ' ' + Math.round(w * 0.5) + ',' + Math.round(baseY - 20) + ' ' + Math.round(w * 0.8) + ',' + Math.round(peak + 30) + ' ' + w + ',' + h + '" fill="hsl(' + hue2 + ',40%,22%)" opacity="0.75"/>');
+  if (line) lines.push(line);
+  if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/.{0,3}$/, '') + '…'; }
+  return lines;
+}
+function horizonPath(rnd, w, h, color) {
+  const base = Math.round(h * (0.78 + rnd() * 0.08));
+  const kind = pick(rnd, ['skyline', 'mountains', 'sea']);
+  if (kind === 'skyline') {
+    let x = -10, bars = '';
+    while (x < w + 10) {
+      const bw = Math.round(w * (0.05 + rnd() * 0.08)), bh = Math.round(h * (0.08 + rnd() * 0.22));
+      bars += '<rect x="' + x + '" y="' + (base - bh) + '" width="' + (bw + 2) + '" height="' + (h - base + bh) + '" fill="' + color + '"/>';
+      x += bw;
+    }
+    return bars;
   }
-  const lines = clean.length > 18 ? [clean.slice(0, Math.ceil(clean.length / 2)), clean.slice(Math.ceil(clean.length / 2))] : [clean];
-  const fs = Math.round(h / (10 - Math.min(lines.length, 2)));
-  const label = lines.map((l, i) => '<text x="50%" y="' + (h - 16 - (lines.length - 1 - i) * (fs + 4)) + '" fill="#fff" font-family="sans-serif" font-weight="600" font-size="' + fs + '" text-anchor="middle">' + l + '</text>').join('');
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+  if (kind === 'mountains') {
+    const peak = Math.round(h * (0.42 + rnd() * 0.14));
+    return '<polygon points="-10,' + h + ' ' + Math.round(w * 0.12) + ',' + peak + ' ' + Math.round(w * 0.38) + ',' + Math.round(base - 10) + ' ' + Math.round(w * 0.62) + ',' + Math.round(peak + h * 0.08) + ' ' + Math.round(w * 0.9) + ',' + Math.round(base + 6) + ' ' + (w + 10) + ',' + Math.round(base - 24) + ' ' + (w + 10) + ',' + h + '" fill="' + color + '"/>';
+  }
+  return '<rect x="0" y="' + base + '" width="' + w + '" height="' + (h - base) + '" fill="' + color + '"/>'
+    + '<path d="M -10 ' + base + ' Q ' + (w * 0.25) + ' ' + (base - 6) + ' ' + (w * 0.5) + ' ' + base + ' T ' + (w + 10) + ' ' + base + '" fill="none" stroke="' + color + '" stroke-width="3" opacity="0.6"/>';
+}
+// A single standing figure in silhouette, the way a lot of poster key art frames its lead.
+function figure(rnd, w, h, color) {
+  const cx = Math.round(w * (0.3 + rnd() * 0.4)), footY = Math.round(h * (0.84 + rnd() * 0.05)), standH = Math.round(h * (0.34 + rnd() * 0.12));
+  const headR = Math.round(standH * 0.12), neckY = footY - standH, shoulderW = Math.round(standH * 0.26);
+  return '<g fill="' + color + '">'
+    + '<ellipse cx="' + cx + '" cy="' + (neckY - headR * 0.6) + '" rx="' + headR + '" ry="' + Math.round(headR * 1.1) + '"/>'
+    + '<path d="M ' + (cx - shoulderW) + ' ' + footY + ' Q ' + (cx - shoulderW * 1.15) + ' ' + (neckY + standH * 0.35) + ' ' + (cx - shoulderW * 0.5) + ' ' + neckY
+    + ' L ' + (cx + shoulderW * 0.5) + ' ' + neckY + ' Q ' + (cx + shoulderW * 1.15) + ' ' + (neckY + standH * 0.35) + ' ' + (cx + shoulderW) + ' ' + footY + ' Z"/>'
+    + '</g>';
+}
+function art(text, w, h, kind) {
+  const clean = text.replace(/[<&]/g, ''), rnd = rng(seedOf(clean)), pal = pick(rnd, PALETTES);
+  const poster = kind === 'poster';
+  // A horizon scene (plus often a figure) earns its place on a tall poster; a small 16:9 thumbnail
+  // doesn't have the vertical room for both a scene and a legible title, so it stays a clean graded
+  // card (gradient, glow, title) rather than crowding a tiny skyline in behind the text.
+  const body = poster ? horizonPath(rnd, w, h, pal.horizon) + (rnd() > 0.3 ? figure(rnd, w, h, pal.horizon) : '') : '';
+  const glowR = Math.round(Math.max(w, h) * (poster ? 0.38 : 0.3));
+  const glow = '<circle cx="' + Math.round(w * (0.3 + rnd() * 0.4)) + '" cy="' + Math.round(h * (poster ? 0.3 : 0.32)) + '" r="' + glowR + '" fill="' + pal.accent + '" opacity="0.22" filter="url(#blur)"/>';
+  const lines = wrap(clean.toUpperCase(), poster ? 14 : 20, poster ? 3 : 1);
+  const fs = poster ? Math.round(w / 9) : Math.round(h / 7.5);
+  const lh = fs * 1.08;
+  const titleY0 = h - 22 - (lines.length - 1) * lh;
+  const title = lines.map((l, i) => '<text x="50%" y="' + (titleY0 + i * lh) + '" fill="#fff" font-family="sans-serif" font-weight="800" letter-spacing="' + (poster ? 2 : 1) + '" font-size="' + fs + '" text-anchor="middle">' + l + '</text>').join('');
+  const rule = poster ? '<rect x="' + (w * 0.5 - 28) + '" y="' + (titleY0 - lh - 14) + '" width="56" height="3" fill="' + pal.accent + '" opacity="0.9"/>' : '';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">'
     + '<defs>'
-    + '<linearGradient id="g" x2="0.7" y2="1"><stop offset="0" stop-color="hsl(' + hue + ',55%,30%)"/><stop offset="1" stop-color="hsl(' + hue2 + ',45%,16%)"/></linearGradient>'
-    + '<linearGradient id="scrim" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.72"/></linearGradient>'
-    + '<filter id="blur"><feGaussianBlur stdDeviation="' + Math.round(Math.max(w, h) * 0.05) + '"/></filter>'
+    + '<linearGradient id="sky" x2="0" y2="1"><stop offset="0" stop-color="' + pal.sky[0] + '"/><stop offset="1" stop-color="' + pal.sky[1] + '"/></linearGradient>'
+    + '<linearGradient id="scrim" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.55" stop-color="#000" stop-opacity="0.15"/><stop offset="1" stop-color="#000" stop-opacity="0.82"/></linearGradient>'
+    + '<filter id="blur"><feGaussianBlur stdDeviation="' + Math.round(Math.max(w, h) * 0.06) + '"/></filter>'
     + '</defs>'
-    + '<rect width="100%" height="100%" fill="url(#g)"/>'
-    + shapes.join('')
+    + '<rect width="100%" height="100%" fill="url(#sky)"/>'
+    + glow
+    + body
     + '<rect width="100%" height="100%" fill="url(#scrim)"/>'
-    + label
+    + rule + title
     + '</svg>';
 }
 let api;
@@ -123,7 +177,10 @@ async function handle(route) {
   if (method === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS, body: '' });
   if (path.includes('/Images/Backdrop')) return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'image/jpeg' }, body: readFileSync(root + 'app/assets/wallpapers/' + (path.includes('/f3/') ? 'bridge' : path.includes('/f2/') ? 'cove' : 'alpine') + '.jpg') });
   if (path.includes('/Images/Logo')) return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'image/svg+xml' }, body: '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="140"><text x="100%" y="110" fill="#fff" font-family="serif" font-size="96" text-anchor="end" letter-spacing="6">GLASS ORCHARD</text></svg>' });
-  if (path.startsWith('/emby/Items/')) return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'image/svg+xml' }, body: art(decodeURIComponent(path.split('/')[3]), 320, 180) });
+  if (path.startsWith('/emby/Items/')) {
+    const w = Number(url.searchParams.get('w')) || 320, h = Number(url.searchParams.get('h')) || 180, kind = url.searchParams.get('kind') || 'card';
+    return route.fulfill({ status: 200, headers: { ...CORS, 'Content-Type': 'image/svg+xml' }, body: art(decodeURIComponent(path.split('/')[3]), w, h, kind) });
+  }
   const body = req.postData() ? JSON.parse(req.postData()) : null, auth = req.headers().authorization || '';
   api.calls.push({ method, path, body, auth, search: url.search });
   if (path === '/emby/System/Info/Public') return json(200, { ServerName: 'Living Room', Version: '4.10.2.0', Id: 'abc' });
@@ -207,9 +264,11 @@ async function main() {
     await shot('lobby-watch-rows');
     await close();
 
-    // Classic Dock layout with Lobby's rows alongside apps.
+    // Classic Dock layout with Lobby's rows alongside apps. Stop on Next Up (not Continue
+    // Watching) so the active row sits clear of the media view's bottom scroll-fade mask, which
+    // otherwise clips the row nearest the edge of the visible area.
     api = freshApi(); await page({ paired: true });
-    await nav('up');
+    await nav('up', 'down');
     await settle();
     await shot('lobby-dock-rows');
     await close();
