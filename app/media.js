@@ -1,5 +1,10 @@
-/* Lobby server client: the Lobby Emby plugin's TV API. Network calls live here,
-   as Tizen calls live in device.js. Nothing is sent until the owner pairs this TV. */
+/* Lobby server client: the Lobby Emby/Jellyfin plugin's TV API. Network calls live here,
+   as Tizen calls live in device.js. Nothing is sent until the owner pairs this TV.
+   Emby serves its own API (and this plugin's routes) at both the bare path and, as an alias,
+   under '/emby'; Jellyfin has no such alias and only answers at the bare path. Rather than ask
+   which server this is, pairing probes the bare path first (the Jellyfin-correct one, and the
+   one Emby's plugin README documents working too) and falls back to the '/emby' prefix only if
+   that fails, then remembers whichever one answered. */
 (function () {
   'use strict';
   var SERVER_KEY = 'lobby.server.v1', CACHE_KEY = 'lobby.home.cache.v1', DEFAULT_PORT = 8096, DEFAULT_TLS_PORT = 443;
@@ -14,12 +19,17 @@
   }
   function validUrl(url) { return typeof url === 'string' && /^https?:\/\/[A-Za-z0-9.\-\[\]:]{1,255}$/.test(url); }
 
-  /* Saved pairing: { url, token, tvName }. */
+  /* Saved pairing: { url, prefix, token, tvName }. 'prefix' is '' (Jellyfin, or Emby answering
+     bare) or '/emby' (an Emby server that only answered under that alias) - whichever probe()
+     found when this TV paired. Older saved pairings, from before this existed, always meant
+     Emby reached through '/emby', since that was the only path ever tried. */
   function config() {
     var c = read(SERVER_KEY);
-    return c && validUrl(c.url) && typeof c.token === 'string' && c.token.length >= 16 ? { url: c.url, token: c.token, tvName: typeof c.tvName === 'string' ? c.tvName.slice(0, 80) : '' } : null;
+    return c && validUrl(c.url) && typeof c.token === 'string' && c.token.length >= 16
+      ? { url: c.url, prefix: c.prefix === '' ? '' : '/emby', token: c.token, tvName: typeof c.tvName === 'string' ? c.tvName.slice(0, 80) : '' }
+      : null;
   }
-  function save(url, token, tvName) { return store(SERVER_KEY, { url: url, token: token, tvName: tvName || '' }); }
+  function save(url, prefix, token, tvName) { return store(SERVER_KEY, { url: url, prefix: prefix === '' ? '' : '/emby', token: token, tvName: tvName || '' }); }
   function forget() { store(SERVER_KEY, null); store(CACHE_KEY, null); }
 
   /* "192.168.1.10" -> "http://192.168.1.10:8096"; a hostname instead of an address always
@@ -64,23 +74,36 @@
   }
   function api(method, path, body, done, timeout) {
     var c = config();
-    if (!c) { done({ code: 'unpaired', message: 'This TV is not connected to an Emby server.' }); return; }
-    request(method, c.url + '/emby/Lobby' + path, body, c.token, timeout, done);
+    if (!c) { done({ code: 'unpaired', message: 'This TV is not connected to a server.' }); return; }
+    request(method, c.url + c.prefix + '/Lobby' + path, body, c.token, timeout, done);
   }
 
-  /* Before pairing: is there an Emby server at this address? */
-  function probe(url, done) {
-    request('GET', url + '/emby/System/Info/Public', undefined, null, 8000, function (err, info) {
+  /* Before pairing: is there an Emby or Jellyfin server at this address, and does it answer the
+     Lobby plugin's routes bare or under '/emby'? Tries bare first (done(null, info) with
+     info.prefix === ''); only on a missing/network/timeout failure does it also try '/emby'
+     (info.prefix === '/emby'). Any other failure (e.g. a non-Emby/Jellyfin server that answered
+     200 with the wrong shape) is reported as-is, from the bare attempt. */
+  function probeOnce(url, prefix, done) {
+    request('GET', url + prefix + '/System/Info/Public', undefined, null, 8000, function (err, info) {
       if (err) { done(err); return; }
-      if (!info || typeof info.Version !== 'string') { done({ code: 'notemby', message: 'That address answered, but it isn’t an Emby server.' }); return; }
-      done(null, { name: String(info.ServerName || 'Emby').slice(0, 80), version: info.Version.slice(0, 20) });
+      if (!info || typeof info.Version !== 'string') { done({ code: 'notemby', message: 'That address answered, but it isn’t an Emby or Jellyfin server.' }); return; }
+      done(null, { name: String(info.ServerName || 'Server').slice(0, 80), version: info.Version.slice(0, 20), prefix: prefix });
     });
   }
-  function startPairing(url, deviceName, duid, done) {
-    request('POST', url + '/emby/Lobby/Pair', { DeviceName: deviceName || 'Samsung TV', Duid: duid || null }, null, 10000, done);
+  function probe(url, done) {
+    probeOnce(url, '', function (err, info) {
+      if (!err) { done(null, info); return; }
+      if (err.code !== 'missing' && err.code !== 'network' && err.code !== 'timeout') { done(err); return; }
+      probeOnce(url, '/emby', function (err2, info2) {
+        done(err2 ? err : null, err2 ? null : info2);
+      });
+    });
   }
-  function pairingStatus(url, id, secret, done) {
-    request('GET', url + '/emby/Lobby/Pair/Status?PairingId=' + encodeURIComponent(id) + '&Secret=' + encodeURIComponent(secret), undefined, null, 10000, done);
+  function startPairing(url, prefix, deviceName, duid, done) {
+    request('POST', url + prefix + '/Lobby/Pair', { DeviceName: deviceName || 'Samsung TV', Duid: duid || null }, null, 10000, done);
+  }
+  function pairingStatus(url, prefix, id, secret, done) {
+    request('GET', url + prefix + '/Lobby/Pair/Status?PairingId=' + encodeURIComponent(id) + '&Secret=' + encodeURIComponent(secret), undefined, null, 10000, done);
   }
 
   function cachedHome() { var c = read(CACHE_KEY); if (c && c.data && Array.isArray(c.data.Rows)) { allowThumbs(c.data); return c.data; } return null; }
@@ -99,7 +122,8 @@
     thumbsBase = /^https?:\/\/[^/]+$/.test(b) ? b : '';
   }
 
-  /* Emby paths are server-relative; TMDB posters and game-thumbs matchups are already absolute. */
+  /* Server image paths are relative (and bare, with no '/emby' alias needed - both servers answer
+     them that way); TMDB posters and game-thumbs matchups are already absolute. */
   function image(path, width) {
     var c = config();
     if (typeof path !== 'string' || !path) return '';

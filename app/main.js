@@ -1324,7 +1324,7 @@
   function openConnect() {
     var c = Media.config();
     FrameDevice.digits();
-    push({ id: 'connect', step: 'address', mode: 'ip', text: c ? Media.host(c.url) : '', error: '', url: '', token: 0, poll: 0, pairing: null, server: null, tvName: '', f: { r: 0, c: 0, b: 0 } });
+    push({ id: 'connect', step: 'address', mode: 'ip', text: c ? Media.host(c.url) : '', error: '', url: '', prefix: '', token: 0, poll: 0, pairing: null, server: null, tvName: '', f: { r: 0, c: 0, b: 0 } });
   }
   function connectFail(t, message) { clearTimeout(t.poll); t.step = 'error'; t.error = message; t.f.b = 0; }
   function connectStart(t) {
@@ -1334,13 +1334,13 @@
     Media.probe(url, function (err, info) {
       if (top() !== t || token !== t.token) return;
       if (err) { connectFail(t, err.code === 'notemby' ? err.message : 'Couldn’t reach ' + Media.host(url) + '. Check the address, and that the TV and server are on the same network.'); render(); return; }
-      t.server = info;
+      t.server = info; t.prefix = info.prefix;
       FrameDevice.identity(function (who) {
         if (top() !== t || token !== t.token) return;
-        Media.startPairing(url, who.name, who.duid, function (err2, p) {
+        Media.startPairing(url, t.prefix, who.name, who.duid, function (err2, p) {
           if (top() !== t || token !== t.token) return;
           if (err2 || !p || !p.Code || !p.PairingId || !p.Secret) {
-            connectFail(t, err2 && err2.code === 'missing' ? 'Emby is running, but the Lobby plugin isn’t installed on it.' : mediaError(err2).message);
+            connectFail(t, err2 && err2.code === 'missing' ? 'Emby or Jellyfin is running, but the Lobby plugin isn’t installed on it.' : mediaError(err2).message);
             render(); return;
           }
           t.pairing = { id: String(p.PairingId), secret: String(p.Secret), code: text(p.Code, 12) };
@@ -1354,11 +1354,11 @@
     t.poll = setTimeout(function () {
       if (top() !== t || token !== t.token || t.step !== 'code') return;
       if (document.hidden) { pollPairing(t, token); return; }
-      Media.pairingStatus(t.url, t.pairing.id, t.pairing.secret, function (err, s) {
+      Media.pairingStatus(t.url, t.prefix, t.pairing.id, t.pairing.secret, function (err, s) {
         if (top() !== t || token !== t.token || t.step !== 'code') return;
         if (err || !s) { pollPairing(t, token); return; }
         if (s.Status === 'approved' && s.Token) {
-          if (!Media.save(t.url, String(s.Token), text(s.TvName, 80))) { connectFail(t, 'This TV couldn’t save the connection. Try again.'); render(); return; }
+          if (!Media.save(t.url, t.prefix, String(s.Token), text(s.TvName, 80))) { connectFail(t, 'This TV couldn’t save the connection. Try again.'); render(); return; }
           M.cfg = Media.config(); M.unauthorized = false; setHome(null); M.data = null; M.cols = {}; M.row = 0; M.settings = null;
           if (S.c.layout !== 'watch') setLook({ layout: 'watch' }, { row: 'layout' });
           t.tvName = text(s.TvName, 80); t.step = 'done'; t.f.b = 0;
