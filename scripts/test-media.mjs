@@ -5,11 +5,27 @@ import vm from 'node:vm';
 import test from 'node:test';
 
 const source = readFileSync(new URL('../app/media.js', import.meta.url), 'utf8');
-function client(seed = {}) {
+function client(seed = {}, respond) {
   const store = new Map(Object.entries(seed));
   const localStorage = { getItem: k => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: k => store.delete(k) };
   const window = {};
-  vm.runInNewContext(source, { window, localStorage, setTimeout, clearTimeout, XMLHttpRequest: function () { throw Error('no network in tests'); }, encodeURIComponent });
+  // respond(url) -> { status, body } to answer synchronously, or null/undefined for a network error.
+  // Defaults to always throwing, as before, for tests that don't touch the network.
+  function FakeXHR() {
+    this.open = (method, url) => { this._url = url; };
+    this.setRequestHeader = () => {};
+    this.send = () => {
+      const r = respond ? respond(this._url) : null;
+      setTimeout(() => {
+        if (!r) { this.onerror && this.onerror(); return; }
+        this.status = r.status;
+        this.responseText = r.body === undefined ? '' : JSON.stringify(r.body);
+        this.onload && this.onload();
+      }, 0);
+    };
+    this.abort = () => {};
+  }
+  vm.runInNewContext(source, { window, localStorage, setTimeout, clearTimeout, XMLHttpRequest: respond ? FakeXHR : function () { throw Error('no network in tests'); }, encodeURIComponent });
   return { media: window.LobbyMedia, store };
 }
 
@@ -39,12 +55,23 @@ test('invalid addresses are refused', () => {
 test('pairing is saved, read back and forgotten with its cache', () => {
   const { media, store } = client();
   assert.equal(media.config(), null);
-  assert.equal(media.save('http://10.0.0.5:8096', 'tok_0123456789abcdef', 'Living Room'), true);
-  assert.deepEqual({ ...media.config() }, { url: 'http://10.0.0.5:8096', token: 'tok_0123456789abcdef', tvName: 'Living Room' });
+  assert.equal(media.save('http://10.0.0.5:8096', '', 'tok_0123456789abcdef', 'Living Room'), true);
+  assert.deepEqual({ ...media.config() }, { url: 'http://10.0.0.5:8096', prefix: '', token: 'tok_0123456789abcdef', tvName: 'Living Room' });
   store.set('lobby.home.cache.v1', JSON.stringify({ data: { Rows: [] } }));
   media.forget();
   assert.equal(media.config(), null);
   assert.equal(store.has('lobby.home.cache.v1'), false);
+});
+
+test('a saved pairing from before the prefix existed is treated as Emby-under-/emby', () => {
+  const { media } = client({ 'lobby.server.v1': JSON.stringify({ url: 'http://10.0.0.5:8096', token: 'tok_0123456789abcdef', tvName: 'Old' }) });
+  assert.deepEqual({ ...media.config() }, { url: 'http://10.0.0.5:8096', prefix: '/emby', token: 'tok_0123456789abcdef', tvName: 'Old' });
+});
+
+test('an Emby pairing saved under its /emby alias keeps that prefix', () => {
+  const { media } = client();
+  assert.equal(media.save('http://10.0.0.5:8096', '/emby', 'tok_0123456789abcdef', 'Living Room'), true);
+  assert.deepEqual({ ...media.config() }, { url: 'http://10.0.0.5:8096', prefix: '/emby', token: 'tok_0123456789abcdef', tvName: 'Living Room' });
 });
 
 test('tampered or partial storage is ignored', () => {
@@ -61,6 +88,47 @@ test('images: Emby paths are sized on the paired server, TMDB passes through, ot
   assert.equal(media.image('//evil.example/x.jpg'), '');
   assert.equal(media.image('https://evil.example/x.jpg'), '');
   assert.equal(media.image(''), '');
+});
+
+test('probing a Jellyfin-style server (bare path only) succeeds with prefix ""', (_t, done) => {
+  const { media } = client({}, url => url.endsWith('/System/Info/Public') && !url.includes('/emby/')
+    ? { status: 200, body: { ServerName: 'Jellyfin', Version: '12.4.0' } }
+    : { status: 404, body: { message: 'Not found.' } });
+  media.probe('http://10.0.0.5:8096', (err, info) => {
+    assert.equal(err, null);
+    assert.deepEqual({ ...info }, { name: 'Jellyfin', version: '12.4.0', prefix: '' });
+    done();
+  });
+});
+
+test('probing an Emby-style server (only answers under /emby) falls back and succeeds with that prefix', (_t, done) => {
+  const { media } = client({}, url => url.includes('/emby/System/Info/Public')
+    ? { status: 200, body: { ServerName: 'Emby', Version: '4.8.0' } }
+    : { status: 404, body: { message: 'Not found.' } });
+  media.probe('http://10.0.0.5:8096', (err, info) => {
+    assert.equal(err, null);
+    assert.deepEqual({ ...info }, { name: 'Emby', version: '4.8.0', prefix: '/emby' });
+    done();
+  });
+});
+
+test('probing a server that answers at neither path reports the bare attempt\'s failure', (_t, done) => {
+  const { media } = client({}, () => ({ status: 404, body: { message: 'Not found.' } }));
+  media.probe('http://10.0.0.5:8096', (err, info) => {
+    assert.equal(info, null);
+    assert.equal(err.code, 'missing');
+    done();
+  });
+});
+
+test('probing an address with no server at all does not try the /emby fallback for an unrelated error', (_t, done) => {
+  const { media } = client({}, url => url.includes('/emby/') ? { status: 200, body: { ServerName: 'Emby', Version: '4.8.0' } } : { status: 200, body: { nope: true } });
+  media.probe('http://10.0.0.5:8096', (err) => {
+    // The bare path answered 200 but without a Version, so this is reported as "notemby"
+    // straight away rather than trying /emby (that failure mode isn't missing/network/timeout).
+    assert.equal(err.code, 'notemby');
+    done();
+  });
 });
 
 test('API calls without a pairing fail locally', () => {
