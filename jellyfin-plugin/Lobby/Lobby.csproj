@@ -38,7 +38,6 @@
   <ItemGroup>
     <None Remove="Web\*" />
     <EmbeddedResource Include="Web\lobby.html" />
-    <EmbeddedResource Include="Web\lobby.js" />
     <None Remove="thumb.png" />
     <EmbeddedResource Include="thumb.png" />
   </ItemGroup>
