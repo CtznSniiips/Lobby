@@ -592,12 +592,27 @@ namespace Lobby.Services
                     }
 
                     BaseItem series = null;
-                    if (long.TryParse(d.SeriesId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seriesId))
+                    var parsedSeriesId = long.TryParse(d.SeriesId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seriesId);
+                    if (parsedSeriesId)
                     {
                         series = _library.GetItemById(seriesId);
                     }
 
                     var seriesDto = series != null ? _dto.GetBaseItemDtos(new[] { series }, options, user).FirstOrDefault() : null;
+
+                    // Temporary diagnostics: the Continue Watching hero was falling back to the episode's
+                    // own (lower-res) thumbnail for at least one real library, even though the series
+                    // itself has proper backdrop art, and it isn't yet clear which step below is failing -
+                    // the SeriesId parse, the series lookup, the re-fetched series DTO, or its
+                    // BackdropImageTags being empty. Remove once that's confirmed.
+                    _logger.Debug(
+                        "Lobby hero backdrop: episode {0} SeriesId='{1}' parsed={2} seriesFound={3} seriesDtoFound={4} backdropTags={5}",
+                        d.Id,
+                        d.SeriesId,
+                        parsedSeriesId,
+                        series != null,
+                        seriesDto != null,
+                        seriesDto?.BackdropImageTags == null ? "null" : "[" + string.Join(",", seriesDto.BackdropImageTags) + "]");
 
                     item.Tagline = series?.Tagline;
                     item.Overview = string.IsNullOrWhiteSpace(d.Overview) ? series?.Overview : d.Overview;
