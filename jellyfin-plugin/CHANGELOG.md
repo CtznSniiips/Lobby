@@ -44,3 +44,7 @@
   updated to match. **Not yet verified by an actual build** — this sandbox has no NuGet access and only the
   .NET 8 SDK installed, so GitHub Actions' build on push is the first real compile check; watch that run
   before trusting this release.
+- Added [`manifest.json`](manifest.json), so Lobby can be installed and updated as a Jellyfin plugin
+  repository (Dashboard → Plugins → Repositories) instead of only by hand. The **Jellyfin plugin release**
+  workflow now also zips `Lobby.dll`, attaches the zip to the release alongside the raw DLL, and adds a
+  matching entry to `manifest.json` on `main` automatically.
