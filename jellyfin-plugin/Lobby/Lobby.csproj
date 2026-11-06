@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <RootNamespace>Lobby</RootNamespace>
     <AssemblyName>Lobby</AssemblyName>
@@ -12,8 +12,11 @@
     <Authors>CtznSniiips</Authors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Nullable>disable</Nullable>
-    <!-- Jellyfin SDK version this plugin is built against. -->
-    <JellyfinSdkVersion>10.9.11</JellyfinSdkVersion>
+    <!-- Jellyfin SDK version this plugin is built against. Jellyfin 12.4.0 broke plugin ABI
+         compatibility with 10.9.x (Jellyfin.Data.Entities.User moved to
+         Jellyfin.Database.Implementations.Entities.User, among other changes), so this plugin now
+         targets 12.4.0 and newer only. -->
+    <JellyfinSdkVersion>12.4.0</JellyfinSdkVersion>
   </PropertyGroup>
 
   <!-- Normal build: reference the Jellyfin SDK from NuGet. -->
@@ -28,6 +31,7 @@
     <Reference Include="MediaBrowser.Controller"><HintPath>$(JellyfinRefDir)/MediaBrowser.Controller.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="MediaBrowser.Model"><HintPath>$(JellyfinRefDir)/MediaBrowser.Model.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Jellyfin.Data"><HintPath>$(JellyfinRefDir)/Jellyfin.Data.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Jellyfin.Database.Implementations"><HintPath>$(JellyfinRefDir)/Jellyfin.Database.Implementations.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Jellyfin.Extensions"><HintPath>$(JellyfinRefDir)/Jellyfin.Extensions.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 
@@ -38,7 +42,6 @@
   <ItemGroup>
     <None Remove="Web\*" />
     <EmbeddedResource Include="Web\lobby.html" />
-    <EmbeddedResource Include="Web\lobby.js" />
     <None Remove="thumb.png" />
     <EmbeddedResource Include="thumb.png" />
   </ItemGroup>

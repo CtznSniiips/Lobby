@@ -71,9 +71,19 @@ Use the staged [Samsung The Frame setup guide](docs/agent-tv-setup-guide.md) to 
 
 Signing supports an ignored `.local/signing.json` based on `signing.example.json`: select your SDK, existing certificate profile and your own SDK-generated app identity. See [local signing setup](docs/development.md#local-tv-tools-and-signing). The TV installation commands and native Home helper still contain reference-machine assumptions. Your agent must check the installed-app IDs and each device stage with you. Installing the app and assigning the remote Home button are separate steps.
 
+### Install via apps2samsung
+
+[Apps2Samsung](https://github.com/Apps2Samsung/Apps2Samsung) is a third-party, open-source tool that side-loads apps onto Tizen devices — TVs, projectors and smart monitors — without you working through the Samsung Studio/SDK signing flow above by hand. It still needs Developer Mode enabled on the TV (Stage 2 of the [setup guide](docs/agent-tv-setup-guide.md)), but it folds the certificate and transfer steps into a desktop tool you run once per install instead of separate SDK commands.
+
+It installs two kinds of thing: apps already in its own catalogue (which lists a handful of community apps, not Lobby), and any `.wgt` file you already have. Nothing here submits Lobby to that catalogue, so the practical way to use it today is to build and sign your own widget first — the setup guide's certificate and packaging stages (4–5) still apply — then hand the resulting `.wgt` to Apps2Samsung for the transfer/install step in place of `sdb install`.
+
+`app/config.xml`'s widget id (`http://github.com/CtznSniiips/Lobby`) and application id (`lobbyTV001.Lobby`) were deliberately set to the project's real GitHub URL so that, if Apps2Samsung or a similar catalogue ever builds straight from a repo, Lobby's identity is already in the right shape. That's forward-looking prep, not a claim that Lobby is listed anywhere today.
+
+Apps2Samsung is developed outside this project and changes on its own schedule; its own README and wiki are the authoritative source for its current install flow, supported models and prerequisites. We haven't verified an end-to-end Lobby install through it. Treat it the same way as the rest of this section: adapt it to your TV, and use it at your own risk.
+
 ### Reach Lobby with one press
 
-Installing Lobby and making it the thing your physical Home button opens are different steps, with very different risk.
+Whichever way you installed Lobby — the full SDK flow or Apps2Samsung above — installing it and making it the thing your physical Home button opens are different steps, with very different risk.
 
 **Full replacement:** the native-Home-routing stage of the [setup guide](docs/agent-tv-setup-guide.md) reassigns what the physical Home button opens, using this project's guarded native-Home helper. It's the closest thing to a stock Home screen, but Samsung doesn't document the mechanism, it's model/firmware-specific, and it needs a recovery baseline before you touch it. Treat it as something you do deliberately for your own TV, not a set of instructions to hand someone else.
 

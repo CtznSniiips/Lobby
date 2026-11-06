@@ -14,7 +14,7 @@ on:
       jellyfin_version:
         description: 'Jellyfin SDK version (Jellyfin.Controller/Jellyfin.Model) to compile against'
         required: false
-        default: '10.9.11'
+        default: '12.4.0'
   # Called by jellyfin-plugin-release.yml so releases use exactly this build.
   workflow_call:
     inputs:
@@ -22,14 +22,14 @@ on:
         description: 'Jellyfin SDK version (Jellyfin.Controller/Jellyfin.Model) to compile against'
         required: false
         type: string
-        default: '10.9.11'
+        default: '12.4.0'
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build (Jellyfin ${{ inputs.jellyfin_version || '10.9.11' }})
+    name: Build (Jellyfin ${{ inputs.jellyfin_version || '12.4.0' }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -37,12 +37,12 @@ jobs:
 
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Build
         working-directory: jellyfin-plugin/Lobby
         env:
-          JELLYFIN_VERSION: ${{ inputs.jellyfin_version || '10.9.11' }}
+          JELLYFIN_VERSION: ${{ inputs.jellyfin_version || '12.4.0' }}
         run: |
           set -o pipefail
           if ! dotnet build -c Release -p:JellyfinSdkVersion="$JELLYFIN_VERSION" 2>&1 | tee "$RUNNER_TEMP/build.log"; then
@@ -55,13 +55,13 @@ jobs:
         working-directory: jellyfin-plugin/Lobby
         run: |
           set -euo pipefail
-          dll=bin/Release/net8.0/Lobby.dll
+          dll=bin/Release/net10.0/Lobby.dll
           test -s "$dll"
           echo "Built $(du -h "$dll" | cut -f1) $dll"
 
       - name: Upload plugin
         uses: actions/upload-artifact@v7
         with:
-          name: Lobby-jellyfin-${{ inputs.jellyfin_version || '10.9.11' }}
-          path: jellyfin-plugin/Lobby/bin/Release/net8.0/Lobby.dll
+          name: Lobby-jellyfin-${{ inputs.jellyfin_version || '12.4.0' }}
+          path: jellyfin-plugin/Lobby/bin/Release/net10.0/Lobby.dll
           if-no-files-found: error

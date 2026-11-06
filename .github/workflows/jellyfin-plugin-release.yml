@@ -15,7 +15,7 @@ on:
       jellyfin_version:
         description: 'Jellyfin SDK version the released DLL is compiled against'
         required: false
-        default: '10.9.11'
+        default: '12.4.0'
       prerelease:
         description: 'Mark as a pre-release'
         type: boolean

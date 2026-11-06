@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data;
 using Lobby.Configuration;
 using Lobby.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -266,7 +267,7 @@ namespace Lobby.Controllers
                     }).ToList(),
                 JellyfinUsers = users
                     .OrderBy(u => u.Username, StringComparer.OrdinalIgnoreCase)
-                    .Select(u => new JellyfinUserView { Id = u.Id.ToString("N"), Name = u.Username, IsDisabled = u.HasPermission(Jellyfin.Data.Enums.PermissionKind.IsDisabled) })
+                    .Select(u => new JellyfinUserView { Id = u.Id.ToString("N"), Name = u.Username, IsDisabled = u.HasPermission(Jellyfin.Database.Implementations.Enums.PermissionKind.IsDisabled) })
                     .ToList(),
                 Links = c.UserLinks,
                 QueuedPlayCount = Runtime.Playback.PendingCount,
