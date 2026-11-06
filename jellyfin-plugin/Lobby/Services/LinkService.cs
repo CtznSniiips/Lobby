@@ -79,7 +79,7 @@ namespace Lobby.Services
         public async Task<SyncReport> Sync(CancellationToken ct)
         {
             var seerrUsers = await GetSeerrUsers(ct, forceRefresh: true).ConfigureAwait(false);
-            var jellyfinUsers = _userManager.Users.ToList();
+            var jellyfinUsers = _userManager.GetUsers().ToList();
             var report = new SyncReport { SeerrUsers = seerrUsers.Count };
 
             UserLink[] result = null;
@@ -158,7 +158,7 @@ namespace Lobby.Services
         /// <summary>Replaces the whole link list with what the admin page submitted.</summary>
         public UserLink[] Save(IEnumerable<UserLink> submitted)
         {
-            var jellyfinIds = new HashSet<string>(_userManager.Users.Select(u => u.Id.ToString("N")));
+            var jellyfinIds = new HashSet<string>(_userManager.GetUsers().Select(u => u.Id.ToString("N")));
             var clean = (submitted ?? Enumerable.Empty<UserLink>())
                 .Where(l => l != null && l.SeerrUserId > 0)
                 .Select(l => new UserLink

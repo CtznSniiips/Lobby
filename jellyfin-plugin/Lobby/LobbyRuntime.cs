@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Data.Entities;
+using Jellyfin.Database.Implementations.Entities;
 using Lobby.Services;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Library;
@@ -59,7 +59,8 @@ namespace Lobby
 
         public User[] AllUsers()
         {
-            return UserManager.Users.ToArray();
+            // IUserManager.Users was removed in Jellyfin 12; GetUsers() replaces it.
+            return UserManager.GetUsers().ToArray();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
