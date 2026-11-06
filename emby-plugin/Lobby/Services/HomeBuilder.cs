@@ -552,25 +552,43 @@ namespace Lobby.Services
                 // Queried directly by per-episode watched state rather than Emby's NextUp API, which can
                 // keep pointing at an already-watched episode (observed returning S1E1 for shows whose
                 // first episode was marked played) instead of advancing to the actual next unwatched one.
+                // Sorted by season/episode number rather than ItemSortBy.AiredEpisodeOrder: that sort key
+                // isn't backed by a real column on every Emby server's SQLite schema (observed throwing
+                // "no such column: AiredEpisodeOrder" on a live 4.9.1.90-era server), and since the whole
+                // featured area shares one try/catch, that one exception was wiping out every other
+                // already-computed featured title, not just this show's "next episode" lookup.
                 if (long.TryParse(d.Id, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seriesId))
                 {
-                    var next = _library.GetItemList(new InternalItemsQuery(user)
+                    try
                     {
-                        AncestorIds = new[] { seriesId },
-                        IncludeItemTypes = new[] { "Episode" },
-                        IsPlayed = false,
-                        OrderBy = new[] { ValueTuple.Create(ItemSortBy.AiredEpisodeOrder, SortOrder.Ascending) },
-                        Limit = 1,
-                    }).FirstOrDefault();
-                    if (next != null)
-                    {
-                        item.PlayItemId = next.InternalId.ToString(CultureInfo.InvariantCulture);
-                        var data = _userData.GetUserData(user, next);
-                        item.DefaultAction = data != null && data.PlaybackPositionTicks > 0 ? PlayAction.Resume : PlayAction.Play;
-                        if (next.ParentIndexNumber.HasValue && next.IndexNumber.HasValue)
+                        var next = _library.GetItemList(new InternalItemsQuery(user)
                         {
-                            parts.Add(string.Format(CultureInfo.InvariantCulture, "S{0} E{1}", next.ParentIndexNumber, next.IndexNumber));
+                            AncestorIds = new[] { seriesId },
+                            IncludeItemTypes = new[] { "Episode" },
+                            IsPlayed = false,
+                            OrderBy = new[]
+                            {
+                                ValueTuple.Create(ItemSortBy.ParentIndexNumber, SortOrder.Ascending),
+                                ValueTuple.Create(ItemSortBy.IndexNumber, SortOrder.Ascending),
+                            },
+                            Limit = 1,
+                        }).FirstOrDefault();
+                        if (next != null)
+                        {
+                            item.PlayItemId = next.InternalId.ToString(CultureInfo.InvariantCulture);
+                            var data = _userData.GetUserData(user, next);
+                            item.DefaultAction = data != null && data.PlaybackPositionTicks > 0 ? PlayAction.Resume : PlayAction.Play;
+                            if (next.ParentIndexNumber.HasValue && next.IndexNumber.HasValue)
+                            {
+                                parts.Add(string.Format(CultureInfo.InvariantCulture, "S{0} E{1}", next.ParentIndexNumber, next.IndexNumber));
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        // This show just plays from wherever NextUp/the pilot would, instead of breaking
+                        // the entire featured area for every other title being built alongside it.
+                        _logger.Debug("next-episode lookup for series {0} failed: {1}", d.Id, ex.Message);
                     }
                 }
 

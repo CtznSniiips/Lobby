@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.8
+
+- Fixed: the Continue Watching hero's blurry-backdrop problem (nominally fixed in 0.9.6) was actually a
+  different bug, found from 0.9.7's diagnostic logging plus a real server's exception log. A completely
+  unrelated title in the "New in your library" list could throw `SQLitePCL.pretty.SQLiteException: no
+  such column: AiredEpisodeOrder` while looking up its next unwatched episode (the 0.9.5 fix) — that sort
+  key isn't backed by a real column on every Emby server's SQLite schema. Because the whole featured area
+  is built behind one try/catch, that single exception discarded every title already computed for it,
+  including ones (like the hero's Continue Watching entry) that had built a perfectly good `BackdropUrl`
+  moments earlier — and the client then fell back to the episode's own low-res thumbnail, which looked
+  identical to the 0.9.6 bug but had nothing to do with it. Sorts by `ParentIndexNumber`/`IndexNumber`
+  instead (real columns, confirmed from the failing query's own SQL text) and wraps the lookup in its own
+  try/catch, so a future quirk on some other server degrades that one show's "next episode" instead of
+  silently emptying the featured area for everything else.
+
 ## 0.9.7
 
 - Diagnostics: the 0.9.6 fix for the blurry Continue Watching hero (above) isn't resolving it for at
