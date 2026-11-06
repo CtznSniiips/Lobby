@@ -3,7 +3,10 @@ name: Jellyfin plugin release
 # Manually publishes a GitHub Release for the Jellyfin plugin:
 #   - version comes from <Version> in jellyfin-plugin/Lobby/Lobby.csproj
 #   - release notes come from that version's "## x.y.z" section in jellyfin-plugin/CHANGELOG.md
-#   - Lobby.dll is built by the regular "Jellyfin plugin" workflow and attached
+#   - Lobby.dll is built by the regular "Jellyfin plugin" workflow, zipped and attached, alongside
+#     the raw .dll for a manual plugins-folder copy
+#   - jellyfin-plugin/manifest.json on main gets a new "versions" entry pointing at that zip, so
+#     Jellyfin's Dashboard -> Plugins -> Repositories can install/update Lobby from this repo
 # Tag: jellyfin-plugin-v<version>. Bump <Version> and add a CHANGELOG section before running.
 
 on:
@@ -32,6 +35,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       version: ${{ steps.version.outputs.version }}
+      assembly_version: ${{ steps.version.outputs.assembly_version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
@@ -41,13 +45,19 @@ jobs:
         run: |
           set -euo pipefail
           version=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' jellyfin-plugin/Lobby/Lobby.csproj | head -n1)
+          assembly_version=$(sed -n 's:.*<AssemblyVersion>\(.*\)</AssemblyVersion>.*:\1:p' jellyfin-plugin/Lobby/Lobby.csproj | head -n1)
           if [ -z "$version" ]; then
             echo "::error file=jellyfin-plugin/Lobby/Lobby.csproj::No <Version> found"
             exit 1
           fi
+          if [ -z "$assembly_version" ]; then
+            echo "::error file=jellyfin-plugin/Lobby/Lobby.csproj::No <AssemblyVersion> found"
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "assembly_version=$assembly_version" >> "$GITHUB_OUTPUT"
           echo "tag=jellyfin-plugin-v$version" >> "$GITHUB_OUTPUT"
-          echo "Releasing Lobby Jellyfin plugin $version"
+          echo "Releasing Lobby Jellyfin plugin $version (assembly $assembly_version)"
 
       - name: Check the tag is new
         env:
@@ -98,6 +108,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+
       - uses: actions/download-artifact@v8
         with:
           name: Lobby-jellyfin-${{ inputs.jellyfin_version }}
@@ -108,6 +120,22 @@ jobs:
           name: release-notes
           path: .
 
+      - name: Zip the plugin for repository install
+        id: zip
+        env:
+          ASSEMBLY_VERSION: ${{ needs.prepare.outputs.assembly_version }}
+        run: |
+          set -euo pipefail
+          test -s dist/Lobby.dll
+          zip_name="lobby_${ASSEMBLY_VERSION}.zip"
+          # -j: no directory entries, so Lobby.dll sits at the zip's root - that's where Jellyfin's
+          # installer expects a plugin's files when it extracts a repository package.
+          zip -j "$zip_name" dist/Lobby.dll
+          checksum=$(md5sum "$zip_name" | cut -d' ' -f1)
+          echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
+          echo "checksum=$checksum" >> "$GITHUB_OUTPUT"
+          echo "Zipped $zip_name ($checksum)"
+
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -115,19 +143,78 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
           JELLYFIN: ${{ inputs.jellyfin_version }}
           PRERELEASE: ${{ inputs.prerelease }}
+          ZIP_NAME: ${{ steps.zip.outputs.zip_name }}
         run: |
           set -euo pipefail
           test -s dist/Lobby.dll
+          test -s "$ZIP_NAME"
           {
             cat notes.md
             echo
             echo "---"
-            echo "Built against the Jellyfin $JELLYFIN SDK. Install via the plugin's repository manifest, or copy \`Lobby.dll\` into your Jellyfin plugins folder (in its own \`Lobby\` subfolder) and restart Jellyfin."
+            echo "Built against the Jellyfin $JELLYFIN SDK. Install from Lobby's plugin repository (Dashboard -> Plugins -> Repositories, see the README), or copy \`Lobby.dll\` into your Jellyfin plugins folder (in its own \`Lobby\` subfolder) and restart Jellyfin."
           } > body.md
 
           args=(--repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Lobby Jellyfin plugin $VERSION" --notes-file body.md)
           if [ "$PRERELEASE" = "true" ]; then
             args+=(--prerelease)
           fi
-          gh release create "$TAG" dist/Lobby.dll "${args[@]}"
+          gh release create "$TAG" dist/Lobby.dll "$ZIP_NAME" "${args[@]}"
           echo "Published $TAG"
+
+      - name: Update the plugin repository manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          ASSEMBLY_VERSION: ${{ needs.prepare.outputs.assembly_version }}
+          JELLYFIN: ${{ inputs.jellyfin_version }}
+          ZIP_NAME: ${{ steps.zip.outputs.zip_name }}
+          CHECKSUM: ${{ steps.zip.outputs.checksum }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+
+          source_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ZIP_NAME}"
+          timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          target_abi="${JELLYFIN}.0"
+
+          python3 - "$ASSEMBLY_VERSION" "$target_abi" "$source_url" "$CHECKSUM" "$timestamp" <<'PYEOF'
+          import json
+          import sys
+
+          version, target_abi, source_url, checksum, timestamp = sys.argv[1:6]
+          path = "jellyfin-plugin/manifest.json"
+
+          with open(path, encoding="utf-8") as f:
+              manifest = json.load(f)
+
+          with open("notes.md", encoding="utf-8") as f:
+              changelog = f.read().strip() + "\n"
+
+          plugin = manifest[0]
+          plugin["versions"] = [v for v in plugin["versions"] if v["version"] != version]
+          plugin["versions"].insert(0, {
+              "version": version,
+              "changelog": changelog,
+              "targetAbi": target_abi,
+              "sourceUrl": source_url,
+              "checksum": checksum,
+              "timestamp": timestamp,
+          })
+
+          with open(path, "w", encoding="utf-8") as f:
+              json.dump(manifest, f, indent=2)
+              f.write("\n")
+          PYEOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add jellyfin-plugin/manifest.json
+          if git diff --cached --quiet; then
+            echo "manifest.json already up to date"
+          else
+            git commit -m "Add Jellyfin plugin $ASSEMBLY_VERSION to the repository manifest"
+            git push origin main
+          fi

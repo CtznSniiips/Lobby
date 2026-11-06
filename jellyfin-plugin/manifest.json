@@ -1,0 +1,12 @@
+[
+  {
+    "guid": "5af002f7-cede-48af-8901-0bae7eec0e4e",
+    "name": "Lobby",
+    "overview": "Home screen backend for the Lobby Samsung TV app",
+    "description": "Continue Watching, Next Up, Recently Added, Live TV and sports, Seerr discovery and requests, and one-press playback for Lobby's paired Samsung TVs.",
+    "owner": "CtznSniiips",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/CtznSniiips/Lobby/main/jellyfin-plugin/Lobby/thumb.png",
+    "versions": []
+  }
+]

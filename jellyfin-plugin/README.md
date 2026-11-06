@@ -16,6 +16,15 @@ Seerr's URL and API key stay on the Jellyfin server. TVs only ever hold their ow
 
 ## Install
 
+**From the plugin repository (recommended):** Dashboard → Plugins → Repositories → **+**, then add
+`https://raw.githubusercontent.com/CtznSniiips/Lobby/main/jellyfin-plugin/manifest.json` as the repository
+URL. Lobby then shows up under Dashboard → Plugins → Catalog, with its icon and changelog, and updates
+the normal way when a new version is released. This is [`manifest.json`](manifest.json); the **Jellyfin
+plugin release** workflow adds a new entry to it, pointing at that release's signed zip, every time it
+publishes a release.
+
+**Manually, for an unreleased build:**
+
 1. Download `Lobby.dll` from the latest [release](https://github.com/CtznSniiips/Lobby/releases) tagged
    `jellyfin-plugin-v…`. For an unreleased build, use the artifact from the latest **Jellyfin plugin**
    workflow run.
