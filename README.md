@@ -1,41 +1,8 @@
 # Lobby
 
-A home screen for Samsung The Frame that starts with what you watch: your Emby server's Continue Watching, Live TV and teams, Seerr's trending titles, and your apps, with an interface made for the TV remote.
+A home screen for Samsung The Frame that starts with what you watch: your Emby or Jellyfin server's Continue Watching, Live TV and sports teams, Seerr's trending titles, and your apps, with an interface made for the TV remote.
 
-Lobby is a fork of [CleanFrame](https://github.com/nthnclrk/CleanFrame) by nthnclrk, which provides the quiet home screen, wallpapers, settings and TV tooling. Lobby adds the Watch layout and a server plugin — for Emby or Jellyfin. Unless a section mentions Lobby, the notes below are CleanFrame's and describe the original author's TV and setup.
-
-![CleanFrame browser preview using the bundled Manrope font](docs/images/cleanframe-dock.jpg)
-
-I built CleanFrame for one TV: my own Samsung The Frame, running Tizen. I'm sharing the code and setup notes as a starting point for other people to build on.
-
-**Use it at your own risk.** Most of the work has gone into making it work well on my TV. Very little has gone into making it portable. The setup scripts reflect my computer, TV and firmware, so expect to adapt them and test the result on your own hardware.
-
-I highly recommend forking it and building on top of it, ideally with a coding agent that can help you understand and adapt the setup. Start with the browser preview, make the interface your own, then work through TV installation when you're ready. Native Home/startup changes need particular care; the setup guide covers the risks and recovery steps.
-
-## Try the interface
-
-You need Node.js 22.13+ (22 LTS), or 24+, and Python 3.10+ to run the browser preview.
-
-```sh
-git clone https://github.com/CtznSniiips/Lobby.git
-cd Lobby
-npm ci
-npm run dev:public
-```
-
-Open [localhost:4795/home/](http://localhost:4795/home/). Use the arrow keys, Enter and Escape, or click the controls. App launches and Samsung screens require a TV; the preview reports that limitation when you select them.
-
-The public preview uses the included Manrope, Geist and Newsreader fonts.
-
-## What you can change
-
-- Choose a List or Dock layout, with icons, names or both.
-- Use a photograph, light or dark background, with a simple 12-hour clock.
-- Adjust typography, focus and glass materials through the same Settings interface.
-- Choose and reorder Home apps; discover installed apps on the TV.
-- Select from fifteen wallpapers and save your preferences locally.
-
-The glass and blur are rendered ahead of time. The TV loads the finished images and uses transforms and opacity for focus feedback.
+Lobby is a fork of [CleanFrame](https://github.com/nthnclrk/CleanFrame) by nthnclrk, which provides the quiet home screen, wallpapers, settings and TV tooling. Lobby adds the Watch layout and a server plugin — for Emby or Jellyfin.
 
 ## Lobby: Emby/Jellyfin and Seerr on Home
 
@@ -49,37 +16,37 @@ Lobby ships a plugin for each server, built from the same design and talking the
 
 Unpaired, the app behaves exactly as CleanFrame. See [interaction behaviour](docs/interaction-behaviour.md#emby-and-seerr-rows-lobby).
 
-## Use a coding agent
-
-Open this repo in a local coding agent and give it a bounded change:
-
-```text
-Read AGENTS.md, docs/development.md and docs/interaction-behaviour.md.
-Help me adapt CleanFrame. Start with the public-font browser preview.
-My first change is: <describe one change>.
-Preserve remote navigation, saved preferences and the ES5 runtime.
-Run the source checks and relevant browser checks. Show the result.
-This task is browser-only: do not connect to a TV, sign or install a
-package, or change Home/startup settings.
-```
-
-See [working with an agent](docs/for-agents.md) for the TV setup prompt and the distinction between UI work, app installation and native Home changes. An agent needs local computer access for TV work; a hosted chat cannot reach your TV merely by reading this repo.
-
 ## Put it on a TV
-
-Use the staged [Samsung The Frame setup guide](docs/agent-tv-setup-guide.md) to understand the process used on my TV and adapt it to yours. It covers the remote's Developer Mode sequence, official Samsung tools, your own certificates and app identity, installation, visible checks and recovery.
-
-Signing supports an ignored `.local/signing.json` based on `signing.example.json`: select your SDK, existing certificate profile and your own SDK-generated app identity. See [local signing setup](docs/development.md#local-tv-tools-and-signing). The TV installation commands and native Home helper still contain reference-machine assumptions. Your agent must check the installed-app IDs and each device stage with you. Installing the app and assigning the remote Home button are separate steps.
 
 ### Install via apps2samsung
 
 [Apps2Samsung](https://github.com/Apps2Samsung/Apps2Samsung) is a third-party, open-source tool that side-loads apps onto Tizen devices — TVs, projectors and smart monitors — without you working through the Samsung Studio/SDK signing flow above by hand. It still needs Developer Mode enabled on the TV (Stage 2 of the [setup guide](docs/agent-tv-setup-guide.md)), but it folds the certificate and transfer steps into a desktop tool you run once per install instead of separate SDK commands.
 
-It installs two kinds of thing: apps already in its own catalogue (which lists a handful of community apps, not Lobby), and any `.wgt` file you already have. Nothing here submits Lobby to that catalogue, so the practical way to use it today is to build and sign your own widget first — the setup guide's certificate and packaging stages (4–5) still apply — then hand the resulting `.wgt` to Apps2Samsung for the transfer/install step in place of `sdb install`.
 
-`app/config.xml`'s widget id (`http://github.com/CtznSniiips/Lobby`) and application id (`lobbyTV001.Lobby`) were deliberately set to the project's real GitHub URL so that, if Apps2Samsung or a similar catalogue ever builds straight from a repo, Lobby's identity is already in the right shape. That's forward-looking prep, not a claim that Lobby is listed anywhere today.
+<details>
+  <summary>1. Enable developer mode on your Samsung TV</summary>
 
-Apps2Samsung is developed outside this project and changes on its own schedule; its own README and wiki are the authoritative source for its current install flow, supported models and prerequisites. We haven't verified an end-to-end Lobby install through it. Treat it the same way as the rest of this section: adapt it to your TV, and use it at your own risk.
+#### Open the Apps Section:
+- Press the Home button on your Samsung remote.
+- Navigate to and open the Apps store/section.
+#### Access App Settings (if using a Smart Remote):
+- Scroll all the way down to App Settings and select it.
+#### Enter the Secret Passcode:
+- Smart Remote: Press the 123 (or 1 then 123) button on your remote to bring up the on-screen numeric keypad, then type in 12345.
+- Standard Remote (with a physical number pad): While in the Apps screen, press 1 - 2 - 3 - 4 - 5 in direct sequence without pausing.
+#### Toggle Developer Mode On:
+- A hidden pop-up window labeled Developer Mode will appear on the screen.
+- Switch the toggle to On.
+#### Restart the TV:
+- Press and hold the power button on your remote for about two seconds (or unplug/restart the TV) to turn it off and back on to finalize activation.
+
+</details>
+
+2. Download and install [Apps2Samsung](https://apps2samsung.com/#download) on your platform of choice  
+
+3. Search for Lobby  
+
+4. Install on your TV  
 
 ### Reach Lobby with one press
 
@@ -88,18 +55,6 @@ Whichever way you installed Lobby — the full SDK flow or Apps2Samsung above �
 **Full replacement:** the native-Home-routing stage of the [setup guide](docs/agent-tv-setup-guide.md) reassigns what the physical Home button opens, using this project's guarded native-Home helper. It's the closest thing to a stock Home screen, but Samsung doesn't document the mechanism, it's model/firmware-specific, and it needs a recovery baseline before you touch it. Treat it as something you do deliberately for your own TV, not a set of instructions to hand someone else.
 
 **Quicker and lower-risk:** in TV Settings → General → Start Screen Options, turn on **Autorun Last App**, open Lobby once so it becomes the last app you used, then move its tile to the first position in the Home bar (press and hold the tile, or use the remote's move option). The TV then tends to come back up in Lobby the next time it's turned on, and even on a run where it doesn't, Lobby's tile is the first thing the physical Home button shows you — one extra press away rather than buried in the row. This doesn't touch native Home routing at all, so there's nothing to recover if you change your mind.
-
-We haven't independently verified this year by year on Lobby; it's reported to work reliably on at least one 2017 Samsung TV, with some community reports that 2019/2020 models don't reopen the last app this way. Try it and check your own model before relying on it.
-
-| Area | Evidence and limits |
-| --- | --- |
-| Reference hardware | Samsung QA55LS03DAWXXY / LS03D, firmware 2130.0, Tizen 9.0, 32-bit ARM |
-| App installation | Signed installation and launch commands succeeded through 0.6.1. Latest rendering and remote feel still need physical observation. |
-| App launch and Home | Netflix/YouTube launch and physical Home from Netflix were confirmed on the reference setup. |
-| Still open | Normal power-on after streaming/Art Mode, corrected Smart Hub escape and native Art Mode destinations need definite physical checks. |
-| Other TVs | No compatibility claim. This is Tizen source; Android TV, Google TV, LG webOS and Roku need their own implementations. |
-
-The detailed [device record](docs/tv-status.md) separates observed results from SDK responses. Native Home/startup uses undocumented, guarded helpers; it is optional and can fail after firmware changes. Keep a recovery baseline before attempting that work. The app can be opened manually without it.
 
 ## Develop and check
 
