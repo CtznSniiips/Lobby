@@ -13,7 +13,7 @@ const CATALOG = IDS.map((id, i) => ({ id, name: NAMES[i], show: true, iconPath: 
   { id: EXTRA, name: UNSAFE_NAME, show: true, iconPath: '' },
   { id: SPOTIFY, name: 'Spotify', show: true, iconPath: '' },
   { id: '5b8c3eb16b.BeamCTVDev', name: 'HBO Max', show: true, iconPath: '' },
-  { id: 'nClrkHome1.FrameHome', name: 'CleanFrame', show: true },
+  { id: 'lobbyTV001.Lobby', name: 'CleanFrame', show: true },
   { id: 'AbCdEf1234.worker', name: 'Background worker', show: true },
   { id: 'com.samsung.tv.cobalt-yt', name: 'YouTube', show: true }
 ]);
@@ -81,7 +81,7 @@ function installHarness({ seed, legacy, mock, catalog, minuteMs, catalogFailure,
     ApplicationControlData: function (key, value) { this.key = key; this.value = value; },
     ApplicationControl: function (operation, uri, mime, category, data) { Object.assign(this, { operation, uri, mime, category, data }); },
     application: {
-      getCurrentApplication() { return { appInfo: { id: currentAppId || 'nClrkHome1.FrameHome' } }; },
+      getCurrentApplication() { return { appInfo: { id: currentAppId || 'lobbyTV001.Lobby' } }; },
       getAppsInfo(ok, fail) {
         const tv = window.__tv;
         tv.catalogCalls++;
@@ -423,7 +423,7 @@ try {
   });
   await run('Independent app identity self-filter', async () => {
     const appId = 'AbCdEf1234.MyHome';
-    await page({ currentAppId: appId, catalog: CATALOG.filter(a => a.id !== 'nClrkHome1.FrameHome').concat({ id: appId, name: 'Family Home', show: true }) });
+    await page({ currentAppId: appId, catalog: CATALOG.filter(a => a.id !== 'lobbyTV001.Lobby').concat({ id: appId, name: 'Family Home', show: true }) });
     await library();
     const independent = await state();
     const names = await current.locator('[data-action^="apps.open."] .label').allTextContents();
@@ -433,7 +433,7 @@ try {
     await current.evaluate(() => { delete tizen.application.getCurrentApplication; });
     await library();
     const fallback = await state();
-    check('Unavailable current-app API keeps reference identity fallback', fallback.catalog.ids.includes(EXTRA) && !fallback.catalog.ids.includes('nClrkHome1.FrameHome'));
+    check('Unavailable current-app API keeps reference identity fallback', fallback.catalog.ids.includes(EXTRA) && !fallback.catalog.ids.includes('lobbyTV001.Lobby'));
   });
   await run('Catalogue failure and retry', async () => {
     await page({ catalogFailure: true }); await library();

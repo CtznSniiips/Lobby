@@ -174,7 +174,7 @@ function installHarness({ paired, cacheHome, staleMs, look, featureMs, catalog, 
     ApplicationControlData: function (key, value) { this.key = key; this.value = value; },
     ApplicationControl: function (operation, uri, mime, category, data) { Object.assign(this, { operation, uri, mime, category, data }); },
     application: {
-      getCurrentApplication() { return { appInfo: { id: 'nClrkHome1.FrameHome' } }; },
+      getCurrentApplication() { return { appInfo: { id: 'lobbyTV001.Lobby' } }; },
       getAppsInfo(ok) { setTimeout(() => ok((catalog || []).map(a => ({ ...a }))), 0); },
       launch(id, ok, fail) { window.__tv.calls.push({ method: 'launch', id }); setTimeout(() => window.__tv.launchFailure ? fail({ name: 'NotFoundError', message: 'missing' }) : ok(), 0); },
       launchAppControl(control, id, ok) { window.__tv.calls.push({ method: 'launchAppControl', id }); setTimeout(ok, 0); }

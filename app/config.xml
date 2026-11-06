@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://local.frame-home/app" version="0.9.14" viewmodes="maximized">
-  <tizen:application id="nClrkHome1.FrameHome" package="nClrkHome1" required_version="6.5"/>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="http://github.com/CtznSniiips/Lobby" version="0.9.14" viewmodes="maximized">
+  <tizen:application id="lobbyTV001.Lobby" package="lobbyTV001" required_version="6.5"/>
   <content src="index.html"/>
   <name>Lobby</name>
   <icon src="icon.png"/>
