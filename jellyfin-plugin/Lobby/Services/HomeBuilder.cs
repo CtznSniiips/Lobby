@@ -4,7 +4,9 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Database.Implementations.Enums;
 using Lobby.Configuration;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -241,7 +243,7 @@ namespace Lobby.Services
             {
                 await AddRow(response, built, TvSettings.NextUp, "landscape", async () =>
                 {
-                    var result = _tv.GetNextUp(new NextUpQuery { UserId = user.Id, Limit = fetch + resumeIds.Count }, dtoOptions);
+                    var result = _tv.GetNextUp(new NextUpQuery { User = user, Limit = fetch + resumeIds.Count }, dtoOptions);
                     var items = result?.Items ?? Array.Empty<BaseItem>();
                     var dtos = _dto.GetBaseItemDtos(items, dtoOptions, user);
                     return dtos
@@ -716,7 +718,7 @@ namespace Lobby.Services
                 if (c.MediaType == "tv")
                 {
                     c.Keys.Add("series:" + match.Id.ToString("N"));
-                    var next = _tv.GetNextUp(new NextUpQuery { UserId = user.Id, SeriesId = match.Id, Limit = 1 }, dtoOptions);
+                    var next = _tv.GetNextUp(new NextUpQuery { User = user, SeriesId = match.Id, Limit = 1 }, dtoOptions);
                     var nextDtos = next?.Items != null ? _dto.GetBaseItemDtos(next.Items, dtoOptions, user) : null;
                     play = next?.Items?.FirstOrDefault() ?? match;
                 }
