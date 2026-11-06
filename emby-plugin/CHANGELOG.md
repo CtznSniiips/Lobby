@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.7
+
+- Diagnostics: the 0.9.6 fix for the blurry Continue Watching hero (above) isn't resolving it for at
+  least one real library — the series itself has a proper `Backdrop` image, but the episode's
+  `BackdropUrl` still comes back empty, and the hero falls back to the episode's own low-res thumbnail.
+  Added temporary `Debug`-level logging in the Episode branch of `MapFeaturedLibrary` (episode id, raw
+  `SeriesId`, whether it parsed, whether the series lookup and re-fetched series DTO succeeded, and the
+  resulting `BackdropImageTags`) to find the actual failure point from a real server's logs. No behaviour
+  change; remove once the real cause is identified and fixed.
+
 ## 0.9.6
 
 - Fixed: a continuing episode in the Watch hero could show a blurry backdrop — the Episode branch of
