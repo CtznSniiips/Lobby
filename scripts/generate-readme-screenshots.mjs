@@ -79,9 +79,42 @@ function homeJson(api) {
   };
 }
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
+/* Generated "poster"/"still" art, not a flat placeholder: a small abstract composition seeded
+   from the (invented) title, so the same title always looks the same but every title differs.
+   Purely procedural shapes and gradients — no photo, artwork or logo is used or referenced. */
+function seedOf(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { return function () { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function art(text, w, h) {
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="#3a5568"/><stop offset="1" stop-color="#8a6a4a"/></linearGradient></defs>'
-    + '<rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="54%" fill="#fff" font-family="sans-serif" font-size="' + Math.round(h / 8) + '" text-anchor="middle">' + text.replace(/[<&]/g, '') + '</text></svg>';
+  const clean = text.replace(/[<&]/g, ''), rnd = rng(seedOf(clean));
+  const hue = Math.round(rnd() * 360), hue2 = (hue + 40 + Math.round(rnd() * 60)) % 360;
+  const shapes = [];
+  const blobs = 3 + Math.floor(rnd() * 2);
+  for (let i = 0; i < blobs; i++) {
+    const cx = Math.round(rnd() * w), cy = Math.round(rnd() * h * 0.75), r = Math.round((0.18 + rnd() * 0.22) * Math.max(w, h));
+    const bh = Math.round((hue + 60 + rnd() * 240) % 360);
+    shapes.push('<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="hsl(' + bh + ',62%,58%)" opacity="' + (0.22 + rnd() * 0.18).toFixed(2) + '" filter="url(#blur)"/>');
+  }
+  // Either a sunburst disc or a mountain silhouette, picked from the seed, for a bit of poster-like variety.
+  if (rnd() > 0.5) {
+    shapes.push('<circle cx="' + Math.round(w * (0.3 + rnd() * 0.4)) + '" cy="' + Math.round(h * 0.38) + '" r="' + Math.round(h * 0.16) + '" fill="hsl(' + hue2 + ',70%,72%)" opacity="0.8"/>');
+  } else {
+    const baseY = Math.round(h * 0.78), peak = Math.round(h * (0.35 + rnd() * 0.15));
+    shapes.push('<polygon points="0,' + h + ' ' + Math.round(w * 0.2) + ',' + peak + ' ' + Math.round(w * 0.5) + ',' + Math.round(baseY - 20) + ' ' + Math.round(w * 0.8) + ',' + Math.round(peak + 30) + ' ' + w + ',' + h + '" fill="hsl(' + hue2 + ',40%,22%)" opacity="0.75"/>');
+  }
+  const lines = clean.length > 18 ? [clean.slice(0, Math.ceil(clean.length / 2)), clean.slice(Math.ceil(clean.length / 2))] : [clean];
+  const fs = Math.round(h / (10 - Math.min(lines.length, 2)));
+  const label = lines.map((l, i) => '<text x="50%" y="' + (h - 16 - (lines.length - 1 - i) * (fs + 4)) + '" fill="#fff" font-family="sans-serif" font-weight="600" font-size="' + fs + '" text-anchor="middle">' + l + '</text>').join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+    + '<defs>'
+    + '<linearGradient id="g" x2="0.7" y2="1"><stop offset="0" stop-color="hsl(' + hue + ',55%,30%)"/><stop offset="1" stop-color="hsl(' + hue2 + ',45%,16%)"/></linearGradient>'
+    + '<linearGradient id="scrim" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.72"/></linearGradient>'
+    + '<filter id="blur"><feGaussianBlur stdDeviation="' + Math.round(Math.max(w, h) * 0.05) + '"/></filter>'
+    + '</defs>'
+    + '<rect width="100%" height="100%" fill="url(#g)"/>'
+    + shapes.join('')
+    + '<rect width="100%" height="100%" fill="url(#scrim)"/>'
+    + label
+    + '</svg>';
 }
 let api;
 async function handle(route) {
