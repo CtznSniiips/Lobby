@@ -761,10 +761,10 @@ async function main() {
       await until(() => ShoreQA.ready());
       check('Dark: a dark page', await bgOf('#watch') === 'rgb(11, 13, 17)');
       await current.waitForTimeout(400); await shot('watch-dark');
-      check('only the focused card shows its name', await current.locator('.wc .wc-label').evaluateAll(els => els.filter(e => getComputedStyle(e).opacity !== '0').length) === 0);
+      check('names stay on but muted until focus', await current.locator('.wc:not(.is-focus) .wc-title').evaluateAll(els => els.every(e => getComputedStyle(e).color === 'rgba(244, 242, 238, 0.6)')));
       await nav('down');
       await current.waitForTimeout(300);
-      check('the focused card names itself', await current.locator('.wc.is-focus .wc-label').evaluate(e => getComputedStyle(e).opacity) === '1');
+      check('the focused card\'s name brightens', await current.locator('.wc.is-focus .wc-title').evaluate(e => getComputedStyle(e).color) === 'rgb(244, 242, 238)');
       check('the focus ring is a light outline', /0px 0px 0px 2px/.test(await current.locator('.wc.is-focus .mc-art').evaluate(e => getComputedStyle(e).boxShadow)));
       await nav('up');
       await current.evaluate(() => ShoreQA.look({ bg: 'light' }));

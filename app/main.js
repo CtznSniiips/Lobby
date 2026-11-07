@@ -1968,7 +1968,7 @@
      paired rows share a band side by side, and the Home apps come last. While a row has focus,
      the top area describes the focused title instead of the featured one. */
   var W_RAIL = ['search', 'art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
-  var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, labels: 60, bottom: 924,
+  var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, bottom: 924,
     tile: { w: 240, h: 135, pitch: 254 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   /* Seerr rows are artwork only, as tiles; library and Live TV rows carry a title and detail line. */
@@ -1989,7 +1989,7 @@
     }
     return rows.map(function (row) {
       var st = wStyle(row);
-      return { key: row.id, kind: 'rows', rows: [row], h: WG.title + WG.after + WG[st].h + (st === 'card' ? WG.labels : 0) };
+      return { key: row.id, kind: 'rows', rows: [row], h: WG.title + WG.after + WG[st].h };
     });
   }
   function wWindow(c, n, size, width) {
@@ -2300,7 +2300,7 @@
     el.style.transform = 'translate3d(' + (s * (WG.half + WG.gap)) + 'px,0,0)';
     setHTML(el.firstChild, esc(row.title));
     clip = el.lastChild; trackEl = clip.firstChild;
-    clip.style.width = (width + 32) + 'px'; clip.style.height = (size.h + (style === 'card' ? WG.labels : 0) + 32) + 'px';
+    clip.style.width = (width + 32) + 'px'; clip.style.height = (size.h + 32) + 'px';
     trackEl.style.transform = 'translate3d(' + (-win.first * size.pitch) + 'px,0,0)';
     keyed(trackEl, row.items.map(function (item, i) { return { key: item.id, item: item, i: i }; }), function (card, ce) {
       var item = ce.item, i = ce.i, isFocus = focusRow && i === c.i, near = visible && i >= win.first - 1 && i <= win.first + win.vis + 1, img;
