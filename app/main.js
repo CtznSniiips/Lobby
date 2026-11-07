@@ -2098,6 +2098,8 @@
       // Left and Right step through the featured titles; Left from the first one reaches the rail.
       if (k === 'left') { if (W.i > 0) wShow(W.i - 1); else wRail(f); }
       else if (k === 'right') wShow((W.i + 1) % M.featured.length);
+      // Up always reaches search directly, rather than wherever the rail was last left.
+      else if (k === 'up') { f.zone = 'wrail'; f.u = W_RAIL.indexOf('search'); S.lastUtil = f.u; }
       else if (k === 'down') { if (bands.length) wEnterBand(f, bands, 0, 0); else wDock(f); }
       else if (k === 'back') openMessage('leave');
       else if (k === 'ok') mediaOk(M.featured[W.i]);
