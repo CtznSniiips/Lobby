@@ -37,7 +37,7 @@ const soon = new Date(Date.now() + 3 * 3600e3).toISOString(), began = new Date(D
 const ITEMS = {
   continue: [
     { Id: '101', Kind: 'movie', Title: 'Arrival', Year: 2016, Subtitle: '2016', LandscapeUrl: '/emby/Items/101/Images/Backdrop?tag=a', PosterUrl: '/emby/Items/101/Images/Primary?tag=b', ProgressPercent: 42, PositionTicks: 300e8, RuntimeTicks: 700e8, PlayItemId: '101', DefaultAction: 'resume' },
-    { Id: '102', Kind: 'episode', Title: 'Severance', Subtitle: 'S2:E3 · Who Is Alive?', LandscapeUrl: '/emby/Items/102/Images/Primary?tag=c', ProgressPercent: 12, PositionTicks: 60e8, RuntimeTicks: 500e8, PlayItemId: '102', DefaultAction: 'resume' },
+    { Id: '102', Kind: 'episode', Title: 'Severance', Subtitle: 'S2:E3 · Who Is Alive?', LandscapeUrl: '/emby/Items/102/Images/Primary?tag=c', LogoUrl: '/emby/Items/f3/Images/Logo?tag=2', ProgressPercent: 12, PositionTicks: 60e8, RuntimeTicks: 500e8, PlayItemId: '102', DefaultAction: 'resume' },
     { Id: '103', Kind: 'movie', Title: 'Title <img src=x onerror="window.__mediaXss=1">', Year: 2001, LandscapeUrl: '', PlayItemId: '103', DefaultAction: 'resume', ProgressPercent: 80 }
   ],
   nextup: Array.from({ length: 9 }, (_, i) => ({ Id: String(200 + i), Kind: 'episode', Title: 'Show ' + (i + 1), Subtitle: 'S1:E' + (i + 2) + ' · Episode', LandscapeUrl: '/emby/Items/' + (200 + i) + '/Images/Primary?tag=x', PlayItemId: String(200 + i), DefaultAction: 'play' })),
@@ -618,6 +618,9 @@ async function main() {
       check('the top describes the focused title', (await current.locator('.wi-head').textContent()) === 'Arrival' && await current.locator('.wi-head.is-title').count() === 1);
       check('a library card carries its title and detail', (await current.locator('.wc.is-focus .wc-title').textContent()) === 'Arrival');
       check('the merged row is titled Continue Watching', (await current.locator('.wrow.is-active .wr-title').textContent()) === 'Continue Watching');
+      check('a title with its own logo art shows the logo instead of its name', (await current.locator('[data-action="media.continue.102"] .wc-logo img').getAttribute('src')).includes('/emby/Items/f3/Images/Logo')
+        && await current.locator('[data-action="media.continue.102"] .wc-title').count() === 0);
+      check('a title with no logo still falls back to its muted name', await current.locator('[data-action="media.continue.101"] .wc-logo').count() === 0);
       await nav('right', 'right', 'right');
       check('next episodes follow the titles in progress in the same row', (await where()).focusAction === 'media.continue.200', await where());
       await nav('left');

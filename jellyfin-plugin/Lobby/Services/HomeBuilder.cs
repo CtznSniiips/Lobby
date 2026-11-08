@@ -71,7 +71,9 @@ namespace Lobby.Services
         /// <summary>Featured items: full-width background art.</summary>
         public string BackdropUrl { get; set; }
 
-        /// <summary>Featured items: the title's logo art, when the library has one.</summary>
+        /// <summary>The title's logo art, when the library has one. Set for featured items and for
+        /// library-sourced row items (Continue Watching, Next Up, Recently Added); null for Seerr and
+        /// Live TV items, which fall back to the title on the TV.</summary>
         public string LogoUrl { get; set; }
 
         /// <summary>Featured items: e.g. "2024 · PG-13 · 2h 10m" or "S1 E5 · 32 min left".</summary>
@@ -956,6 +958,9 @@ namespace Lobby.Services
                                     ?? Image(d.ParentThumbItemId, ImageType.Thumb, d.ParentThumbImageTag)
                                     ?? Image(d.ParentBackdropItemId, ImageType.Backdrop, d.ParentBackdropImageTags?.FirstOrDefault());
                 item.PosterUrl = Image(d.SeriesId, ImageType.Primary, d.SeriesPrimaryImageTag) ?? item.LandscapeUrl;
+                // A season essentially never has its own Logo, so the inherited Parent* tag resolves to the
+                // series' logo without the extra per-row DTO fetch MapFeaturedLibrary pays for the hero.
+                item.LogoUrl = Image(d.ParentLogoItemId, ImageType.Logo, d.ParentLogoImageTag);
             }
             else
             {
@@ -964,6 +969,7 @@ namespace Lobby.Services
                 item.LandscapeUrl = Image(d.Id, ImageType.Thumb, Tag(d, ImageType.Thumb))
                                     ?? Image(d.Id, ImageType.Backdrop, d.BackdropImageTags?.FirstOrDefault())
                                     ?? item.PosterUrl;
+                item.LogoUrl = Image(d.Id, ImageType.Logo, Tag(d, ImageType.Logo));
             }
 
             var ud = d.UserData;
