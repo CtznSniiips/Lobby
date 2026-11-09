@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.10
+
+- Added a "Check for updates" section to the settings page. It checks github.com/CtznSniiips/Lobby for the
+  newest `emby-plugin-v*` release (filtered by that tag prefix, since this repo also tags Jellyfin
+  releases) and, when one is newer than the version currently running, offers to download it. Pressing
+  **Update now** downloads the release's zip asset, extracts `Lobby.dll`, and overwrites this plugin's own
+  file on disk - it does not restart Emby Server, so a manual restart is still required afterward to
+  actually load the new version. The check result is cached for 6 hours; "Check now" bypasses the cache.
+
 ## 0.9.9
 
 - Home row items (Continue Watching, Next Up, Recently Added) now carry `LogoUrl` for titles that have

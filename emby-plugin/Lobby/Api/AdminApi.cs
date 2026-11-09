@@ -90,6 +90,20 @@ namespace Lobby.Api
         public string Id { get; set; }
     }
 
+    [Route("/Lobby/Admin/Updates/Check", "GET", Summary = "Checks GitHub for a newer Emby plugin release than the one running.")]
+    [Authenticated(Roles = "Admin")]
+    public class CheckForUpdates : IReturn<UpdateCheckView>
+    {
+        /// <summary>Bypasses the cache (an admin pressing "Check now").</summary>
+        public bool Refresh { get; set; }
+    }
+
+    [Route("/Lobby/Admin/Updates/Install", "POST", Summary = "Downloads the latest release and overwrites this plugin's own DLL on disk. Emby Server still needs restarting afterward to load it.")]
+    [Authenticated(Roles = "Admin")]
+    public class InstallUpdate : IReturn<UpdateInstallView>
+    {
+    }
+
     // ---- Views ----------------------------------------------------------------------------------
 
     public class TvEdit
@@ -232,6 +246,22 @@ namespace Lobby.Api
     public class OkResult
     {
         public bool Ok { get; set; } = true;
+    }
+
+    public class UpdateCheckView
+    {
+        public string CurrentVersion { get; set; }
+        public string LatestVersion { get; set; }
+        public bool UpdateAvailable { get; set; }
+        public string ReleaseUrl { get; set; }
+        public string PublishedAt { get; set; }
+        public string Error { get; set; }
+    }
+
+    public class UpdateInstallView
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
     }
 
     // ---- Service --------------------------------------------------------------------------------
@@ -469,6 +499,26 @@ namespace Lobby.Api
         {
             Plugin.Instance.Mutate(c => c.Tvs = c.Tvs.Where(t => t.Id != request.Id).ToArray());
             return new OkResult();
+        }
+
+        public async Task<object> Get(CheckForUpdates request)
+        {
+            var r = await Runtime.Updates.Check(CancellationToken.None, request.Refresh).ConfigureAwait(false);
+            return new UpdateCheckView
+            {
+                CurrentVersion = r.CurrentVersion,
+                LatestVersion = r.LatestVersion,
+                UpdateAvailable = r.UpdateAvailable,
+                ReleaseUrl = r.ReleaseUrl,
+                PublishedAt = r.PublishedAt,
+                Error = r.Error,
+            };
+        }
+
+        public async Task<object> Post(InstallUpdate request)
+        {
+            var r = await Runtime.Updates.Install(CancellationToken.None).ConfigureAwait(false);
+            return new UpdateInstallView { Success = r.Success, Message = r.Message };
         }
 
         private static void ValidateUser(string embyUserId)

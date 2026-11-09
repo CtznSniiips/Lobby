@@ -35,6 +35,7 @@ namespace Lobby
             Seerr = new SeerrClient(json, Logger);
             Links = new LinkService(Seerr, userManager, Logger);
             Playback = new PlaybackDispatcher(sessionManager, userManager, Logger);
+            Updates = new UpdateChecker(json, Logger);
             Home = new HomeBuilder(libraryManager, userManager, dtoService, tvSeriesManager, liveTvManager, userDataManager, Seerr, Logger);
             Current = this;
         }
@@ -51,6 +52,7 @@ namespace Lobby
         public LinkService Links { get; }
         public PlaybackDispatcher Playback { get; }
         public HomeBuilder Home { get; }
+        public UpdateChecker Updates { get; }
 
         public MediaBrowser.Controller.Entities.User[] AllUsers()
         {
