@@ -1060,7 +1060,7 @@
       { id: 'saver', label: 'Screen saver', value: saverName(S.c.saver) },
       { id: 'editor', label: 'Apps on Home', value: n + (n === 1 ? ' app' : ' apps') }].concat(INPUTS.length ? [
       { id: 'inputs', label: 'Inputs on Home', value: shownInputs().length + ' of ' + INPUTS.length }] : []).concat([
-      { id: 'media', label: 'Emby & Seerr', value: !M.cfg ? 'Not connected' : M.unauthorized ? 'Not paired. Connect again' : M.cfg.tvName || Media.host(M.cfg.url) },
+      { id: 'media', label: 'Emby/Jellyfin & Seerr', value: !M.cfg ? 'Not connected' : M.unauthorized ? 'Not paired. Connect again' : M.cfg.tvName || Media.host(M.cfg.url) },
       { id: 'samsung', label: 'Samsung', value: 'Home and TV settings' }]);
   }
   function settingsIds() { return settingsRows().map(function (r) { return r.id; }); }
@@ -1905,8 +1905,10 @@
     return '';
   }
   // The Trending row mixes movies and shows; every other Seerr row is already one kind.
+  // Once a title has a status of its own (requested, available, ...) that badge takes
+  // the spot instead - the two never need to share a corner.
   function mediaTypeBadge(it, row) {
-    return row.id === 'seerr-trending' && it.kind === 'discover' && it.mediaType ? '<span class="mc-type">' + (it.mediaType === 'tv' ? 'Series' : 'Movie') + '</span>' : '';
+    return row.id === 'seerr-trending' && it.kind === 'discover' && it.status === 'none' && it.mediaType ? '<span class="mc-type">' + (it.mediaType === 'tv' ? 'Series' : 'Movie') + '</span>' : '';
   }
   function mediaCardHtml(it, row) {
     var bar = it.progress !== null && it.progress > 0 && it.progress < 100 ? '<span class="mc-progress"><span style="width:' + it.progress.toFixed(1) + '%"></span></span>' : '';
@@ -2806,7 +2808,7 @@
   }
   function fillList(t, el) {
     var all = listLines(t), lines = focusLines(all), focus = lines[t.f.i], y = 0, fy = 0, entries = [], more = false;
-    setHTML(el.title, t.id === 'teams' ? 'Your teams' : t.id === 'inputs' ? 'Inputs on Home' : 'Emby &amp; Seerr');
+    setHTML(el.title, t.id === 'teams' ? 'Your teams' : t.id === 'inputs' ? 'Inputs on Home' : 'Emby/Jellyfin &amp; Seerr');
     setHTML(el.sub, esc(M.saving ? 'Saving ' + M.saving.toLowerCase() + '…' : M.note || (t.id === 'teams' ? 'Follow teams to see their games in Your Teams on Home.' : t.id === 'inputs' ? 'Choose which HDMI inputs appear on Home.' : 'These settings belong to this TV. Your Emby server keeps them.')));
     all.forEach(function (line) {
       entries.push({ key: line.head ? 'head.' + line.head + '.' + y : line.key, line: line, y: y });
