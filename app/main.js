@@ -1946,7 +1946,7 @@
           img.onerror = function () { this.className = 'is-missing'; };
           img.src = src;
         }
-        card.className = 'mc' + (isFocus ? ' is-focus' : '') + (img.className === 'is-loaded' ? ' has-art' : '');
+        card.className = 'mc' + (isFocus ? ' is-focus' : '') + (i === 0 ? ' is-first' : '') + (img.className === 'is-loaded' ? ' has-art' : '');
         card.style.width = size.w + 'px'; card.style.height = size.h + 'px';
         card.style.transform = 'translate3d(' + (i * win.pitch) + 'px,0,0)';
         // Inherit when shown, so Home's hidden state under a sheet still applies.

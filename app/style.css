@@ -670,6 +670,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .mc-art img.is-missing{display:none}
 .mc-fallback{max-height:100%;padding:0 14px;overflow:hidden;font-size:22px;line-height:28px;font-weight:600;text-align:center;color:var(--mute)}
 .mc.is-focus .mc-art{transform:scale(1.06);box-shadow:0 0 0 4px var(--solid),0 14px 36px rgba(0,0,0,.36)}
+/* rowWindow() keeps a 1-item lookahead when scrolling back, so the focused card
+   only ever sits flush at the row's x=0 edge when it's the row's actual first
+   item (there's no earlier item to buffer with). Scale from the left edge there
+   instead of the center, so the focus grow never crosses into the clipped
+   left edge of .media-view. */
+.mc.is-first .mc-art{transform-origin:0 50%}
 .mc-badge{position:absolute;left:10px;top:10px;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;height:30px;padding:0 10px;border-radius:9px;font-size:18px;line-height:30px;font-weight:700;letter-spacing:.2px;color:#fff;background:rgba(10,12,14,.72);white-space:nowrap;pointer-events:none}
 .mc-badge.is-live{background:#c8372d}
 .mc-badge.is-available{background:rgba(32,120,72,.92)}
