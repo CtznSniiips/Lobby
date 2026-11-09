@@ -262,6 +262,44 @@ define([], function () {
             }).join('');
         }
 
+        // ---- updates ----
+
+        function renderUpdateStatus(u) {
+            var status = cf('update-status');
+            var installBtn = cf('install-update');
+            var help = cf('update-help');
+            if (!u) {
+                show(status, 'Checking for updates…', true);
+                installBtn.hidden = true;
+                help.hidden = true;
+                return;
+            }
+            if (u.Error) {
+                status.textContent = u.Error;
+                installBtn.hidden = true;
+                help.hidden = true;
+                return;
+            }
+            if (u.UpdateAvailable) {
+                status.innerHTML = 'Update available: <b>v' + esc(u.LatestVersion) + '</b> (running v' + esc(u.CurrentVersion) + ')' +
+                    (u.ReleaseUrl ? ' — <a href="' + esc(u.ReleaseUrl) + '" target="_blank" rel="noopener">release notes</a>' : '');
+                installBtn.hidden = false;
+                help.hidden = false;
+            } else {
+                status.textContent = 'Up to date (v' + esc(u.CurrentVersion) + ').';
+                installBtn.hidden = true;
+                help.hidden = true;
+            }
+        }
+
+        function checkUpdates(refresh) {
+            return api('GET', 'Lobby/Admin/Updates/Check' + (refresh ? '?Refresh=true' : '')).then(function (u) {
+                renderUpdateStatus(u);
+            }, function (err) {
+                renderUpdateStatus({ Error: err.message });
+            });
+        }
+
         // ---- loading ----
 
         function loadSeerrUsers(refresh) {
@@ -307,6 +345,26 @@ define([], function () {
 
             if (name === 'refresh') {
                 load(true);
+            } else if (name === 'check-updates') {
+                show(cf('update-message'), '', true);
+                renderUpdateStatus(null);
+                checkUpdates(true);
+            } else if (name === 'install-update') {
+                if (!window.confirm('Download the latest release and replace this plugin’s own file on disk? ' +
+                    'Emby Server will keep running the old version until you restart it afterward.')) {
+                    return;
+                }
+                var umsg = cf('update-message');
+                show(umsg, 'Downloading…', true);
+                target.disabled = true;
+                api('POST', 'Lobby/Admin/Updates/Install', {}).then(function (r) {
+                    target.disabled = false;
+                    show(umsg, r.Message, r.Success);
+                    if (r.Success) { checkUpdates(true); }
+                }, function (err) {
+                    target.disabled = false;
+                    show(umsg, err.message, false);
+                });
             } else if (name === 'test-seerr') {
                 var msg = cf('seerr-message');
                 show(msg, 'Testing…', true);
@@ -427,6 +485,7 @@ define([], function () {
 
         view.addEventListener('viewshow', function () {
             load(false);
+            checkUpdates(false);
         });
     };
 });

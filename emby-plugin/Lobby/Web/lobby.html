@@ -82,6 +82,23 @@
                 </p>
             </div>
 
+            <!-- Updates -->
+            <div class="cf-section">
+                <h2>Updates</h2>
+                <div class="cf-card">
+                    <div class="cf-card-head" style="margin-bottom:.2em;">
+                        <span class="cf-status" data-cf="update-status">Checking for updates…</span>
+                        <button type="button" class="cf-btn" data-cf="check-updates">Check now</button>
+                        <button type="button" class="cf-btn cf-btn-primary" data-cf="install-update" hidden>Update now</button>
+                    </div>
+                    <p class="cf-help" data-cf="update-help" hidden>
+                        Downloads the release and replaces this plugin's own file on disk. Emby Server still needs a
+                        <b>manual restart</b> afterward to load it — this never restarts Emby Server for you.
+                    </p>
+                    <div class="cf-message" data-cf="update-message"></div>
+                </div>
+            </div>
+
             <!-- TVs -->
             <div class="cf-section">
                 <div class="cf-card-head" style="margin-bottom:.3em;">
