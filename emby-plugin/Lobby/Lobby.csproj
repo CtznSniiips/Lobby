@@ -5,9 +5,9 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>Lobby</RootNamespace>
     <AssemblyName>Lobby</AssemblyName>
-    <Version>0.9.8</Version>
-    <AssemblyVersion>0.9.8.0</AssemblyVersion>
-    <FileVersion>0.9.8.0</FileVersion>
+    <Version>0.9.9</Version>
+    <AssemblyVersion>0.9.9.0</AssemblyVersion>
+    <FileVersion>0.9.9.0</FileVersion>
     <Description>Server side of the Lobby Samsung TV home screen: home rows, Seerr requests and remote playback for paired TVs.</Description>
     <Authors>CtznSniiips</Authors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

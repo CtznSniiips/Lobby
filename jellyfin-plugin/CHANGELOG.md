@@ -48,3 +48,11 @@
   repository (Dashboard → Plugins → Repositories) instead of only by hand. The **Jellyfin plugin release**
   workflow now also zips `Lobby.dll`, attaches the zip to the release alongside the raw DLL, and adds a
   matching entry to `manifest.json` on `main` automatically.
+- Home row items (Continue Watching, Next Up, Recently Added) now carry `LogoUrl` for titles that have
+  logo art, not just the featured hero - the TV uses it to show a title's logo on its card instead of its
+  name. A movie or series reads its own Logo image tag directly; an episode reads its series' logo through
+  the inherited `ParentLogoItemId`/`ParentLogoImageTag` (a season essentially never has its own Logo, so
+  this resolves to the series' logo without paying for a separate per-row DTO fetch the way the hero's
+  episode branch already does for its backdrop). Titles with no logo art - common for Live TV, Seerr
+  not-yet-available titles and plenty of older library content - still send no `LogoUrl`, so the TV falls
+  back to the title's name.

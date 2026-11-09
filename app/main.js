@@ -2291,7 +2291,9 @@
     var style = wStyle(row), sub = mediaMeta(it);
     return mediaCardHtml(it, row)
       + (it.action === 'resume' && it.playId ? '<span class="wc-x" aria-hidden="true">×</span>' : '')
-      + (style === 'card' ? '<span class="wc-label"><span class="wc-title">' + esc(it.title) + '</span></span>' + (sub ? '<span class="wc-sub">' + esc(sub) + '</span>' : '') : '');
+      + (style === 'card' ? (it.logo
+        ? '<span class="wc-logo"><img alt="" src="' + esc(Media.image(it.logo, 480)) + '"></span>'
+        : '<span class="wc-label"><span class="wc-title">' + esc(it.title) + '</span></span>') + (sub ? '<span class="wc-sub">' + esc(sub) + '</span>' : '') : '');
   }
   function renderWatchRow(el, row, b, s, width, focusRow, visible) {
     var style = wStyle(row), size = WG[style], c = mediaCol(row), win = wWindow(c, row.items.length, size, width), clip, trackEl;
