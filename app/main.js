@@ -1904,9 +1904,13 @@
     if (it.kind === 'discover' && it.status !== 'none') return '<span class="mc-badge is-' + it.status + '">' + esc(STATUS_NAMES[it.status]) + '</span>';
     return '';
   }
+  // The Trending row mixes movies and shows; every other Seerr row is already one kind.
+  function mediaTypeBadge(it, row) {
+    return row.id === 'seerr-trending' && it.kind === 'discover' && it.mediaType ? '<span class="mc-type">' + (it.mediaType === 'tv' ? 'Series' : 'Movie') + '</span>' : '';
+  }
   function mediaCardHtml(it, row) {
     var bar = it.progress !== null && it.progress > 0 && it.progress < 100 ? '<span class="mc-progress"><span style="width:' + it.progress.toFixed(1) + '%"></span></span>' : '';
-    return '<span class="mc-art"><img alt=""><span class="mc-fallback">' + esc(it.title) + '</span></span>' + mediaBadge(it) + bar;
+    return '<span class="mc-art"><img alt=""><span class="mc-fallback">' + esc(it.title) + '</span></span>' + mediaBadge(it) + mediaTypeBadge(it, row) + bar;
   }
   function renderMedia(t, hs) {
     var on = mediaOn() && hs.mode === 'browse', focus = on && hs.zone === 'media' && t.id === 'home', g, y = 0, ys = [], off, viewH, total, R, info = '', it;
@@ -1969,10 +1973,10 @@
      the top area describes the focused title instead of the featured one. */
   var W_RAIL = ['search', 'art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
   var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, labels: 40, bottom: 924,
-    tile: { w: 240, h: 135, pitch: 254 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
+    poster: { w: 160, h: 240, pitch: 176 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  /* Seerr rows are artwork only, as tiles; library and Live TV rows carry a title and detail line. */
-  function wStyle(row) { return row.id.indexOf('seerr-') === 0 ? 'tile' : 'card'; }
+  /* Seerr rows are artwork only, as portrait posters; library and Live TV rows carry a title and detail line. */
+  function wStyle(row) { return row.id.indexOf('seerr-') === 0 ? 'poster' : 'card'; }
   /* One row per band. Continue Watching and Next Up merge into a single Continue Watching row:
      titles in progress first, then the next episodes. */
   function wBands() {
@@ -2306,7 +2310,7 @@
     trackEl.style.transform = 'translate3d(' + (-win.first * size.pitch) + 'px,0,0)';
     keyed(trackEl, row.items.map(function (item, i) { return { key: item.id, item: item, i: i }; }), function (card, ce) {
       var item = ce.item, i = ce.i, isFocus = focusRow && i === c.i, near = visible && i >= win.first - 1 && i <= win.first + win.vis + 1, img;
-      var src = near ? Media.image(style === 'tile' ? item.landscape || item.poster : item.landscape || item.poster, Math.round(size.w * 1.5)) : '';
+      var src = near ? Media.image(style === 'poster' ? item.poster || item.landscape : item.landscape || item.poster, Math.round(size.w * 1.5)) : '';
       setContent(card, [item.id, item.status, item.progress, item.airing, item.title, item.subtitle, style].join('|'), function () { return wCardHtml(item, row); });
       img = card.querySelector('img');
       if (src && img._src !== src) {
