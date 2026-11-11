@@ -1683,7 +1683,7 @@
   var photoMode = null, photoTransitionToken = 0;
   var sheetEl = $('sheet'), sheetView = $('sheetView');
   var watchEl = $('watch'), wHeroEl = $('wHero'), wTopEl = $('wTop'), wRailEl = $('wRail'), wInfoEl = $('wInfo'), wArtEl = $('wArt'), wDotsEl = $('wDots'), wBandsEl = $('wBands');
-  var wBacks = [$('wBackA'), $('wBackB')], wDockEl = $('wDock');
+  var wBacks = [$('wBackA'), $('wBackB')], wDockEl = $('wDock'), wMatImg = $('wMatImg'), wMatScrim = $('wMatScrim');
   var mediaEl = $('media'), mediaInfo = $('mediaInfo'), mediaView = $('mediaView'), mediaRowsEl = $('mediaRows'), mediaScrim = $('mediaScrim');
   var IMG = { photo: $('photo'), mat: $('matImg'), bg: $('sheetBg'), field: $('phFieldImg'), fieldAlt: $('phFieldImgAlt'), utility: $('utFieldImg'), utilityAlt: $('utFieldImgAlt') };
   var sheetKey = '', slotEls = {}, dockEdgeFrame = 0, dockEdgeUntil = 0, dockAnchorCenter = 960;
@@ -2342,7 +2342,19 @@
     // Tiles narrow when apps and inputs together would overflow the screen.
     var pitch = Math.min(WG.app.pitch, Math.floor((inner + 8) / Math.max(1, n))), w = pitch - 8, width = n * pitch - 8 + 24;
     wDockEl.className = 'w-dock a-' + S.c.apps + (n ? ' is-on' : '') + (zone === 'wapps' ? ' is-active' : '');
-    wDockEl.style.width = width + 'px'; wDockEl.style.left = Math.round((1920 - width) / 2) + 'px';
+    var dockLeft = Math.round((1920 - width) / 2), dockTop = 952, dockH = 112;
+    wDockEl.style.width = width + 'px'; wDockEl.style.left = dockLeft + 'px';
+    // Same photographic glass material the Home dock uses: a window onto the full-stage
+    // material JPEG, offset so the dock's slice lines up with the screen. .bg-dark/.bg-light
+    // .mat hide it on flat backgrounds (reused .mat class), matching the Home dock there.
+    if (n && S.c.bg === 'photo') {
+      var matFile = matSrc(S.c.wall, S.c.material);
+      if (wMatImg._src !== matFile) { wMatImg._src = matFile; wMatImg.src = matFile; }
+      wMatImg.style.left = (-dockLeft) + 'px'; wMatImg.style.top = (-dockTop) + 'px';
+      wMatImg.style.transformOrigin = '960px ' + (dockTop + dockH / 2) + 'px';
+      wMatScrim.style.left = (-dockLeft) + 'px'; wMatScrim.style.top = (SCRIM_Y - dockTop) + 'px';
+      wMatScrim.style.transformOrigin = '960px ' + (dockTop + dockH / 2 - SCRIM_Y) + 'px';
+    }
     keyed(wDockEl, items.map(function (item, i) { return { key: item.kind + ':' + item.id, item: item, i: i }; }), function (tile, te) {
       var item = te.item, a = item.kind === 'app' ? app(item.id) : null, name = a ? a.name : item.kind === 'input' ? inputName(item.input) : item.id, markW = Math.min(112, w - 16);
       setContent(tile, item.kind + '|' + item.id + '|' + name + '|' + (item.input ? inputIcon(item.input) : '') + '|' + S.c.apps + '|' + S.c.bg + '|' + markW, function () {
