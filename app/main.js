@@ -1116,11 +1116,7 @@
       { id: 'layout', title: 'Layout', horizontal: true, items: options('layout', ['list', 'dock', 'watch']),
         reason: S.c.layout === 'watch' && !watchOn() ? 'Watch shows your Emby and Seerr titles. Until this TV is connected in Settings → Emby & Seerr, Home uses Dock.' : '' },
       { id: 'apps', title: 'App display', horizontal: true, items: options('apps', ['text', 'icons', 'both']) },
-      { id: 'controls', title: 'Home controls', horizontal: true, items: options('controls', ['text', 'icons', 'both']) },
-      { id: 'resume', title: 'Continue Watching', horizontal: true, items: [
-        { action: 'choice.combineResume.off', axis: 'combineResume', value: false, label: 'Separate', disabled: false },
-        { action: 'choice.combineResume.on', axis: 'combineResume', value: true, label: 'Combined', disabled: false }
-      ], reason: 'Combined folds Next Up into the Continue Watching row, in every layout.' }
+      { id: 'controls', title: 'Home controls', horizontal: true, items: options('controls', ['text', 'icons', 'both']) }
     ];
     if (t.group === 'typography') return [{ id: 'font', title: '', items: options('font', LOOK_VALUES.font) }];
     if (t.group === 'focus') return [
@@ -1195,7 +1191,6 @@
       else if (error) setLook(error.patch, { row: error.row });
     } else if (item.axis === 'mode') applyRotation(item.value);
     else if (item.axis === 'saver') applySaver(item.value);
-    else if (item.axis === 'combineResume') applyCombine(item.value);
     else if (item.axis) { patch[item.axis] = item.value; setLook(patch, { row: item.axis }); }
     else if (item.action === 'background.wallpaper') openWallpaper();
     else if (item.action === 'background.rotation') openAppearance('rotation');
@@ -1522,6 +1517,10 @@
         lines.push({ key: 'row.' + r.Id, row: r.Id, label: text(r.Title, 60), desc: r.Available ? SOURCE_NAMES[r.Source] || '' : text(r.Reason, 120), dim: !r.Visible,
           parts: [{ id: 'toggle', label: r.Visible ? 'Shown' : 'Hidden', applied: !!r.Visible }, { id: 'up', label: 'Move up', disabled: i === 0 }, { id: 'down', label: 'Move down', disabled: i === s.Rows.length - 1 }] });
       });
+      // A client preference on this TV (not a server setting), placed with the rows it affects.
+      lines.push({ head: 'Continue Watching' });
+      lines.push({ key: 'combine', label: 'Next Up', desc: 'Fold Next Up into the Continue Watching row, in every layout.',
+        parts: [{ id: 'off', combine: false, label: 'Separate', applied: !S.c.combineResume }, { id: 'on', combine: true, label: 'Combined', applied: !!S.c.combineResume }] });
       lines.push({ head: 'Rows' });
       lines.push(choiceLine('limit', 'Items per row', 'The most items a row shows.', 'RowLimit', [8, 12, 20, 30], function (v) { return String(v); }));
       lines.push({ key: 'teams', label: 'Your teams', desc: s.SportsTeams && s.SportsTeams.length ? s.SportsTeams.slice(0, 6).join(', ') + (s.SportsTeams.length > 6 ? ' and ' + (s.SportsTeams.length - 6) + ' more' : '') : 'None chosen yet', parts: [{ id: 'teams', label: 'Choose teams' }] });
@@ -1593,6 +1592,7 @@
     if (part.id === 'refresh') { refreshMedia(true); if (!s) loadMediaSettings(); return; }
     if (part.id === 'retry') { loadMediaSettings(); return; }
     if (part.id === 'disconnect') { push({ id: 'message', content: { title: 'Disconnect this TV?', line: 'Lobby will forget ' + Media.host(M.cfg.url) + '.', note: 'Home rows go away until you connect again. Your server keeps this TV’s pairing until you remove it there.', actions: [['cancel', 'Cancel'], ['disconnect', 'Disconnect']] }, f: { b: 0 } }); return; }
+    if (part.combine !== undefined) { applyCombine(part.combine); render(); return; }
     if (!s || M.saving) return;
     if (part.id === 'teams') { openTeams(); return; }
     if (part.id === 'reset') {
