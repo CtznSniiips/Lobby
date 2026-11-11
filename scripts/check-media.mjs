@@ -664,14 +664,16 @@ async function main() {
       const row = s.media.rows.find(r => r.id === 'continue');
       check('combined drops the Next Up row (Dock)', !!row && !s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
       check('titles in progress lead, then the next episodes', row.items.indexOf('101') >= 0 && row.items.indexOf('200') > row.items.indexOf('101'), row.items);
-      // The on-TV Layout setting folds and unfolds the rows live, no refresh.
+      // The toggle lives in Emby/Jellyfin & Seerr settings, after Home rows, and folds live.
       api = freshApi(); await page({ paired: true, look: 'list' });
-      await scene('settings'); await act('settings.group.layout');
-      check('the Layout screen offers the Continue Watching choice', await current.locator('[data-action="choice.combineResume.on"]').count() === 1);
-      await act('choice.combineResume.on');
+      await scene('settings'); await act('settings.group.media'); await until(() => !!ShoreQA.state().media.settings);
+      check('the Emby settings screen offers the Continue Watching toggle', await current.locator('[data-action="list.combine.on"]').count() === 1);
+      // The list virtualises off-screen rows, so bring the toggle into view before activating it.
+      for (let i = 0; i < 12 && await current.locator('[data-action="list.combine.on"]').evaluate(el => getComputedStyle(el).visibility === 'hidden'); i++) await nav('down');
+      await act('list.combine.on');
       s = await state();
       check('turning it on merges the rows live', s.media.rows.some(r => r.id === 'continue') && !s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
-      await act('choice.combineResume.off');
+      await act('list.combine.off');
       s = await state();
       check('turning it off restores both rows', s.media.rows.some(r => r.id === 'continue') && s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
     });
