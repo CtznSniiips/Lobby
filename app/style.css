@@ -892,11 +892,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wc-removable.is-arming .mc-art{box-shadow:0 0 0 2px var(--ring),0 12px 30px rgba(0,0,0,.35)}
 .wc-removable.is-arming .wc-x{opacity:1;transform:scale(1);background:#c6443b;animation:wcArm 600ms linear forwards}
 @keyframes wcArm{from{box-shadow:0 0 0 0 rgba(198,68,59,.55)}to{box-shadow:0 0 0 13px rgba(198,68,59,0)}}
-.w-dock{position:absolute;top:952px;height:112px;display:none;border-radius:30px;background:var(--dock);box-shadow:inset 0 0 0 1px var(--dock-line),0 18px 40px rgba(0,0,0,.25)}
+/* The app dock shares the Home dock's glass: on Photo the .w-mat material shows the
+   wallpaper's blurred slice; on flat backgrounds .bg-dark/.bg-light .mat hide it, so the
+   tiles float with just the focus plate, exactly as the Home dock does. */
+.w-dock{position:absolute;top:952px;height:112px;display:none;border-radius:30px}
 .w-dock.is-on{display:block}
+.w-dock .mat{border-radius:30px}
+.w-dock .mat::after{border-radius:30px}
 .wapp{position:absolute;left:0;top:8px;width:168px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:22px;color:var(--soft);transition:transform var(--t) var(--ease),background 140ms linear,color 140ms linear;cursor:pointer}
-.wapp.is-focus{background:var(--app-focus);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ring)}
-.wapp-mark{display:block}
+/* Focus selector: the Home dock's glass plate (--plate / --plate-edge) plus the same
+   icon lift, in place of the old translucent fill and inset ring. */
+.wapp.is-focus{background:var(--plate);box-shadow:var(--plate-edge);color:var(--ink)}
+.m-frost .w-dock .wapp.is-focus{background:linear-gradient(170deg,rgba(255,255,255,.26),rgba(255,255,255,.08) 58%,rgba(255,255,255,.10))}
+.bg-photo.db-quiet.m-frost .w-dock .wapp.is-focus{background:linear-gradient(170deg,rgba(255,255,255,.24),rgba(255,255,255,0) 52%,rgba(12,10,8,.08))}
+.bg-photo.db-quiet.m-soft .w-dock .wapp.is-focus,.bg-photo.db-quiet.m-tint .w-dock .wapp.is-focus{background:linear-gradient(170deg,rgba(255,255,255,.30),rgba(255,255,255,.10) 52%,rgba(255,255,255,.08))}
+.wapp.is-focus .wapp-mark{transform:translateY(-3px) scale(1.04)}
+.wapp-mark{display:block;transition:transform var(--t) var(--ease)}
 .wapp .mark{position:relative;display:block}
 .wapp-name{display:block;max-width:156px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:20px;line-height:26px;font-weight:600}
 .a-text .wapp-name{margin-top:0;font-size:23px;line-height:30px}
@@ -905,4 +916,4 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wapp.is-input .wapp-name{margin-top:4px}
 .wapp.is-off{opacity:.5}
 .wapp.is-off.is-focus{opacity:.85}
-@media(prefers-reduced-motion:reduce){.w-bands,.wband,.wr-track,.wc,.wapp,.wi-btn,.wr-btn,.w-backdrop,.w-backs,.wc-x{transition:none!important}.w-backdrop,.wc-removable.is-arming .wc-x{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.w-bands,.wband,.wr-track,.wc,.wapp,.wapp-mark,.wi-btn,.wr-btn,.w-backdrop,.w-backs,.wc-x{transition:none!important}.w-backdrop,.wc-removable.is-arming .wc-x{animation:none!important}}
