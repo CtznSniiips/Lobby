@@ -134,10 +134,25 @@
   }
   /* Rows and featured titles always change together. */
   function setHome(data) {
-    M.rows = data ? cleanRows(data) : []; M.featured = data ? cleanFeatured(data) : [];
+    M.rowsRaw = data ? cleanRows(data) : []; M.featured = data ? cleanFeatured(data) : [];
     M.weatherCfg = cleanWeather(data); refreshWeather();
     if (!M.featured.length) pickFeatured();
+    M.rows = combineRows(M.rowsRaw);
     W.i = clamp(W.i, 0, Math.max(0, M.featured.length - 1));
+  }
+  /* Continue Watching and Next Up optionally fold into one Continue Watching row (titles in
+     progress first, then the next episodes), applied to every layout. Off by default. Kept as a
+     derivation of M.rowsRaw so the toggle can re-run it live without re-fetching. */
+  function combineRows(rows) {
+    if (!S.c.combineResume) return rows.slice();
+    var out = [], merged = null;
+    rows.forEach(function (row) {
+      if (row.id !== 'continue' && row.id !== 'nextup') { out.push(row); return; }
+      if (!merged) { merged = { id: 'continue', title: 'Continue Watching', layout: row.layout, items: [] }; out.push(merged); }
+      row.items.forEach(function (it) { if (!merged.items.some(function (m) { return m.id === it.id; })) merged.items.push(it); });
+    });
+    if (merged) merged.items = merged.items.filter(function (it) { return it.action === 'resume'; }).concat(merged.items.filter(function (it) { return it.action !== 'resume'; }));
+    return out;
   }
   /* When the server sends no featured titles (an older plugin, or none with background art), take
      them from the rows: the first of Continue Watching and Next Up, then the top of Trending.
@@ -145,7 +160,7 @@
   function pickFeatured() {
     var picks = [], from = [['continue', 1, 'resume'], ['nextup', 1, 'nextup'], ['seerr-trending', 3, 'trending']];
     from.forEach(function (source) {
-      var row = M.rows.filter(function (r) { return r.id === source[0]; })[0], taken = 0;
+      var row = M.rowsRaw.filter(function (r) { return r.id === source[0]; })[0], taken = 0;
       if (!row) return;
       row.items = row.items.filter(function (it) {
         if (taken >= source[1] || picks.length >= 5 || !it.landscape) return true;
@@ -156,7 +171,7 @@
         return false;
       });
     });
-    M.rows = M.rows.filter(function (r) { return r.items.length > 0; });
+    M.rowsRaw = M.rowsRaw.filter(function (r) { return r.items.length > 0; });
     M.featured = picks;
   }
   function cleanRows(data) {
@@ -448,7 +463,8 @@
       home: h, recent: recent, lastApp: h.indexOf(s.lastApp) >= 0 ? s.lastApp : h[0],
       mode: pick(s.mode, MODES.map(function (m) { return m.id; }), 'fixed'),
       hiddenInputs: (Array.isArray(s.hiddenInputs) ? s.hiddenInputs : []).filter(function (n, i, all) { return typeof n === 'number' && n >= 1 && n <= 9 && all.indexOf(n) === i; }),
-      saver: SAVER_VALUES.indexOf(+s.saver) >= 0 ? +s.saver : 0
+      saver: SAVER_VALUES.indexOf(+s.saver) >= 0 ? +s.saver : 0,
+      combineResume: !!s.combineResume
     };
   }
   function serialise(c) {
@@ -473,7 +489,7 @@
   }
   function clearSession() { S.undo = []; S.removedAt = {}; S.note = null; S.err = null; }
   function begin() { S.note = null; }
-  function next(home, recent) { var c = lookOf(S.c); c.home = home; c.recent = recent; c.lastApp = S.c.lastApp; c.mode = S.c.mode; c.hiddenInputs = (S.c.hiddenInputs || []).slice(); c.saver = S.c.saver || 0; return c; }
+  function next(home, recent) { var c = lookOf(S.c); c.home = home; c.recent = recent; c.lastApp = S.c.lastApp; c.mode = S.c.mode; c.hiddenInputs = (S.c.hiddenInputs || []).slice(); c.saver = S.c.saver || 0; c.combineResume = !!S.c.combineResume; return c; }
   function snap() { return { home: S.c.home.slice(), recent: S.c.recent.slice() }; }
   function pushRecent(list, id) { return [id].concat(without(list, id)).slice(0, 5); }
   function write(c, label) {
@@ -1100,7 +1116,11 @@
       { id: 'layout', title: 'Layout', horizontal: true, items: options('layout', ['list', 'dock', 'watch']),
         reason: S.c.layout === 'watch' && !watchOn() ? 'Watch shows your Emby and Seerr titles. Until this TV is connected in Settings → Emby & Seerr, Home uses Dock.' : '' },
       { id: 'apps', title: 'App display', horizontal: true, items: options('apps', ['text', 'icons', 'both']) },
-      { id: 'controls', title: 'Home controls', horizontal: true, items: options('controls', ['text', 'icons', 'both']) }
+      { id: 'controls', title: 'Home controls', horizontal: true, items: options('controls', ['text', 'icons', 'both']) },
+      { id: 'resume', title: 'Continue Watching', horizontal: true, items: [
+        { action: 'choice.combineResume.off', axis: 'combineResume', value: false, label: 'Separate', disabled: false },
+        { action: 'choice.combineResume.on', axis: 'combineResume', value: true, label: 'Combined', disabled: false }
+      ], reason: 'Combined folds Next Up into the Continue Watching row, in every layout.' }
     ];
     if (t.group === 'typography') return [{ id: 'font', title: '', items: options('font', LOOK_VALUES.font) }];
     if (t.group === 'focus') return [
@@ -1155,6 +1175,14 @@
     if (!write(c, 'Screen saver')) S.lookError = { type: 'save', patch: { saver: value }, row: 'saver', transient: false };
     armSaver();
   }
+  /* Combine/separate the Continue Watching and Next Up rows. A client preference (not a look axis
+     and no bundle reload), so it just re-derives M.rows from the stored raw rows and re-renders. */
+  function applyCombine(on) {
+    on = !!on;
+    if (!!S.c.combineResume === on) return;
+    var c = next(S.c.home.slice(), S.c.recent.slice()); c.combineResume = on;
+    if (write(c, on ? 'Combine Continue Watching and Next Up' : 'Separate Continue Watching and Next Up') && M.rowsRaw) M.rows = combineRows(M.rowsRaw);
+  }
   function detailBack() { cancelLook(); S.err = null; pop(); }
   function detailOk(t, item) {
     var patch = {}, error = S.lookError;
@@ -1167,6 +1195,7 @@
       else if (error) setLook(error.patch, { row: error.row });
     } else if (item.axis === 'mode') applyRotation(item.value);
     else if (item.axis === 'saver') applySaver(item.value);
+    else if (item.axis === 'combineResume') applyCombine(item.value);
     else if (item.axis) { patch[item.axis] = item.value; setLook(patch, { row: item.axis }); }
     else if (item.action === 'background.wallpaper') openWallpaper();
     else if (item.action === 'background.rotation') openAppearance('rotation');
@@ -1986,21 +2015,10 @@
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   /* Seerr rows are artwork only, as portrait posters; library and Live TV rows carry a title and detail line. */
   function wStyle(row) { return row.id.indexOf('seerr-') === 0 ? 'poster' : 'card'; }
-  /* One row per band. Continue Watching and Next Up merge into a single Continue Watching row:
-     titles in progress first, then the next episodes. */
+  /* One row per band. Row content (including the optional Continue Watching / Next Up merge) is
+     already settled in M.rows by combineRows, so every layout shows the same rows. */
   function wBands() {
-    var rows = [], merged = null;
-    M.rows.forEach(function (row) {
-      if (row.id !== 'continue' && row.id !== 'nextup') { rows.push(row); return; }
-      if (merged) { merged.items = merged.items.concat(row.items.filter(function (it) { return !merged.items.some(function (m) { return m.id === it.id; }); })); return; }
-      merged = { id: 'continue', title: 'Continue Watching', layout: row.layout, items: row.items.slice() };
-      rows.push(merged);
-    });
-    if (merged) {
-      // Whichever came first in the TV's order, titles in progress lead.
-      merged.items = merged.items.filter(function (it) { return it.action === 'resume'; }).concat(merged.items.filter(function (it) { return it.action !== 'resume'; }));
-    }
-    return rows.map(function (row) {
+    return M.rows.map(function (row) {
       var st = wStyle(row);
       return { key: row.id, kind: 'rows', rows: [row], h: WG.title + WG.after + WG[st].h + (st === 'card' ? WG.labels : 0) };
     });
@@ -2186,8 +2204,10 @@
   function wDismiss(it) {
     if (!it || !it.playId) return;
     var id = it.id, f;
-    M.rows.forEach(function (r) { r.items = r.items.filter(function (x) { return x.id !== id; }); });
-    M.rows = M.rows.filter(function (r) { return r.items.length > 0; });
+    // Remove from the raw rows and re-derive, so a merged view and a later toggle both stay correct.
+    (M.rowsRaw || []).forEach(function (r) { r.items = r.items.filter(function (x) { return x.id !== id; }); });
+    M.rowsRaw = (M.rowsRaw || []).filter(function (r) { return r.items.length > 0; });
+    M.rows = combineRows(M.rowsRaw);
     var t = top();
     if (t && t.id === 'home' && t.f.zone === 'wband') {
       f = t.f;

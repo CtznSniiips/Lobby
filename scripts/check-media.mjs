@@ -161,9 +161,9 @@ async function handle(route) {
 }
 
 /* ---------- Page harness ---------- */
-function installHarness({ paired, cacheHome, staleMs, look, featureMs, catalog, sources, dock }) {
+function installHarness({ paired, cacheHome, staleMs, look, featureMs, catalog, sources, dock, combine }) {
   if (!sessionStorage.getItem('__seeded')) {
-    localStorage.setItem('cleanframe.home.v1', JSON.stringify({ dock: dock || ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'], wallpaper: 'misty', mode: 'fixed', lastApp: 'netflix', theme: 'shore', ...(look ? { look: { layout: look } } : {}) }));
+    localStorage.setItem('cleanframe.home.v1', JSON.stringify({ dock: dock || ['stremio', 'netflix', 'disneyplus', 'youtube', 'appletv', 'primevideo', 'abciview', 'sbs', 'applemusic'], wallpaper: 'misty', mode: 'fixed', lastApp: 'netflix', theme: 'shore', ...(combine ? { combineResume: true } : {}), ...(look ? { look: { layout: look } } : {}) }));
     if (paired) localStorage.setItem('lobby.server.v1', JSON.stringify({ url: 'https://cf.test:8096', token: 'tok_0123456789abcdefghijklmnop', tvName: 'Living Room' }));
     if (cacheHome) localStorage.setItem('lobby.home.cache.v1', JSON.stringify({ at: 1, data: cacheHome }));
     sessionStorage.setItem('__seeded', '1');
@@ -198,7 +198,7 @@ async function page(options = {}) {
   await current.route('https://image.tmdb.org/**', route => route.fulfill({ status: 200, headers: { 'Content-Type': 'image/svg+xml', 'Access-Control-Allow-Origin': '*' }, body: art('Poster', 200, 300) }));
   // Registered last, so it is matched first.
   await current.route('https://image.tmdb.org/t/p/w1280/**', route => route.fulfill({ status: 200, headers: { 'Content-Type': 'image/jpeg', 'Access-Control-Allow-Origin': '*' }, body: readFileSync(root + 'app/assets/wallpapers/amber.jpg') }));
-  await current.addInitScript(installHarness, { paired: !!options.paired, cacheHome: options.cacheHome || null, staleMs: options.staleMs || 0, look: options.look || null, featureMs: options.featureMs || 0, catalog: options.catalog || null, sources: options.sources || null, dock: options.dock || null });
+  await current.addInitScript(installHarness, { paired: !!options.paired, cacheHome: options.cacheHome || null, staleMs: options.staleMs || 0, look: options.look || null, featureMs: options.featureMs || 0, catalog: options.catalog || null, sources: options.sources || null, dock: options.dock || null, combine: !!options.combine });
   await current.goto(preview.baseURL + '/home/');
   await current.waitForFunction(() => window.ShoreQA && ShoreQA.ready && ShoreQA.ready());
   if (options.paired && options.waitRows !== false) await current.waitForFunction(() => ShoreQA.state().media.rows.length > 0 && !ShoreQA.state().media.loading);
@@ -556,7 +556,8 @@ async function main() {
     });
 
     await run('Watch layout: featured titles, bands and navigation', async () => {
-      api = freshApi(); await page({ paired: true, look: 'watch' });
+      // Combine on, so this exercises the merged Continue Watching + Next Up row and cross-row nav.
+      api = freshApi(); await page({ paired: true, look: 'watch', combine: true });
       let s = await state();
       const rect = sel => current.locator(sel).first().evaluate(el => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, r: r.right, b: r.bottom }; });
       check('Watch is in use', s.media.layout === 'watch' && await current.locator('#watch').evaluate(el => getComputedStyle(el).display) === 'block');
@@ -650,6 +651,29 @@ async function main() {
       await nav('ok');
       await untilNode(() => api.plays.length === 1);
       check('OK on the featured title resumes it', api.plays[0].ItemId === '101' && api.plays[0].Action === 'resume', api.plays);
+    });
+
+    await run('Continue Watching and Next Up: the combine option', async () => {
+      // Separate in every layout by default.
+      api = freshApi(); await page({ paired: true, look: 'list' });
+      let s = await state();
+      check('separate by default (List shows both rows)', s.media.rows.map(r => r.id).join().includes('continue,nextup'), s.media.rows.map(r => r.id));
+      // The option folds Next Up into Continue Watching, in every layout (here Dock).
+      api = freshApi(); await page({ paired: true, look: 'dock', combine: true });
+      s = await state();
+      const row = s.media.rows.find(r => r.id === 'continue');
+      check('combined drops the Next Up row (Dock)', !!row && !s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
+      check('titles in progress lead, then the next episodes', row.items.indexOf('101') >= 0 && row.items.indexOf('200') > row.items.indexOf('101'), row.items);
+      // The on-TV Layout setting folds and unfolds the rows live, no refresh.
+      api = freshApi(); await page({ paired: true, look: 'list' });
+      await scene('settings'); await act('settings.group.layout');
+      check('the Layout screen offers the Continue Watching choice', await current.locator('[data-action="choice.combineResume.on"]').count() === 1);
+      await act('choice.combineResume.on');
+      s = await state();
+      check('turning it on merges the rows live', s.media.rows.some(r => r.id === 'continue') && !s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
+      await act('choice.combineResume.off');
+      s = await state();
+      check('turning it off restores both rows', s.media.rows.some(r => r.id === 'continue') && s.media.rows.some(r => r.id === 'nextup'), s.media.rows.map(r => r.id));
     });
 
     await run('Watch layout: rotation, fallback and missing titles', async () => {
