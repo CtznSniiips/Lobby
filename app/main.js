@@ -1855,14 +1855,16 @@
   /* ---------- Rows on Home: rendering ---------- */
   function mediaGeom() {
     var g;
-    // pad: the rows block is inset this far from the clip box's left edge, so a focused
-    // card's scale-up, focus ring and shadow have room before .media-view's overflow:hidden
-    // cuts them off. The clip box itself stays flush with the column (it can't move left in
-    // List layout - the app list is packed right against it), so the inset lives inside it
-    // and rowWindow() takes it off the usable width so nothing clips on the right instead.
-    if (S.c.layout === 'list') return { x: 1048, width: 760, pad: 10, top: 236, bottom: 748, land: { w: 232, h: 131 }, poster: { w: 104, h: 156 }, gap: 16, title: 44, after: 28 };
+    // pad: the rows block is inset this far from the clip box's left edge, so the first
+    // card's centred scale-up and 2px focus ring have room before .media-view's
+    // overflow:hidden cuts them off. The clip box itself stays flush with the column (it
+    // can't move left in List layout - the app list is packed right against it), so the
+    // inset lives inside it and rowWindow() takes it off the usable width so nothing clips
+    // on the right instead. The grow splits evenly left/right, so it also fits the gap and
+    // never overlaps the next card.
+    if (S.c.layout === 'list') return { x: 1048, width: 760, pad: 14, top: 236, bottom: 748, land: { w: 232, h: 131 }, poster: { w: 104, h: 156 }, gap: 16, title: 44, after: 28 };
     g = dockGeom(S.c.home.length || -1);
-    return { x: 112, width: 1696, pad: 10, top: 236, bottom: g.y - 24, land: { w: 288, h: 162 }, poster: { w: 132, h: 198 }, gap: 16, title: 44, after: 28 };
+    return { x: 112, width: 1696, pad: 14, top: 236, bottom: g.y - 24, land: { w: 288, h: 162 }, poster: { w: 132, h: 198 }, gap: 16, title: 44, after: 28 };
   }
   function cardSize(row, g) { return row.layout === 'poster' ? g.poster : g.land; }
   /* Keep the focused card in view with the next one peeking, without wrapping. */
@@ -1957,7 +1959,7 @@
           img.onerror = function () { this.className = 'is-missing'; };
           img.src = src;
         }
-        card.className = 'mc' + (isFocus ? ' is-focus' : '') + (i === 0 ? ' is-first' : '') + (img.className === 'is-loaded' ? ' has-art' : '');
+        card.className = 'mc' + (isFocus ? ' is-focus' : '') + (img.className === 'is-loaded' ? ' has-art' : '');
         card.style.width = size.w + 'px'; card.style.height = size.h + 'px';
         card.style.transform = 'translate3d(' + (i * win.pitch) + 'px,0,0)';
         // Inherit when shown, so Home's hidden state under a sheet still applies.
