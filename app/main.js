@@ -1790,18 +1790,13 @@
     var d = new Date(), h = d.getHours() % 12 || 12, m = d.getMinutes();
     return h + ':' + (m < 10 ? '0' : '') + m;
   }
-  function clockHtml() {
-    var text = clockText(), metrics = fontMetrics[homeFont()];
-    if (!metrics || !metrics.digitCell) return text;
-    return text.replace(/[0-9]/g, function (digit) { return '<span class="clock-digit">' + digit + '</span>'; });
-  }
   function weatherHtml(cls) {
     if (!M.weather) return '';
     return '<span class="' + cls + '">' + icon(weatherIcon(M.weather.code, M.weather.day)) + '<span class="wx-temp">' + M.weather.temp + '°</span></span>';
   }
   function renderCaption(t, hs) {
-    // Date, Time, Weather, matching the Watch header's order (stacked here to suit the caption column).
-    var html = '<span class="cap-date">' + esc(wDateText()) + '</span><span class="clock">' + clockHtml() + '</span>' + weatherHtml('cap-wx');
+    // Date, Time, Weather in one horizontal strip, matching the Watch header's orientation and size.
+    var html = '<span class="cap-top"><span class="cap-date">' + esc(wDateText()) + '</span><span class="cap-time">' + esc(clockText()) + '</span>' + weatherHtml('cap-wx') + '</span>';
     if (S.c.apps !== 'icons' && hs.items[hs.i] && (S.c.layout === 'list' ? photoLabel(hs.items[hs.i].id, false).size < 88 || photoLabel(hs.items[hs.i].id, false).ellipsis : hs.zone === 'apps' && reducedDockLabel(hs.items[hs.i].id))) html += '<span class="cap-line full-name">' + esc(app(hs.items[hs.i].id).name) + '</span>';
     setHTML(caption, html);
   }

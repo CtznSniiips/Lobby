@@ -39,11 +39,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .clock,.cap-title{font-size:48px;line-height:64px;font-weight:500;letter-spacing:-1.5px;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.22)}
 .clock{font-variant-numeric:tabular-nums}
 .cap-line{max-width:100%;font-size:30px;line-height:40px;font-weight:500;letter-spacing:-.2px;color:rgba(255,255,255,.88);text-shadow:0 1px 2px rgba(0,0,0,.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Date above and weather below the clock, matching the Watch header's Date / Time / Weather order. */
-.cap-date{font-size:30px;line-height:40px;font-weight:500;letter-spacing:-.2px;color:rgba(255,255,255,.92);white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.22)}
-.cap-wx{display:inline-flex;align-items:center;font-size:30px;line-height:40px;font-weight:500;letter-spacing:-.2px;color:rgba(255,255,255,.92);white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.22)}
+/* Date, Time, Weather as one horizontal strip, matching the Watch header's orientation and size.
+   Date and weather sit a touch quieter than the time, as they do on Watch. */
+.cap-top{display:flex;align-items:center;font-size:26px;line-height:36px;font-weight:500;letter-spacing:-.2px;white-space:nowrap;color:rgba(255,255,255,.96);text-shadow:0 1px 3px rgba(0,0,0,.28)}
+.cap-top>*+*{margin-left:28px}
+.cap-date,.cap-wx{opacity:.82}
+.cap-time{font-variant-numeric:tabular-nums}
+.cap-wx{display:inline-flex;align-items:center}
 .cap-wx .ico{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-right:8px}
-.l-list .cap-wx{align-self:flex-end}
 .wx-temp{font-variant-numeric:tabular-nums}
 .warn{display:inline-flex;align-items:flex-start;color:var(--warn)}
 .warn .ico{width:30px;height:30px;margin-top:5px}
@@ -392,7 +395,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .l-list .caption{left:auto;right:140px;top:112px;align-items:flex-end;text-align:right;max-width:880px}
 .l-list.at-arrange .caption{top:72px}
 .bg-dark .clock,.bg-light .clock{opacity:.72;text-shadow:none}
-.bg-dark .cap-title,.bg-light .cap-title,.bg-dark .cap-line,.bg-light .cap-line,.bg-dark .cap-date,.bg-light .cap-date,.bg-dark .cap-wx,.bg-light .cap-wx{color:var(--ink);text-shadow:none}
+.bg-dark .cap-title,.bg-light .cap-title,.bg-dark .cap-line,.bg-light .cap-line,.bg-dark .cap-top,.bg-light .cap-top{color:var(--ink);text-shadow:none}
 .l-list .quiet-utils{right:122.1px;top:auto;bottom:112px;flex-direction:column;align-items:flex-end}
 .l-list .quiet-utils .u{flex:none}
 .u-content{position:relative;z-index:2;display:inline-flex;align-items:center;transition:transform 140ms var(--ease)}
@@ -451,7 +454,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .ut-br{background:radial-gradient(ellipse 900px 260px at 1560px 878px,rgba(10,8,6,var(--br-a)),rgba(10,8,6,var(--br-b)) 55%,rgba(10,8,6,0))!important}
 .tr-dark .ut-tr,.br-dark .ut-br,.l-dock .ut-br{display:none}
 .bg-photo.l-list .caption{color:var(--tr-ink)}
-.bg-photo.l-list .caption .clock,.bg-photo.l-list .caption .cap-title,.bg-photo.l-list .caption .cap-line,.bg-photo.l-list .caption .cap-date,.bg-photo.l-list .caption .cap-wx{color:var(--tr-ink);text-shadow:var(--tr-shadow)}
+.bg-photo.l-list .caption .clock,.bg-photo.l-list .caption .cap-title,.bg-photo.l-list .caption .cap-line,.bg-photo.l-list .caption .cap-top{color:var(--tr-ink);text-shadow:var(--tr-shadow)}
 .bg-photo.l-list.has-clock-ink .caption .clock{color:var(--clock-ink);opacity:1;text-shadow:none}
 .bg-photo.l-dock.has-dock-clock-ink .caption .clock{color:var(--dock-clock-ink);opacity:1;text-shadow:none}
 .bg-photo.l-dock.tl-mist .shade{background:radial-gradient(ellipse 560px 200px at 188px 104px,rgba(10,8,6,.24),rgba(10,8,6,.14) 55%,rgba(10,8,6,0)),linear-gradient(to bottom,rgba(4,10,12,.32),rgba(4,10,12,.14) 150px,rgba(4,10,12,0))}
