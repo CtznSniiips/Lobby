@@ -1011,7 +1011,7 @@ try {
     await current.evaluate(() => { __setHidden(true); document.getElementById('stage').blur(); __setHidden(false); window.dispatchEvent(new Event('focus')); });
     const focus = (await state()).focusAction; await current.keyboard.press('ArrowDown');
     check('Warm return restores remote focus', (await state()).focusAction !== focus && (await call('where')).focusCount === 1);
-    const clock = await current.locator('#caption .clock').textContent();
+    const clock = await current.locator('#caption .cap-time').textContent();
     check('Live 12-hour clock has no AM/PM', /^\s*\d{1,2}:\d{2}\s*$/.test(clock), clock);
   });
   await run('Open rotation and browser fallback', async () => {
