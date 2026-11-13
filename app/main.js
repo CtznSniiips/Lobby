@@ -1893,7 +1893,7 @@
     // never overlaps the next card.
     if (S.c.layout === 'list') return { x: 1048, width: 760, pad: 14, top: 236, bottom: 748, land: { w: 232, h: 131 }, poster: { w: 104, h: 156 }, gap: 16, title: 44, after: 28 };
     g = dockGeom(S.c.home.length || -1);
-    return { x: 112, width: 1696, pad: 14, top: 236, bottom: g.y - 24, land: { w: 288, h: 162 }, poster: { w: 132, h: 198 }, gap: 16, title: 44, after: 28 };
+    return { x: 112, width: 1696, pad: 14, top: 236, bottom: g.y - 24, land: { w: 374, h: 210 }, poster: { w: 172, h: 258 }, gap: 16, title: 44, after: 28 };
   }
   function cardSize(row, g) { return row.layout === 'poster' ? g.poster : g.land; }
   /* Keep the focused card in view with the next one peeking, without wrapping. */
@@ -2011,7 +2011,7 @@
      the top area describes the focused title instead of the featured one. */
   var W_RAIL = ['search', 'art', 'apps', 'settings'], W_ZONES = ['wrail', 'whero', 'wband', 'wapps'];
   var WG = { x: 72, width: 1776, half: 864, gap: 48, hero: 452, slot: 336, title: 42, after: 22, labels: 40, bottom: 924,
-    poster: { w: 160, h: 240, pitch: 176 }, card: { w: 256, h: 144, pitch: 272 }, app: { w: 168, h: 96, pitch: 176 } };
+    poster: { w: 208, h: 312, pitch: 224 }, card: { w: 333, h: 187, pitch: 349 }, app: { w: 168, h: 96, pitch: 176 } };
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   /* Seerr rows are artwork only, as portrait posters; library and Live TV rows carry a title and detail line. */
   function wStyle(row) { return row.id.indexOf('seerr-') === 0 ? 'poster' : 'card'; }
