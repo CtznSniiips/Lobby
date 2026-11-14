@@ -157,8 +157,10 @@
   /* When the server sends no featured titles (an older plugin, or none with background art), take
      them from the rows: the first of Continue Watching and Next Up, then the top of Trending.
      They leave their rows, so each title still appears once. */
+  // Fallback only, for a server that sends no Featured of its own. Continue Watching and Next Up are
+  // left out on purpose (they have their own rows); the hero draws on Recently Added and Trending.
   function pickFeatured() {
-    var picks = [], from = [['continue', 1, 'resume'], ['nextup', 1, 'nextup'], ['seerr-trending', 3, 'trending']];
+    var picks = [], from = [['recentlyadded', 2, 'new'], ['seerr-trending', 3, 'trending']];
     from.forEach(function (source) {
       var row = M.rowsRaw.filter(function (r) { return r.id === source[0]; })[0], taken = 0;
       if (!row) return;

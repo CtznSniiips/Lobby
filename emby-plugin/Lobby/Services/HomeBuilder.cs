@@ -76,7 +76,7 @@ namespace Lobby.Services
         /// <summary>Featured items: e.g. "2024 · PG-13 · 2h 10m" or "S1 E5 · 32 min left".</summary>
         public string Meta { get; set; }
 
-        /// <summary>Featured items: game, resume, new or trending.</summary>
+        /// <summary>Featured items: game, new or trending. (Continue Watching titles are not featured.)</summary>
         public string FeatureReason { get; set; }
 
         /// <summary>Identities used to show each title only once across rows. Not sent to TVs.</summary>
@@ -399,8 +399,9 @@ namespace Lobby.Services
 
         /// <summary>
         /// The featured mix: games for the TV's first two teams that are on now or start within the hour (first),
-        /// then the title being watched most recently, the newest library additions not yet watched, and the top of
-        /// Seerr's Trending list, interleaved so the area alternates between them.
+        /// then the newest library additions not yet watched, and the top of Seerr's Trending list, interleaved so
+        /// the area alternates between them. Continue Watching and Next Up titles are deliberately left out - they
+        /// have their own rows, and the hero is for surfacing something new.
         /// </summary>
         private async Task<List<HomeItem>> BuildFeatured(User user, string[] teams, Task<List<SeerrMedia>> trendingTask, CancellationToken ct)
         {
@@ -416,16 +417,6 @@ namespace Lobby.Services
                 _logger.Debug("featured games skipped: {0}", ex.Message);
             }
 
-            var resume = _library.GetItemList(new InternalItemsQuery(user)
-            {
-                IsResumable = true,
-                Recursive = true,
-                IncludeItemTypes = new[] { "Movie", "Episode" },
-                OrderBy = new[] { ValueTuple.Create(ItemSortBy.DatePlayed, SortOrder.Descending) },
-                Limit = 1,
-                DtoOptions = options,
-            });
-
             var latest = _library.GetItemList(new InternalItemsQuery(user)
             {
                 Recursive = true,
@@ -439,7 +430,6 @@ namespace Lobby.Services
             });
 
             // The featured area needs background art; a title without it stays in its row instead.
-            var fromResume = _dto.GetBaseItemDtos(resume, options, user).Select(d => MapFeaturedLibrary(user, d, "resume", options)).Where(i => i.BackdropUrl != null).ToList();
             var fromLatest = _dto.GetBaseItemDtos(latest, options, user).Select(d => MapFeaturedLibrary(user, d, "new", options)).Where(i => i.BackdropUrl != null).ToList();
 
             var fromTrending = new List<HomeItem>();
@@ -478,7 +468,6 @@ namespace Lobby.Services
                 }
             }
 
-            if (picks.Count < FeaturedCount) Take(fromResume);
             for (var round = 0; round < FeaturedCount && picks.Count < FeaturedCount; round++)
             {
                 Take(fromTrending);

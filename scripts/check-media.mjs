@@ -692,9 +692,8 @@ async function main() {
 
       api = freshApi({ featured: undefined }); await page({ paired: true, look: 'watch' });
       s2 = await state();
-      check('without featured titles from the server, the first of Continue Watching and Next Up are featured', s2.media.featured.join() === '101,200', s2.media.featured);
-      check('they leave their rows', !s2.media.rows.find(r => r.id === 'continue').items.includes('101') && !s2.media.rows.find(r => r.id === 'nextup').items.includes('200'));
-      check('the headline is the title, with the reason beside the button', (await current.locator('.wi-head').textContent()) === 'Arrival' && (await current.locator('.wi-meta').textContent()).startsWith('Continue watching'));
+      check('without server featured, Continue Watching and Next Up are kept out of the hero', !s2.media.featured.includes('101') && !s2.media.featured.includes('200'), s2.media.featured);
+      check('and those titles stay in their own rows', s2.media.rows.find(r => r.id === 'continue').items.includes('101') && s2.media.rows.find(r => r.id === 'nextup').items.includes('200'));
       await current.close(); current = null;
 
       api = freshApi({ featured: [] });
