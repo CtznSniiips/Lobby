@@ -1,3 +1,11 @@
+## 0.1.2
+
+- Continue Watching and Next Up titles are no longer pulled into the Watch hero (parity with the Emby
+  plugin). The hero previously featured the most recently watched title, and the de-duplication pass that
+  fills the hero first then removed that same title from the Continue Watching row below - so an in-progress
+  show could go missing from its row. The hero now draws only on games, newly added titles and Seerr
+  trending, leaving the Continue Watching and Next Up rows complete.
+
 ## 0.1.1
 
 - Home row items (Continue Watching, Next Up, Recently Added) now carry `LogoUrl` for titles that have
