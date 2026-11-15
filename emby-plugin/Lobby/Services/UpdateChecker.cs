@@ -191,7 +191,7 @@ namespace Lobby.Services
                 return new UpdateInstallResult { Success = false, Message = "Release " + check.LatestVersion + " has no downloadable zip asset." };
             }
 
-            var dllPath = typeof(Plugin).Assembly.Location;
+            var dllPath = ResolvePluginPath();
             if (string.IsNullOrEmpty(dllPath))
             {
                 return new UpdateInstallResult { Success = false, Message = "Could not locate the running plugin file on disk." };
@@ -248,6 +248,40 @@ namespace Lobby.Services
             {
                 TryDelete(tempZip);
                 TryDelete(tempDll);
+            }
+        }
+
+        /// <summary>
+        /// Finds this plugin's Lobby.dll on disk. Emby records where it loaded the plugin from in
+        /// <c>BasePlugin.AssemblyFilePath</c>; <c>Assembly.Location</c> is empty when Emby loads the
+        /// assembly from memory (a shadow copy or a byte stream), which is what produced the
+        /// "Could not locate the running plugin file on disk" error. Prefer the Emby-provided path,
+        /// fall back to the assembly location, and only return a path that actually exists.
+        /// </summary>
+        private static string ResolvePluginPath()
+        {
+            var candidates = new[] { Plugin.Instance?.AssemblyFilePath, SafeAssemblyLocation() };
+            foreach (var candidate in candidates)
+            {
+                if (!string.IsNullOrEmpty(candidate) && File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static string SafeAssemblyLocation()
+        {
+            try
+            {
+                return typeof(Plugin).Assembly.Location;
+            }
+            catch
+            {
+                // Some hosts throw on Location for an assembly loaded from a byte array; treat as unknown.
+                return null;
             }
         }
 
