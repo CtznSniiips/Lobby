@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.12
+
+- Fixed "Could not locate the running plugin file on disk" when updating from the plugin page. The
+  updater resolved its own `Lobby.dll` via `Assembly.Location`, which Emby leaves empty when it loads
+  the plugin assembly from memory (a shadow copy). It now uses Emby's `BasePlugin.AssemblyFilePath`
+  (the path Emby recorded when it loaded the plugin), falls back to `Assembly.Location`, and only
+  accepts a path that exists on disk.
+
 ## 0.9.11
 
 - Continue Watching and Next Up titles are no longer pulled into the Watch hero. The hero previously
