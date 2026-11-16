@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/CtznSniiips/Lobby/main/jellyfin-plugin/Lobby/thumb.png",
     "versions": [
       {
+        "version": "0.1.2.0",
+        "changelog": "- Continue Watching and Next Up titles are no longer pulled into the Watch hero (parity with the Emby\n  plugin). The hero previously featured the most recently watched title, and the de-duplication pass that\n  fills the hero first then removed that same title from the Continue Watching row below - so an in-progress\n  show could go missing from its row. The hero now draws only on games, newly added titles and Seerr\n  trending, leaving the Continue Watching and Next Up rows complete.\n",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/CtznSniiips/Lobby/releases/download/jellyfin-plugin-v0.1.2/lobby_0.1.2.0.zip",
+        "checksum": "d583eea2fb96cc9da883175cb82f6dcd",
+        "timestamp": "2026-11-16T21:19:27Z"
+      },
+      {
         "version": "0.1.1.0",
         "changelog": "- Home row items (Continue Watching, Next Up, Recently Added) now carry `LogoUrl` for titles that have\n  logo art, not just the featured hero - the TV uses it to show a title's logo on its card instead of its\n  name. A movie or series reads its own Logo image tag directly; an episode reads its series' logo through\n  the inherited `ParentLogoItemId`/`ParentLogoImageTag` (a season essentially never has its own Logo, so\n  this resolves to the series' logo without paying for a separate per-row DTO fetch the way the hero's\n  episode branch already does for its backdrop). Titles with no logo art - common for Live TV, Seerr\n  not-yet-available titles and plenty of older library content - still send no `LogoUrl`, so the TV falls\n  back to the title's name.\n",
         "targetAbi": "12.4.0.0",
