@@ -851,7 +851,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .w-hero.is-browsing .w-art,.w-hero.is-browsing .w-dots{opacity:0}
 .wa-logo{max-width:600px;max-height:200px;object-fit:contain;object-position:right bottom;opacity:0;transition:opacity 400ms linear;filter:drop-shadow(0 4px 16px rgba(0,0,0,.45))}
 .wa-logo.is-loaded{opacity:1}
-.wa-title{max-height:248px;margin:-24px;padding:24px;overflow:hidden;text-align:right;font-family:var(--font-display-family),Manrope,Arial,sans-serif;font-size:72px;line-height:80px;font-weight:600;letter-spacing:-1.5px;color:#fff;text-shadow:0 3px 22px rgba(0,0,0,.55)}
+.wa-title{max-height:288px;margin:-24px;padding:24px;overflow:hidden;text-align:right;font-family:var(--font-display-family),Manrope,Arial,sans-serif;font-size:72px;line-height:80px;font-weight:600;letter-spacing:-1.5px;color:#fff;text-shadow:0 3px 22px rgba(0,0,0,.55)}
 .w-dots{position:absolute;right:72px;top:404px;height:12px;display:flex;align-items:center;transition:opacity var(--t) linear}
 .wd{width:10px;height:10px;margin-left:12px;border-radius:5px;background:rgba(255,255,255,.4);transition:width var(--t) var(--ease),background 140ms linear;cursor:pointer}
 .wd.is-on{width:28px;background:#fff}
