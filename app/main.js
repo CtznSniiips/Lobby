@@ -2286,6 +2286,19 @@
   function wPreload(src) { if (src && W.pre !== src) { W.pre = src; W.preImg = new Image(); W.preImg.src = src; } }
   /* A programme's landscape image may be its channel logo, so games use only real background art. */
   function wArtSrc(it) { return Media.image(it.kind === 'program' ? it.backdrop : it.backdrop || it.landscape, 1920); }
+  // The text-fallback hero title (no logo art) wraps to up to three lines at its
+  // full size; a longer title would overflow its clamp box and clip the last
+  // line, so step the size down until it fits rather than cutting it off.
+  function wFitTitle(el) {
+    var size = 72;
+    el.style.fontSize = '';
+    el.style.lineHeight = '';
+    while (size > 40 && el.scrollHeight > el.clientHeight + 1) {
+      size -= 4;
+      el.style.fontSize = size + 'px';
+      el.style.lineHeight = Math.round(size * 80 / 72) + 'px';
+    }
+  }
   function renderWatchRail(zone, live) {
     setHTML(wRailEl, W_RAIL.map(function (u, i) {
       var on = live && zone === 'wrail' && i === clamp(top().f.u, 0, W_RAIL.length - 1);
@@ -2316,6 +2329,8 @@
     }
     setHTML(wInfoEl, html);
     setHTML(wArtEl, art);
+    var wtEl = wArtEl.querySelector('.wa-title');
+    if (wtEl) wFitTitle(wtEl);
     Array.prototype.forEach.call(wArtEl.querySelectorAll('img'), function (img) {
       if (img.complete && img.naturalWidth) img.className = 'wa-logo is-loaded';
       else { img.onload = function () { this.className = 'wa-logo is-loaded'; }; img.onerror = function () { this.style.display = 'none'; }; }
