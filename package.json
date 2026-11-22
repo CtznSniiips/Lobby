@@ -1,6 +1,6 @@
 {
   "name": "cleanframe",
-  "version": "0.9.23",
+  "version": "0.9.24",
   "private": true,
   "description": "A personal, uncluttered home interface for Samsung The Frame.",
   "scripts": {

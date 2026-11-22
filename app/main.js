@@ -1972,12 +1972,18 @@
     mediaRowsEl.style.transform = 'translate3d(' + g.pad + 'px,' + (-off) + 'px,0)';
     keyed(mediaRowsEl, M.rows.map(function (row, r) { return { key: row.id, row: row, r: r }; }), function (el, entry) {
       var row = entry.row, r = entry.r, win = rowWindow(row, g), size = win.size, rowVisible = ys[r] + g.title + size.h > off && ys[r] < off + viewH, track;
-      if (el._frame !== row.layout) { el.innerHTML = '<h3 class="mr-title"></h3><div class="mr-track"></div>'; el._frame = row.layout; }
+      if (el._frame !== row.layout) { el.innerHTML = '<h3 class="mr-title"></h3><div class="mr-clip"><div class="mr-track"></div></div>'; el._frame = row.layout; }
       el.className = 'mr mr-' + row.layout + (focus && r === R ? ' is-active' : '');
       el.style.transform = 'translate3d(0,' + ys[r] + 'px,0)';
       setHTML(el.firstChild, esc(row.title));
-      track = el.lastChild;
-      track.style.top = g.title + 'px'; track.style.height = size.h + 'px';
+      // The clip spans the column edge-to-edge (g.pad of breathing room each side for the
+      // focused card's scale and ring) and fades whichever side still has cards off-screen.
+      var clip = el.lastChild;
+      track = clip.firstChild;
+      clip.className = 'mr-clip' + (win.first > 0 ? ' row-fade-l' : '') + (row.items.length > win.first + win.vis ? ' row-fade-r' : '');
+      clip.style.left = (-g.pad) + 'px'; clip.style.top = (g.title - g.after) + 'px';
+      clip.style.width = g.width + 'px'; clip.style.height = (size.h + g.after * 2) + 'px';
+      track.style.left = g.pad + 'px'; track.style.top = g.after + 'px'; track.style.height = size.h + 'px';
       track.style.transform = 'translate3d(' + (-win.first * win.pitch) + 'px,0,0)';
       keyed(track, row.items.map(function (item, i) { return { key: item.id, item: item, i: i }; }), function (card, ce) {
         var item = ce.item, i = ce.i, isFocus = focus && r === R && i === mediaCol(row).i, near = rowVisible && i >= win.first - 1 && i <= win.first + win.vis + 1;
@@ -2352,6 +2358,7 @@
     el.style.transform = 'translate3d(' + (s * (WG.half + WG.gap)) + 'px,0,0)';
     setHTML(el.firstChild, esc(row.title));
     clip = el.lastChild; trackEl = clip.firstChild;
+    clip.className = 'wr-clip' + (win.first > 0 ? ' row-fade-l' : '') + (row.items.length > win.first + win.vis ? ' row-fade-r' : '');
     clip.style.width = (width + 32) + 'px'; clip.style.height = (size.h + (style === 'card' ? WG.labels : 0) + 32) + 'px';
     trackEl.style.transform = 'translate3d(' + (-win.first * size.pitch) + 'px,0,0)';
     keyed(trackEl, row.items.map(function (item, i) { return { key: item.id, item: item, i: i }; }), function (card, ce) {
