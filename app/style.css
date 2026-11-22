@@ -670,7 +670,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .mr-title{position:absolute;left:4px;top:0;font-size:28px;line-height:36px;font-weight:600;letter-spacing:-.2px;color:var(--ink);opacity:.82;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3)}
 .media.is-focus .mr.is-active .mr-title{opacity:1}
 .bg-light .mr-title,.bg-dark .mr-title{text-shadow:none}
+.mr-clip{position:absolute;left:0;top:0;overflow:hidden}
 .mr-track{position:absolute;left:0;width:100%;transition:transform var(--t) var(--ease)}
+/* A short alpha fade on the edge of a row that runs past the visible area, so cut-off
+   cards dissolve instead of ending on a hard crop (mirrors the Android build). Toggled
+   per row by its scroll window; shared by the List/Dock .mr-clip and the Watch .wr-clip.
+   An alpha mask (not a colour scrim) so it reads correctly over any wallpaper. */
+.row-fade-l{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 48px);mask-image:linear-gradient(to right,transparent 0,#000 48px)}
+.row-fade-r{-webkit-mask-image:linear-gradient(to left,transparent 0,#000 48px);mask-image:linear-gradient(to left,transparent 0,#000 48px)}
+.row-fade-l.row-fade-r{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 48px,#000 calc(100% - 48px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 48px,#000 calc(100% - 48px),transparent 100%)}
 .mc{position:absolute;left:0;top:0;transition:transform var(--t) var(--ease)}
 .mc-art{position:absolute;left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px;background:rgba(246,241,231,.12);transition:transform var(--t) var(--ease),box-shadow 140ms linear}
 .bg-light .mc-art{background:rgba(29,26,22,.08)}
