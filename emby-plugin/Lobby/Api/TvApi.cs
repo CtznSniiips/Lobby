@@ -177,6 +177,9 @@ namespace Lobby.Api
 
         /// <summary>Top-billed cast, at most twelve.</summary>
         public List<TitlePerson> Cast { get; set; } = new List<TitlePerson>();
+
+        /// <summary>Seerr display name of whoever requested this title, when it has been requested; null otherwise.</summary>
+        public string RequestedBy { get; set; }
     }
 
     public class TvRowSetting
@@ -387,7 +390,21 @@ namespace Lobby.Api
                         PhotoUrl = string.IsNullOrWhiteSpace(p.ProfilePath) ? null : photoBase + p.ProfilePath,
                     })
                     .ToList(),
+                RequestedBy = RequesterName(d),
             };
+        }
+
+        /// <summary>The Seerr display name of the first requester on a title's detail response, or null if unrequested.</summary>
+        private static string RequesterName(SeerrDetails d)
+        {
+            var user = d?.MediaInfo?.Requests?.FirstOrDefault(r => r?.RequestedBy != null)?.RequestedBy;
+            if (user == null)
+            {
+                return null;
+            }
+
+            var name = string.IsNullOrWhiteSpace(user.DisplayName) ? user.BestName : user.DisplayName;
+            return string.IsNullOrWhiteSpace(name) ? null : name.Trim();
         }
 
         public async Task<object> Get(SearchTitles request)
