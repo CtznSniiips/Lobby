@@ -2816,7 +2816,7 @@
     request: function () {
       return '<div class="rq-art" data-slot="art"></div><div class="rq-copy"><h2 class="rq-title" data-slot="title"></h2><p class="rq-meta" data-slot="meta"></p>'
         + '<p class="rq-tagline" data-slot="tagline"></p><p class="rq-overview" data-slot="overview"></p><div class="rq-facts" data-slot="facts"></div><div class="rq-cast" data-slot="cast"></div>'
-        + '<p class="rq-status" data-slot="status" aria-live="polite"></p><div class="msg-acts rq-acts" data-slot="acts"></div></div>';
+        + '<p class="rq-status" data-slot="status" aria-live="polite"></p><p class="rq-req" data-slot="req"></p><div class="msg-acts rq-acts" data-slot="acts"></div></div>';
     },
     connect: function () {
       return '<h2 class="s-title">Connect to Emby</h2><p class="s-sub" data-slot="sub" aria-live="polite"></p><div class="cn-body" data-slot="body"></div><div class="msg-acts cn-acts" data-slot="acts"></div>';
@@ -2849,10 +2849,9 @@
       if (d.networks.length) facts.push(['On', d.networks]);
     }
     el.facts.className = 'rq-facts' + (waiting ? ' is-waiting' : '');
-    // "Requested by" (Seerr) stays out of the two-credit cap so it always shows for a requested title.
-    var factsHtml = facts.slice(0, 2).map(function (f) { return '<p class="rq-fact"><span class="rq-fact-k">' + esc(f[0]) + '</span> ' + esc(f[1].join(', ')) + '</p>'; }).join('');
-    if (d && d.requestedBy) factsHtml += '<p class="rq-fact rq-fact-req"><span class="rq-fact-k">Requested by</span> ' + esc(d.requestedBy) + '</p>';
-    setHTML(el.facts, factsHtml);
+    setHTML(el.facts, facts.slice(0, 2).map(function (f) { return '<p class="rq-fact"><span class="rq-fact-k">' + esc(f[0]) + '</span> ' + esc(f[1].join(', ')) + '</p>'; }).join(''));
+    // "Requested by <name>" (Seerr) sits in the empty space beside the action row, like the Android build.
+    if (el.req) setHTML(el.req, d && d.requestedBy ? 'Requested by ' + esc(d.requestedBy) : '');
     el.cast.className = 'rq-cast' + (waiting ? ' is-waiting' : '') + (d && d.cast.length ? ' has-cast' : '');
     setHTML(el.cast, d && d.cast.length ? '<p class="rq-fact-k rq-cast-k">Cast</p><div class="rq-people">' + d.cast.slice(0, 7).map(function (c) {
       return '<div class="rq-person"><span class="rq-face">' + (c.photo ? '<img alt="" src="' + esc(Media.image(c.photo, 185)) + '">' : '<span class="rq-initials">' + esc(c.name.split(/\s+/).map(function (w) { return w.charAt(0); }).slice(0, 2).join('')) + '</span>') + '</span>'
