@@ -10,7 +10,7 @@ Lobby is a fork of [CleanFrame](https://github.com/nthnclrk/CleanFrame) by nthnc
 
 ## Lobby: Emby/Jellyfin and Seerr on Home
 
-[![Jellyfin plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=jellyfin-plugin-v*&label=release&color=00a4dc&logo=jellyfin&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)  [![Emby plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=emby-plugin-v*&label=release&color=52b54b&logo=emby&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)
+[![Emby plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=emby-plugin-v*&label=release&color=52b54b&logo=emby&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)  [![Jellyfin plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=jellyfin-plugin-v*&label=release&color=00a4dc&logo=jellyfin&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)
 
 Lobby adds rows from your own Emby or Jellyfin server and Seerr to Home: Continue Watching, On Now, games for teams you follow, and Seerr's Trending and Popular lists. OK resumes or plays in the Emby/Jellyfin app, or requests a title in Seerr as the right person. The Watch layout puts a rotating featured title at the top (including your teams' games when they're about to start), with one row per band below and your apps in a dock along the bottom.
 
