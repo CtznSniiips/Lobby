@@ -48,6 +48,16 @@ namespace Lobby.Services
     public class SeerrMediaInfo
     {
         public int Status { get; set; }
+
+        /// <summary>Present on /movie/{id} and /tv/{id} detail responses; absent on discover rows.</summary>
+        public List<SeerrRequest> Requests { get; set; }
+    }
+
+    public class SeerrRequest
+    {
+        /// <summary>1 pending approval, 2 approved, 3 declined.</summary>
+        public int Status { get; set; }
+        public SeerrUser RequestedBy { get; set; }
     }
 
     public class SeerrMedia
@@ -105,6 +115,9 @@ namespace Lobby.Services
         public SeerrCredits Credits { get; set; }
         public List<SeerrPerson> CreatedBy { get; set; }
         public List<SeerrCompany> Networks { get; set; }
+
+        /// <summary>Carries the request(s), and so the requester, for titles already requested in Seerr.</summary>
+        public SeerrMediaInfo MediaInfo { get; set; }
     }
 
     public class SeerrDiscoverPage
