@@ -1,3 +1,9 @@
+## 0.1.3
+
+- The title details endpoint now returns `RequestedBy`, the Seerr display name of whoever requested a
+  title (the first requester on the Seerr `/movie` or `/tv` detail response), so the TV can show
+  "Requested by <name>" on the details screen. Null for titles that haven't been requested.
+
 ## 0.1.2
 
 - Continue Watching and Next Up titles are no longer pulled into the Watch hero (parity with the Emby

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.13
+
+- The title details endpoint now returns `RequestedBy`, the Seerr display name of whoever requested a
+  title (the first requester on the Seerr `/movie` or `/tv` detail response), so the TV can show
+  "Requested by <name>" on the details screen. Null for titles that haven't been requested.
+
 ## 0.9.12
 
 - Fixed "Could not locate the running plugin file on disk" when updating from the plugin page. The
