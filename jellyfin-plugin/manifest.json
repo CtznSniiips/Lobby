@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/CtznSniiips/Lobby/main/jellyfin-plugin/Lobby/thumb.png",
     "versions": [
       {
+        "version": "0.1.3.0",
+        "changelog": "- The title details endpoint now returns `RequestedBy`, the Seerr display name of whoever requested a\n  title (the first requester on the Seerr `/movie` or `/tv` detail response), so the TV can show\n  \"Requested by <name>\" on the details screen. Null for titles that haven't been requested.\n",
+        "targetAbi": "12.4.0.0",
+        "sourceUrl": "https://github.com/CtznSniiips/Lobby/releases/download/jellyfin-plugin-v0.1.3/lobby_0.1.3.0.zip",
+        "checksum": "88bb9839ce3cd2f466e6188614b158e0",
+        "timestamp": "2026-11-25T17:10:25Z"
+      },
+      {
         "version": "0.1.2.0",
         "changelog": "- Continue Watching and Next Up titles are no longer pulled into the Watch hero (parity with the Emby\n  plugin). The hero previously featured the most recently watched title, and the de-duplication pass that\n  fills the hero first then removed that same title from the Continue Watching row below - so an in-progress\n  show could go missing from its row. The hero now draws only on games, newly added titles and Seerr\n  trending, leaving the Continue Watching and Next Up rows complete.\n",
         "targetAbi": "12.4.0.0",
