@@ -1255,7 +1255,7 @@
   function cleanDetails(d) {
     if (!d || typeof d !== 'object') return null;
     return { tagline: text(d.Tagline, 200), overview: text(d.Overview, 900), genres: names(d.Genres, 3), runtime: count(d.RuntimeMinutes), seasons: count(d.Seasons), rating: count(d.Rating),
-      directors: names(d.Directors, 3), writers: names(d.Writers, 3), creators: names(d.Creators, 3), networks: names(d.Networks, 2),
+      directors: names(d.Directors, 3), writers: names(d.Writers, 3), creators: names(d.Creators, 3), networks: names(d.Networks, 2), requestedBy: text(d.RequestedBy, 80),
       cast: (Array.isArray(d.Cast) ? d.Cast : []).slice(0, 12).filter(function (c) { return c && typeof c.Name === 'string' && c.Name; })
         .map(function (c) { return { name: text(c.Name, 80), character: text(c.Character, 80), photo: text(c.PhotoUrl, 400) }; }) };
   }
@@ -2849,7 +2849,10 @@
       if (d.networks.length) facts.push(['On', d.networks]);
     }
     el.facts.className = 'rq-facts' + (waiting ? ' is-waiting' : '');
-    setHTML(el.facts, facts.slice(0, 2).map(function (f) { return '<p class="rq-fact"><span class="rq-fact-k">' + esc(f[0]) + '</span> ' + esc(f[1].join(', ')) + '</p>'; }).join(''));
+    // "Requested by" (Seerr) stays out of the two-credit cap so it always shows for a requested title.
+    var factsHtml = facts.slice(0, 2).map(function (f) { return '<p class="rq-fact"><span class="rq-fact-k">' + esc(f[0]) + '</span> ' + esc(f[1].join(', ')) + '</p>'; }).join('');
+    if (d && d.requestedBy) factsHtml += '<p class="rq-fact rq-fact-req"><span class="rq-fact-k">Requested by</span> ' + esc(d.requestedBy) + '</p>';
+    setHTML(el.facts, factsHtml);
     el.cast.className = 'rq-cast' + (waiting ? ' is-waiting' : '') + (d && d.cast.length ? ' has-cast' : '');
     setHTML(el.cast, d && d.cast.length ? '<p class="rq-fact-k rq-cast-k">Cast</p><div class="rq-people">' + d.cast.slice(0, 7).map(function (c) {
       return '<div class="rq-person"><span class="rq-face">' + (c.photo ? '<img alt="" src="' + esc(Media.image(c.photo, 185)) + '">' : '<span class="rq-initials">' + esc(c.name.split(/\s+/).map(function (w) { return w.charAt(0); }).slice(0, 2).join('')) + '</span>') + '</span>'
