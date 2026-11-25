@@ -1,7 +1,6 @@
 # Lobby
 
-**Jellyfin plugin** &nbsp;[![Jellyfin plugin build](https://img.shields.io/github/actions/workflow/status/CtznSniiips/Lobby/jellyfin-plugin.yml?branch=main&label=build&logo=jellyfin&logoColor=white)](https://github.com/CtznSniiips/Lobby/actions/workflows/jellyfin-plugin.yml) [![Jellyfin plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=jellyfin-plugin-v*&label=release&color=00a4dc&logo=jellyfin&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)  
-**Emby plugin** &nbsp;[![Emby plugin build](https://img.shields.io/github/actions/workflow/status/CtznSniiips/Lobby/emby-plugin.yml?branch=main&label=build&logo=emby&logoColor=white)](https://github.com/CtznSniiips/Lobby/actions/workflows/emby-plugin.yml) [![Emby plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=emby-plugin-v*&label=release&color=52b54b&logo=emby&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)
+[![Jellyfin plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=jellyfin-plugin-v*&label=release&color=00a4dc&logo=jellyfin&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)  [![Emby plugin release](https://img.shields.io/github/v/tag/CtznSniiips/Lobby?filter=emby-plugin-v*&label=release&color=52b54b&logo=emby&logoColor=white)](https://github.com/CtznSniiips/Lobby/releases)
 
 A home screen for Samsung The Frame that starts with what you watch: your Emby or Jellyfin server's Continue Watching, Live TV and sports teams, Seerr's trending titles, and your apps, with an interface made for the TV remote.
 
