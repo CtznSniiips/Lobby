@@ -218,8 +218,9 @@ Everything the settings page shows. Response `AdminState`:
 ### `POST /Lobby/Admin/Settings`
 
 Saves general and Seerr settings. Request/response share **`SettingsView`** (see
-[Settings shapes](#settings-shapes)). `SeerrApiKey` is write-only — leave it empty to keep the saved
-key; `HasSeerrApiKey` reports whether one is stored. Numeric fields are clamped.
+[Settings shapes](#settings-shapes)). `SeerrApiKey` and `TmdbApiKey` are write-only — leave either empty
+to keep the saved key; `HasSeerrApiKey`/`HasTmdbApiKey` report whether one is stored. Numeric fields are
+clamped.
 
 ### `POST /Lobby/Admin/Seerr/Test`
 
@@ -317,7 +318,7 @@ restarting afterward** to load it. Response `UpdateInstallView`: `Success`, `Mes
 | `Kind` | string | `movie`, `episode`, `program` or `discover`. |
 | `Title`, `Subtitle`, `Overview` | string | |
 | `Year` | int? | |
-| `PosterUrl`, `LandscapeUrl`, `LogoUrl`, `BackdropUrl` | string | Emby-relative or absolute TMDB URLs. `LogoUrl`/`BackdropUrl` mainly for library and featured items. |
+| `PosterUrl`, `LandscapeUrl`, `LogoUrl`, `BackdropUrl` | string | Emby-relative or absolute TMDB URLs. `LogoUrl`/`BackdropUrl` mainly for library and featured items. For a featured Seerr title (not yet in the library), `LogoUrl` is a TMDB logo, included only when a `TmdbApiKey` is configured. |
 | `ProgressPercent` | double? | |
 | `PositionTicks`, `RuntimeTicks` | long? | |
 | `PlayItemId` | string | Item id to send to `/Lobby/Play` (channel id for Live TV programs). |
@@ -357,6 +358,8 @@ Connection and defaults for the whole server:
 
 - **Seerr:** `SeerrUrl`, `SeerrApiKey` (write-only), `HasSeerrApiKey`, `RequestsEnabled`,
   `FallbackSeerrUserId`, `RememberRequesterMinutes`.
+- **TMDB (optional):** `TmdbApiKey` (write-only), `HasTmdbApiKey` — a TMDB v3 key used to fetch hero
+  logos for Seerr titles not yet in the library. Blank disables it.
 - **Defaults/timing:** `RowLimit`, `SportsLookaheadHours`, `PlayDelayMs`, `PlayTimeoutSeconds`.
 - **Default rows:** `ShowContinueWatching`, `ShowNextUp`, `ShowRecentlyAdded`, `ShowLiveNow`,
   `ShowSports`, `ShowSeerrTrending`, `ShowSeerrPopularMovies`, `ShowSeerrPopularShows`.

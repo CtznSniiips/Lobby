@@ -207,6 +207,8 @@ define([], function () {
             $('#cfSeerrUrl').value = s.SeerrUrl || '';
             $('#cfSeerrKey').value = '';
             $('#cfSeerrKey').placeholder = s.HasSeerrApiKey ? 'Saved. Leave blank to keep it' : 'Paste your Seerr API key';
+            $('#cfTmdbKey').value = '';
+            $('#cfTmdbKey').placeholder = s.HasTmdbApiKey ? 'Saved. Leave blank to keep it' : 'Optional — for hero logos';
             $('#cfRequestsEnabled').checked = !!s.RequestsEnabled;
             $('#cfGameThumbsUrl').value = s.GameThumbsUrl || '';
             ['ShowContinueWatching', 'ShowNextUp', 'ShowRecentlyAdded', 'ShowLiveNow', 'ShowSports', 'ShowSeerrTrending',
@@ -223,6 +225,7 @@ define([], function () {
             var s = {
                 SeerrUrl: $('#cfSeerrUrl').value.trim(),
                 SeerrApiKey: $('#cfSeerrKey').value.trim(),
+                TmdbApiKey: $('#cfTmdbKey').value.trim(),
                 RequestsEnabled: $('#cfRequestsEnabled').checked,
                 FallbackSeerrUserId: parseInt($('#cfFallback').value, 10) || 0,
                 GameThumbsUrl: $('#cfGameThumbsUrl').value.trim()

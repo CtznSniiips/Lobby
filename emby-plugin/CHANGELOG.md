@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.14
+
+- Added an optional TMDB API key (Settings → Seerr). When set, the featured/hero area fetches a title
+  logo from TMDB for Seerr titles that aren't in the library yet, so the hero shows the logo instead of
+  plain text. Without a key it's disabled and the hero behaves as before; library titles keep using
+  their own server logo either way. Logos are cached for 24h (hits and misses) to avoid re-querying TMDB.
+
 ## 0.9.13
 
 - The title details endpoint now returns `RequestedBy`, the Seerr display name of whoever requested a
