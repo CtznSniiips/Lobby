@@ -389,6 +389,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .stage{--mute:rgba(246,241,231,.76);--faint:rgba(246,241,231,.58);--line:rgba(246,241,231,.18);--knock:#1d1a16;--solid-mute:rgba(29,26,22,.68);--solid-warn:#8a4b00;--ink:#f6f1e7;--ground:#0d0d0d;--ring:rgba(255,255,255,.62);--tr-ink:var(--ink);--br-ink:var(--ink);--tr-rest:.62;--br-rest:.62;--tr-peer:.434;--br-peer:.434;--tr-a:.20;--tr-b:.12;--br-a:.20;--br-b:.12;--tr-under:rgba(14,10,6,.38);--br-under:rgba(14,10,6,.38);--tr-shadow:0 1px 2px rgba(14,10,6,.4),0 2px 8px rgba(14,10,6,.24);--br-shadow:var(--tr-shadow);background:var(--ground)}
 .bg-light{--mute:rgba(29,26,22,.70);--faint:rgba(29,26,22,.52);--line:rgba(29,26,22,.14);--knock:#f2efe8;--solid-mute:rgba(242,239,232,.72);--solid-warn:#e8b36a;--ground:#f2efe8;--ink:#1d1a16;--warn:#8a4b00;--solid:#1d1a16;--solid-ink:#f2efe8;--ring:rgba(28,26,23,.5);--plate:rgba(29,26,22,.07);--plate-edge:none;--lift:rgba(29,26,22,.13);--tr-peer:.52;--br-peer:.52}
 .bg-dark{--mute:rgba(246,241,231,.72);--faint:rgba(246,241,231,.50);--line:rgba(246,241,231,.14);--knock:#0d0d0d;--solid-mute:rgba(29,26,22,.68);--solid-warn:#8a4b00;--warn:#e8b36a;--plate:rgba(246,241,231,.08);--plate-edge:inset 0 1px 0 rgba(255,250,240,.1);--lift:rgba(246,241,231,.15)}
+/* The Glass focus style renders its selector as a lit, 3D glassy plate - a top-lit gradient fill capped
+   by a crisp bright top highlight - so it reads clearly differently from the flat Type plate. Defined
+   here for the Dark and Light backgrounds (Photo already uses a glass gradient) and shared through
+   --plate, so it applies to every focus selector in every layout: Home dock, Watch dock, rail, grid and
+   sheets. Type keeps the flat per-background plate above, so the two styles are now distinct everywhere. */
+.f-glass.bg-dark{--plate:linear-gradient(180deg,rgba(255,255,255,.40),rgba(255,255,255,.13) 50%,rgba(255,255,255,.07));--plate-edge:inset 0 2px 0 rgba(255,255,255,.6),inset 0 0 0 1px rgba(255,255,255,.06);--lift:linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,.2) 50%,rgba(255,255,255,.12))}
+.f-glass.bg-light{--plate:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.36) 52%,rgba(255,255,255,.2));--plate-edge:inset 0 1.5px 0 rgba(255,255,255,.95),0 3px 12px rgba(29,26,22,.1);--lift:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.5) 52%,rgba(255,255,255,.3))}
 .scene{position:absolute;left:0;top:0;width:1920px;height:1080px;background:var(--ground);overflow:hidden;transform-origin:0 0}
 .at-appearance .scene,.at-wallpaper .scene{z-index:2;transform:translate3d(858px,288px,0) scale(.48);border-radius:32px;pointer-events:none}
 .bg-dark.at-appearance .scene,.bg-light.at-appearance .scene{box-shadow:0 0 0 4px var(--line)}
@@ -855,6 +862,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wi-act{display:flex;align-items:center;margin-top:20px;height:62px}
 .wi-btn{display:inline-flex;align-items:center;height:58px;padding:0 36px;border-radius:29px;font-size:26px;font-weight:600;color:var(--ink);background:var(--btn);transition:transform var(--t) var(--ease),background 140ms linear,color 140ms linear;cursor:pointer;white-space:nowrap}
 .wi-btn.is-focus{color:var(--solid-ink);background:var(--solid);transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+/* In Glass mode the hero button takes the same 3D glassy plate as the icons, not the solid fill. */
+.f-glass .wi-btn.is-focus{color:var(--ink);background:var(--plate);box-shadow:var(--plate-edge),0 8px 24px rgba(0,0,0,.25)}
 .wi-hint{display:inline-flex;align-items:center;font-size:25px;font-weight:600;color:var(--ink);white-space:nowrap}
 .wi-hint .remote-key{margin-right:12px}
 .wi-hint-sub{margin-left:22px;color:var(--mute)}
