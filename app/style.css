@@ -888,6 +888,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .wr-btn{position:relative;display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 0 18px;padding:0;border:0;border-radius:36px;background:transparent;color:var(--soft);font:inherit;cursor:pointer;transition:background 140ms linear,color 140ms linear,transform var(--t) var(--ease)}
 .wr-btn .ico{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .wr-btn.is-focus{background:var(--solid);color:var(--solid-ink);transform:scale(1.05)}
+/* In Glass mode the Watch rail icons (search, art, apps, settings) take the same 3D glassy plate as the
+   other selectors, not the solid fill. */
+.f-glass .wr-btn.is-focus{background:var(--plate);box-shadow:var(--plate-edge);color:var(--ink)}
 .wr-label{position:absolute;left:88px;top:15px;height:42px;padding:0 18px;border-radius:21px;font-size:23px;line-height:42px;font-weight:600;white-space:nowrap;color:var(--solid-ink);background:var(--solid);opacity:0;transform:translate3d(-8px,0,0);transition:opacity 140ms linear,transform var(--t) var(--ease);pointer-events:none}
 .wr-btn.is-focus .wr-label{opacity:1;transform:none}
 .w-view{position:absolute;left:0;top:0;width:1920px;height:944px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 916px,rgba(0,0,0,0) 944px);mask-image:linear-gradient(to bottom,#000 916px,rgba(0,0,0,0) 944px)}
