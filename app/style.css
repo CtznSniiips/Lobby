@@ -891,6 +891,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 /* In Glass mode the Watch rail icons (search, art, apps, settings) take the same 3D glassy plate as the
    other selectors, not the solid fill. */
 .f-glass .wr-btn.is-focus{background:var(--plate);box-shadow:var(--plate-edge);color:var(--ink)}
+/* On a dark background, ease the 3D highlight on the glass hero button and rail icons just a touch - a
+   slightly softer top sheen and highlight than the dock tiles, which keep the stronger --plate. */
+.f-glass.bg-dark .wr-btn.is-focus{background:linear-gradient(180deg,rgba(255,255,255,.36),rgba(255,255,255,.12) 50%,rgba(255,255,255,.07));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5)}
+.f-glass.bg-dark .wi-btn.is-focus{background:linear-gradient(180deg,rgba(255,255,255,.36),rgba(255,255,255,.12) 50%,rgba(255,255,255,.07));box-shadow:inset 0 1.5px 0 rgba(255,255,255,.5),0 8px 24px rgba(0,0,0,.25)}
 .wr-label{position:absolute;left:88px;top:15px;height:42px;padding:0 18px;border-radius:21px;font-size:23px;line-height:42px;font-weight:600;white-space:nowrap;color:var(--solid-ink);background:var(--solid);opacity:0;transform:translate3d(-8px,0,0);transition:opacity 140ms linear,transform var(--t) var(--ease);pointer-events:none}
 .wr-btn.is-focus .wr-label{opacity:1;transform:none}
 .w-view{position:absolute;left:0;top:0;width:1920px;height:944px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 916px,rgba(0,0,0,0) 944px);mask-image:linear-gradient(to bottom,#000 916px,rgba(0,0,0,0) 944px)}
