@@ -921,6 +921,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 /* On flat backgrounds the material is hidden, so keep a subtle panel behind the
    dock (the Home dock floats bare here, but Watch keeps a light container). */
 .bg-dark .w-dock,.bg-light .w-dock{background:var(--card);box-shadow:inset 0 0 0 1px var(--dock-line)}
+/* App bar glow (Settings → Focus): a soft white halo that fades in around the Watch app dock when
+   focus moves into it, so arriving in the dock from the rows is obvious. Toggled by the dglow-on/off
+   stage class; its peak alpha follows the dgl-low/medium/high intensity. A pseudo-element so it layers
+   over the existing dock shadow without replacing it; pointer-events off so it never blocks the tiles. */
+.w-dock::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;border-radius:30px;pointer-events:none;opacity:0;transition:opacity 180ms linear;box-shadow:0 0 30px 1px rgba(255,255,255,var(--dglow,.30))}
+.stage.dglow-on .w-dock.is-active::after{opacity:1}
+.stage.dgl-low{--dglow:.18}
+.stage.dgl-medium{--dglow:.30}
+.stage.dgl-high{--dglow:.48}
 .wapp{position:absolute;left:0;top:8px;width:168px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:22px;color:var(--soft);transition:transform var(--t) var(--ease),background 140ms linear,color 140ms linear;cursor:pointer}
 /* Focus selector: the Home dock's glass plate (--plate / --plate-edge) plus the same
    icon lift, in place of the old translucent fill and inset ring. */
