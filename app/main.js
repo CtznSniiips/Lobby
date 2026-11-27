@@ -2385,11 +2385,16 @@
     });
   }
   /* The Home apps, always at the bottom: a smaller version of the Dock that follows App display. */
-  function renderWatchDock(zone) {
+  function renderWatchDock(zone, preview) {
     var items = dockItems(), n = items.length, f = top().f, inner = WG.width - 24;
     // Tiles narrow when apps and inputs together would overflow the screen.
     var pitch = Math.min(WG.app.pitch, Math.floor((inner + 8) / Math.max(1, n))), w = pitch - 8, width = n * pitch - 8 + 24;
-    wDockEl.className = 'w-dock a-' + S.c.apps + (n ? ' is-on' : '') + (zone === 'wapps' ? ' is-active' : '');
+    // In the Focus settings preview, show the dock as focused (and the first tile) so the chosen focus
+    // style and app-bar glow are visible there without the viewer having to move focus into it.
+    var active = zone === 'wapps' || preview, focusA = zone === 'wapps' ? f.a : (preview ? 0 : -1);
+    // While a Glow intensity option is focused in the preview, show that level live (not the saved one).
+    var hovered = preview && (f.action || '').match(/glowLevel\.(low|medium|high)$/);
+    wDockEl.className = 'w-dock a-' + S.c.apps + (n ? ' is-on' : '') + (active ? ' is-active' : '') + (hovered ? ' dgl-' + hovered[1] : '');
     var dockLeft = Math.round((1920 - width) / 2), dockTop = 952, dockH = 112;
     wDockEl.style.width = width + 'px'; wDockEl.style.left = dockLeft + 'px';
     // Same photographic glass material the Home dock uses: a window onto the full-stage
@@ -2411,7 +2416,7 @@
         return (S.c.apps !== 'text' && a ? '<span class="wapp-mark">' + appMark(a, markW, S.c.apps === 'icons' ? 56 : 44, S.c.apps === 'icons' ? 52 : 40) + '</span>' : '')
           + (S.c.apps !== 'icons' ? '<span class="wapp-name">' + esc(name) + '</span>' : '');
       });
-      tile.className = 'wapp' + (item.kind === 'input' ? ' is-input' + (item.input.connected ? '' : ' is-off') : '') + (zone === 'wapps' && te.i === f.a ? ' is-focus' : '');
+      tile.className = 'wapp' + (item.kind === 'input' ? ' is-input' + (item.input.connected ? '' : ' is-off') : '') + (te.i === focusA ? ' is-focus' : '');
       tile.style.width = w + 'px';
       tile.style.transform = 'translate3d(' + (12 + te.i * pitch) + 'px,0,0)';
       tile.setAttribute('role', 'button'); tile.setAttribute('aria-label', item.kind === 'input' && !item.input.connected ? name + ', no signal' : name);
@@ -2421,8 +2426,9 @@
 
   function renderWatch(t) {
     var live = t.id === 'home', f = t.f, zone = live ? f.zone : '', bands = wBands(), ys = [], y = 0, shift = 0, fb = -1, row, focusItem = null, it;
+    var glowPreview = !live && t.group === 'focus';
     bands.forEach(function (band) { ys.push(y); y += band.h; });
-    renderWatchDock(zone);
+    renderWatchDock(zone, glowPreview);
     if (zone === 'wband') {
       W.band = f.b; W.side = f.s;
       fb = clamp(f.b, 0, bands.length - 1);
@@ -2712,6 +2718,10 @@
         }).join('') + '</div>'
         + (section.reason ? '<p class="setting-reason">' + esc(section.reason) + '</p>' : '') + '</section>';
     }).join(''));
+    // Keep the focused option in view when the group is taller than the scroll area (e.g. Focus, which
+    // now also carries the app-bar glow rows).
+    var focusedRow = appearanceRows.querySelector('.setting-choice.is-focus');
+    if (focusedRow && focusedRow.scrollIntoView) focusedRow.scrollIntoView({ block: 'nearest' });
     if (S.pending) status = '<p>Loading ' + esc(S.pending.row === 'font' ? FONTS[S.pending.target.font].name : 'your choice') + '…</p><p>Back cancels this change.</p>';
     else if (error) {
       status = '<p class="setting-error">' + (error.type === 'save' ? 'Couldn’t save this change.' : error.type === 'font' ? 'Couldn’t load ' + esc(FONTS[error.font].name) + '.' : 'Couldn’t load this appearance.') + ' Your current choice is kept.</p>'

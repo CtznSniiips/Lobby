@@ -493,7 +493,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .appearance{position:absolute;z-index:3;top:0;right:0;bottom:0;left:0;color:var(--ink);pointer-events:none}
 .settings-back{position:absolute;left:124px;top:60px;pointer-events:auto}
 .settings-title{position:absolute;left:140px;top:132px;font-size:56px;line-height:68px;font-weight:500;letter-spacing:-1.6px}
-.appearance-rows{position:absolute;left:140px;top:244px;width:640px;pointer-events:auto}
+.appearance-rows{position:absolute;left:140px;top:244px;width:660px;max-height:690px;padding-right:20px;overflow-y:auto;overflow-x:hidden;pointer-events:auto;scrollbar-width:none}
+.appearance-rows::-webkit-scrollbar{width:0;height:0;display:none}
+.appearance-rows.wallpaper-picker{max-height:none;padding-right:0;overflow:hidden}
 .setting-section+.setting-section{margin-top:32px}
 .setting-label{margin-bottom:12px;font-size:28px;line-height:36px;font-weight:500;letter-spacing:-.2px;color:var(--mute)}
 .setting-options{display:flex;flex-direction:column}
@@ -518,6 +520,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .section-material .setting-choice:last-child{flex:1.4}
 .detail-background .section-rotation .setting-choice{padding-left:128px}
 .detail-layout .setting-section+.setting-section,.detail-focus .setting-section+.setting-section{margin-top:64px}
+.detail-focus .setting-section+.setting-section{margin-top:44px}
 .detail-typography .setting-choice,.detail-rotation .setting-choice{min-height:88px}
 .detail-typography .appearance-rows,.detail-rotation .appearance-rows,.detail-samsung .appearance-rows{top:260px}
 .setting-choice.has-description{min-height:120px}
@@ -930,6 +933,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .stage.dgl-low{--dglow:.18}
 .stage.dgl-medium{--dglow:.30}
 .stage.dgl-high{--dglow:.48}
+/* In the Focus settings preview, the dock carries its own intensity class so hovering Low/Medium/High
+   previews that level live, without changing the saved setting. */
+.w-dock.dgl-low{--dglow:.18}
+.w-dock.dgl-medium{--dglow:.30}
+.w-dock.dgl-high{--dglow:.48}
 .wapp{position:absolute;left:0;top:8px;width:168px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:22px;color:var(--soft);transition:transform var(--t) var(--ease),background 140ms linear,color 140ms linear;cursor:pointer}
 /* Focus selector: the Home dock's glass plate (--plate / --plate-edge) plus the same
    icon lift, in place of the old translucent fill and inset ring. */
