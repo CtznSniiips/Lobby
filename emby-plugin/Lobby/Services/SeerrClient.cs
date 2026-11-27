@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -139,6 +140,28 @@ namespace Lobby.Services
         public string Message { get; set; }
     }
 
+    // TMDB's image endpoint is snake_case; name the members explicitly rather than rely on Emby's
+    // IJsonSerializer, which folds case but not underscores.
+    [DataContract]
+    public class TmdbImage
+    {
+        [DataMember(Name = "file_path")]
+        public string FilePath { get; set; }
+
+        [DataMember(Name = "iso_639_1")]
+        public string Language { get; set; }
+
+        [DataMember(Name = "vote_average")]
+        public double VoteAverage { get; set; }
+    }
+
+    [DataContract]
+    public class TmdbImages
+    {
+        [DataMember(Name = "logos")]
+        public List<TmdbImage> Logos { get; set; }
+    }
+
     public class SeerrException : Exception
     {
         public SeerrException(string message, int statusCode = 0)
@@ -163,6 +186,9 @@ namespace Lobby.Services
             new ConcurrentDictionary<string, Tuple<DateTime, SeerrDetails>>();
         private readonly ConcurrentDictionary<string, Tuple<DateTime, List<SeerrMedia>>> _discoverCache =
             new ConcurrentDictionary<string, Tuple<DateTime, List<SeerrMedia>>>();
+        private static readonly TimeSpan LogoCacheLifetime = TimeSpan.FromHours(24);
+        private readonly ConcurrentDictionary<string, Tuple<DateTime, string>> _logoCache =
+            new ConcurrentDictionary<string, Tuple<DateTime, string>>();
 
         public SeerrClient(IJsonSerializer json, ILogger logger)
         {
@@ -293,6 +319,75 @@ namespace Lobby.Services
             }
 
             return BaseUrl + (pathOrUrl.StartsWith("/", StringComparison.Ordinal) ? pathOrUrl : "/" + pathOrUrl);
+        }
+
+        /// <summary>
+        /// The best title logo for a TMDB movie/show as a TMDB file path (e.g. "/abc.png"), or null. This
+        /// calls TMDB directly - not Seerr - using the optional TMDB API key from the Lobby settings; with
+        /// no key, or on any error, it returns null so the hero just keeps its text title. English logos win,
+        /// then language-neutral (textless) ones, PNG preferred, each by TMDB vote. Results (hits and misses)
+        /// are cached so the hero doesn't re-query TMDB on every refresh.
+        /// </summary>
+        public async Task<string> TmdbLogoPath(string mediaType, int tmdbId, CancellationToken ct)
+        {
+            var apiKey = (Plugin.Instance.Configuration.TmdbApiKey ?? string.Empty).Trim();
+            if (apiKey.Length == 0 || tmdbId <= 0)
+            {
+                return null;
+            }
+
+            var id = tmdbId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var key = (mediaType == "tv" ? "tv:" : "movie:") + id;
+            if (_logoCache.TryGetValue(key, out var cached) && DateTime.UtcNow - cached.Item1 < LogoCacheLifetime)
+            {
+                return cached.Item2.Length == 0 ? null : cached.Item2;
+            }
+
+            string path = null;
+            try
+            {
+                var url = "https://api.themoviedb.org/3/" + (mediaType == "tv" ? "tv/" : "movie/") + id
+                    + "/images?include_image_language=en,null&api_key=" + Uri.EscapeDataString(apiKey);
+                using (var req = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    req.Headers.TryAddWithoutValidation("Accept", "application/json");
+                    using (var resp = await Http.SendAsync(req, ct).ConfigureAwait(false))
+                    {
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var text = resp.Content == null ? string.Empty : await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            path = BestLogo(_json.DeserializeFromString<TmdbImages>(text)?.Logos);
+                        }
+                        else
+                        {
+                            _logger.Debug("TMDB logos for {0} {1} returned HTTP {2}", mediaType, id, (int)resp.StatusCode);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) when (!(ex is OperationCanceledException) || !ct.IsCancellationRequested)
+            {
+                _logger.Debug("TMDB logos for {0} {1} failed: {2}", mediaType, id, ex.Message);
+            }
+
+            _logoCache[key] = Tuple.Create(DateTime.UtcNow, path ?? string.Empty);
+            return path;
+        }
+
+        private static string BestLogo(List<TmdbImage> logos)
+        {
+            if (logos == null)
+            {
+                return null;
+            }
+
+            return logos
+                .Where(l => l != null && !string.IsNullOrWhiteSpace(l.FilePath))
+                .OrderByDescending(l => string.Equals(l.Language, "en", StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(l => l.FilePath.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(l => l.VoteAverage)
+                .Select(l => l.FilePath)
+                .FirstOrDefault();
         }
 
         private async Task<T> Send<T>(HttpMethod method, string path, string jsonBody, CancellationToken ct, string baseUrl = null, string apiKey = null)

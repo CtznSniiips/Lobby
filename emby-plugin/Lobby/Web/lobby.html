@@ -129,10 +129,15 @@
                             <input id="cfSeerrKey" type="password" autocomplete="new-password" />
                         </div>
                         <div class="cf-field">
+                            <label for="cfTmdbKey">TMDB API key (optional)</label>
+                            <input id="cfTmdbKey" type="password" autocomplete="new-password" placeholder="Optional — for hero logos" />
+                        </div>
+                        <div class="cf-field">
                             <label for="cfFallback">Request as (Emby users with no linked Seerr account)</label>
                             <select id="cfFallback"></select>
                         </div>
                     </div>
+                    <p class="cf-help" style="margin-top:.6em;">The TMDB key is optional. With it, the featured hero shows a title logo for Seerr titles that aren't in your library yet; without it, the hero uses plain text. Get a free v3 API key at themoviedb.org → Settings → API.</p>
                     <div class="cf-checks" style="margin-top:.8em;">
                         <label><input type="checkbox" id="cfRequestsEnabled" /> Allow requests from TVs</label>
                     </div>

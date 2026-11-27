@@ -623,6 +623,14 @@ namespace Lobby.Services
             var item = MapSeerr(m);
             item.BackdropUrl = TmdbImageBase + "w1280" + m.BackdropPath;
             item.FeatureReason = "trending";
+
+            // A Seerr title isn't in the library yet, so it has no server logo; pull one from TMDB when a
+            // key is set, otherwise the hero falls back to the plain-text title.
+            var logoPath = await _seerr.TmdbLogoPath(m.MediaType, m.Id, ct).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(logoPath))
+            {
+                item.LogoUrl = TmdbImageBase + "w500" + logoPath;
+            }
             var parts = new List<string> { item.Year?.ToString(CultureInfo.InvariantCulture), m.MediaType == "tv" ? "Series" : "Movie" };
             try
             {

@@ -13,6 +13,13 @@ namespace Lobby.Configuration
         /// <summary>Seerr admin API key (Settings → General → API Key).</summary>
         public string SeerrApiKey { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Optional TMDB API key (v3). When set, the featured/hero area fetches a title logo from TMDB for
+        /// Seerr titles that aren't in the library yet, so the hero shows the logo instead of plain text.
+        /// Leave blank to disable; library titles still use their own server logo either way.
+        /// </summary>
+        public string TmdbApiKey { get; set; } = string.Empty;
+
         /// <summary>Whether TVs may submit Seerr requests.</summary>
         public bool RequestsEnabled { get; set; } = true;
 

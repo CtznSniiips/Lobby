@@ -69,6 +69,10 @@ namespace Lobby.Controllers
         /// <summary>Write-only. Empty keeps the saved key.</summary>
         public string SeerrApiKey { get; set; }
         public bool HasSeerrApiKey { get; set; }
+
+        /// <summary>Write-only. Empty keeps the saved key.</summary>
+        public string TmdbApiKey { get; set; }
+        public bool HasTmdbApiKey { get; set; }
         public bool RequestsEnabled { get; set; }
         public int FallbackSeerrUserId { get; set; }
         public int RowLimit { get; set; }
@@ -296,6 +300,11 @@ namespace Lobby.Controllers
                     Runtime.Seerr.InvalidateDiscover();
                 }
 
+                if (!string.IsNullOrWhiteSpace(body.TmdbApiKey))
+                {
+                    c.TmdbApiKey = body.TmdbApiKey.Trim();
+                }
+
                 c.RequestsEnabled = body.RequestsEnabled;
                 c.FallbackSeerrUserId = Math.Max(0, body.FallbackSeerrUserId);
                 c.RowLimit = Clamp(body.RowLimit, 1, 100, 20);
@@ -481,6 +490,7 @@ namespace Lobby.Controllers
             {
                 SeerrUrl = c.SeerrUrl,
                 HasSeerrApiKey = !string.IsNullOrWhiteSpace(c.SeerrApiKey),
+                HasTmdbApiKey = !string.IsNullOrWhiteSpace(c.TmdbApiKey),
                 RequestsEnabled = c.RequestsEnabled,
                 FallbackSeerrUserId = c.FallbackSeerrUserId,
                 RowLimit = c.RowLimit,
